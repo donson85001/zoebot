@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Twitch 訂閱監聽器</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">TWITCH EVENTSUB</p>
+        <h1>Twitch 訂閱監聽器</h1>
+      </div>
+      <div class="top-actions">
+        <div id="connectionBadge" class="badge offline">未監聽</div>
+        <button id="settingsBtn" class="icon-btn" type="button" aria-label="設定">⚙ 設定</button>
+      </div>
+    </header>
+
+    <section class="panel auth-strip">
+      <div>
+        <div class="label">Twitch 帳號</div>
+        <div id="authInfo" class="plain-status">尚未登入 Twitch</div>
+      </div>
+      <button id="loginBtn" class="primary">登入 Twitch</button>
+    </section>
+
+    <section class="panel monitor-panel">
+      <label class="channel-field">
+        <span>目標頻道</span>
+        <input id="channelLogin" type="text" autocomplete="off" placeholder="輸入 Twitch 頻道名稱" />
+      </label>
+      <div class="monitor-actions">
+        <button id="startBtn" class="primary wide">開始監聽</button>
+        <button id="stopBtn" class="secondary" disabled>停止</button>
+      </div>
+      <div id="channelInfo" class="plain-status muted full-row">尚未選擇頻道</div>
+    </section>
+
+    <section class="counter-grid">
+      <article class="counter-card purple">
+        <span>訂閱累積月份</span>
+        <strong id="publicMonths">1546</strong>
+      </article>
+      <article class="counter-card gold">
+        <span>累積贈禮訂閱</span>
+        <strong id="publicGifts">395</strong>
+      </article>
+    </section>
+
+    <section class="panel event-panel">
+      <div class="section-header">
+        <div>
+          <h2>即時事件</h2>
+          <p>續訂直接加 cumulativeMonths；批次贈訂每 5 份 +1。</p>
+        </div>
+        <button id="clearBtn" class="secondary small">清空</button>
+      </div>
+      <div id="eventList" class="event-list">
+        <div class="empty-state">等待事件...</div>
+      </div>
+    </section>
+  </main>
+
+  <div id="settingsModal" class="modal-backdrop" hidden>
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="modal-head">
+        <div>
+          <p class="eyebrow">SETTINGS</p>
+          <h2 id="settingsTitle">設定</h2>
+        </div>
+        <button id="closeSettingsBtn" class="icon-btn" type="button">✕</button>
+      </div>
+
+      <div class="settings-section">
+        <h3>Twitch</h3>
+        <label><span>Client ID</span><input id="clientId" type="text" autocomplete="off" /></label>
+        <label><span>Redirect URI</span><input id="redirectUri" type="text" autocomplete="off" /></label>
+        <div class="button-row">
+          <button id="saveSettingsBtn" class="secondary">儲存 Twitch 設定</button>
+          <button id="logoutBtn" class="danger ghost">清除登入</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Google 試算表</h3>
+        <label><span>Apps Script Web App 網址</span><input id="publicApiUrl" type="url" autocomplete="off" placeholder="https://script.google.com/macros/s/.../exec" /></label>
+        <label><span>更新金鑰</span><input id="publicWriteKey" type="password" autocomplete="off" /></label>
+        <div class="two-col">
+          <label><span>訂閱累積月份</span><input id="manualMonths" type="number" min="0" step="1" value="1546" /></label>
+          <label><span>累積贈禮訂閱</span><input id="manualGifts" type="number" min="0" step="1" value="395" /></label>
+        </div>
+        <div class="button-row">
+          <button id="savePublicBtn" class="secondary">儲存設定</button>
+          <button id="loadPublicBtn" class="secondary">讀取網路數字</button>
+          <button id="setPublicBtn" class="primary">同步目前數字</button>
+        </div>
+        <div id="publicInfo" class="settings-status muted">尚未連接 Google 試算表</div>
+        <div class="tiny">公開 JSON：<code id="publicStatsUrl">尚未設定</code></div>
+      </div>
+
+      <details class="advanced">
+        <summary>進階 / 除錯</summary>
+        <div class="mini-stats">
+          <span>聊天 <b id="chatCount">0</b></span>
+          <span>訂閱 <b id="subCount">0</b></span>
+          <span>續訂 <b id="resubCount">0</b></span>
+          <span>贈訂 <b id="giftCount">0</b></span>
+        </div>
+        <label class="checkbox"><input id="showChat" type="checkbox" checked /> 顯示一般聊天</label>
+        <div class="section-header compact">
+          <h3>最後一筆訂閱參數</h3>
+          <button id="copyJsonBtn" class="secondary small">複製 JSON</button>
+        </div>
+        <pre id="lastSubJson">尚無訂閱事件</pre>
+        <h3>除錯紀錄</h3>
+        <pre id="debugLog"></pre>
+      </details>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
