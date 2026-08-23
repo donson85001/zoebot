@@ -24,8 +24,8 @@
         <div class="label">Twitch 帳號</div>
         <div id="authInfo" class="plain-status">尚未登入 Twitch</div>
         <div style="margin-top:8px;font-size:12px;color:#adadb8;line-height:1.5;overflow-wrap:anywhere">
-          <div>實際 Client ID：<code id="activeClientId">75se22u3rxqy926g81rdxzq6wb4fvt</code></div>
-          <div>實際 Redirect URI：<code id="activeRedirectUri">https://donson85001.github.io/zoebot/</code></div>
+          <div>實際 Client ID：<code id="activeClientId">75se22u3rxqy926g81rxkzq6wb4fvt</code></div>
+          <div>實際 Redirect URI：<code id="activeRedirectUri">https://donson85001.github.io/zoebot/index.html</code></div>
         </div>
       </div>
       <button id="loginBtn" class="primary">登入 Twitch</button>
@@ -58,7 +58,7 @@
       <div class="section-header">
         <div>
           <h2>即時事件</h2>
-          <p>續訂直接加 cumulativeMonths；批次贈訂每 5 份 +1。</p>
+          <p>續訂直接加 cumulativeMonths；批次贈訂每 5 份 +1；更新成功後自動回報聊天室。</p>
         </div>
         <button id="clearBtn" class="secondary small">清空</button>
       </div>
@@ -127,15 +127,14 @@
 
   <script>
     (() => {
-      const REDIRECT = 'https://donson85001.github.io/zoebot/';
-      const CLIENT_ID = '75se22u3rxqy926g81rdxzq6wb4fvt';
+      const REDIRECT = 'https://donson85001.github.io/zoebot/index.html';
+      const CLIENT_ID = '75se22u3rxqy926g81rxkzq6wb4fvt';
       const GAS_URL = 'https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec';
-      localStorage.removeItem('oauthState');
       localStorage.setItem('twitchClientId', CLIENT_ID);
       localStorage.setItem('twitchRedirectUri', REDIRECT);
       localStorage.setItem('publicApiUrl', GAS_URL);
     })();
   </script>
-  <script src="app.js?v=20260824-4"></script>
+  <script src="app.js?v=20260824-chat-write-1"></script>
 </body>
 </html>
