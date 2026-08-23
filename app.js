@@ -5,11 +5,12 @@ const API='https://api.twitch.tv/helix';
 const OAUTH='https://id.twitch.tv/oauth2/authorize';
 const SCOPE='user:read:chat';
 const CLIENT='75se22u3rxqy926g81rdxzq6wb4fvt';
+const GITHUB_REDIRECT='https://donson85001.github.io/zoebot/index.html';
 const GAS='https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec';
 const $=s=>document.querySelector(s);
 const e={clientId:$('#clientId'),redirectUri:$('#redirectUri'),loginBtn:$('#loginBtn'),logoutBtn:$('#logoutBtn'),saveSettingsBtn:$('#saveSettingsBtn'),authInfo:$('#authInfo'),channelLogin:$('#channelLogin'),startBtn:$('#startBtn'),stopBtn:$('#stopBtn'),channelInfo:$('#channelInfo'),badge:$('#connectionBadge'),eventList:$('#eventList'),debug:$('#debugLog'),clearBtn:$('#clearBtn'),showChat:$('#showChat'),chatCount:$('#chatCount'),subCount:$('#subCount'),resubCount:$('#resubCount'),giftCount:$('#giftCount'),lastSubJson:$('#lastSubJson'),copyJsonBtn:$('#copyJsonBtn'),months:$('#publicMonths'),gifts:$('#publicGifts'),apiUrl:$('#publicApiUrl'),key:$('#publicWriteKey'),manualMonths:$('#manualMonths'),manualGifts:$('#manualGifts'),savePublicBtn:$('#savePublicBtn'),loadPublicBtn:$('#loadPublicBtn'),setPublicBtn:$('#setPublicBtn'),publicInfo:$('#publicInfo'),publicStatsUrl:$('#publicStatsUrl')};
 const st={token:null,viewer:null,target:null,socket:null,stopped:false,seen:new Set(),counts:{chat:0,sub:0,resub:0,gift:0},last:null,public:{subscriptionMonths:1546,giftSubCount:395}};
-const redirect=()=>location.hostname.endsWith('github.io')?'https://donson85001.github.io/zoebot/':location.href.split('#')[0].split('?')[0];
+const redirect=()=>location.hostname.endsWith('github.io')?GITHUB_REDIRECT:location.href.split('#')[0].split('?')[0];
 function log(x){if(e.debug)e.debug.textContent=`[${new Date().toLocaleTimeString('zh-TW',{hour12:false})}] ${x}\n${e.debug.textContent}`.slice(0,30000)}
 function status(el,text,mode='muted'){el.textContent=text;el.className=`plain-status ${mode}`}
 function badge(text,mode){e.badge.textContent=text;e.badge.className=`badge ${mode}`}
