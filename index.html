@@ -23,6 +23,10 @@
       <div>
         <div class="label">Twitch 帳號</div>
         <div id="authInfo" class="plain-status">尚未登入 Twitch</div>
+        <div style="margin-top:8px;font-size:12px;color:#adadb8;line-height:1.5;overflow-wrap:anywhere">
+          <div>實際 Client ID：<code id="activeClientId">75se22u3rxqy926g81rdxzq6wb4fvt</code></div>
+          <div>實際 Redirect URI：<code id="activeRedirectUri">https://donson85001.github.io/zoebot/</code></div>
+        </div>
       </div>
       <button id="loginBtn" class="primary">登入 Twitch</button>
     </section>
@@ -122,16 +126,16 @@
   </div>
 
   <script>
-    // GitHub Pages 固定設定：使用本機版已驗證可登入的同一個 Client ID。
     (() => {
       const REDIRECT = 'https://donson85001.github.io/zoebot/';
       const CLIENT_ID = '75se22u3rxqy926g81rdxzq6wb4fvt';
       const GAS_URL = 'https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec';
+      localStorage.removeItem('oauthState');
       localStorage.setItem('twitchClientId', CLIENT_ID);
       localStorage.setItem('twitchRedirectUri', REDIRECT);
       localStorage.setItem('publicApiUrl', GAS_URL);
     })();
   </script>
-  <script src="app.js?v=20260824-3"></script>
+  <script src="app.js?v=20260824-4"></script>
 </body>
 </html>
