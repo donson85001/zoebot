@@ -121,6 +121,17 @@
     </section>
   </div>
 
-  <script src="app.js"></script>
+  <script>
+    // GitHub Pages 固定設定：避免殘留 localhost 或空白設定。
+    (() => {
+      const REDIRECT = 'https://donson85001.github.io/zoebot/';
+      const CLIENT_ID = '75se22u3rxqy926g81rdxzq6wb4fvt';
+      const GAS_URL = 'https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec';
+      localStorage.setItem('twitchClientId', CLIENT_ID);
+      localStorage.setItem('twitchRedirectUri', REDIRECT);
+      localStorage.setItem('publicApiUrl', GAS_URL);
+    })();
+  </script>
+  <script src="app.js?v=20260824-1"></script>
 </body>
 </html>
