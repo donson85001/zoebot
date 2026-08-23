@@ -4,7 +4,7 @@ const WS='wss://eventsub.wss.twitch.tv/ws?keepalive_timeout_seconds=30';
 const API='https://api.twitch.tv/helix';
 const OAUTH='https://id.twitch.tv/oauth2/authorize';
 const SCOPE='user:read:chat';
-const CLIENT='75se22u3rxqy926g81rdxzq6wb4fvt';
+const CLIENT='75se22u3rxqy926g81rxkzq6wb4fvt';
 const GITHUB_REDIRECT='https://donson85001.github.io/zoebot/index.html';
 const GAS='https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec';
 const $=s=>document.querySelector(s);
