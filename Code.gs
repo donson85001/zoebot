@@ -15,6 +15,7 @@
 const UPDATE_KEY = 'donson-twitch-2026-change-this';
 const COUNTER_SHEET = 'TwitchCounter';
 const LOG_SHEET = 'EventLog';
+const DETAIL_SHEET = 'SubscriptionDetail';
 const INITIAL_MONTHS = 1546;
 const INITIAL_GIFTS = 395;
 
@@ -39,6 +40,13 @@ function setup() {
   if (log.getLastRow() === 0) {
     log.appendRow(['時間', 'eventId', '類型', '月份增加', '贈禮增加', '更新後月份', '更新後贈禮']);
     log.setFrozenRows(1);
+  }
+
+  let detail = ss.getSheetByName(DETAIL_SHEET);
+  if (!detail) detail = ss.insertSheet(DETAIL_SHEET);
+  if (detail.getLastRow() === 0) {
+    detail.appendRow(['時間', 'eventId', '類型', '誰', '訂閱層級', '一次幾個月', '第幾個月續訂', '贈送訂閱數', '計數增加']);
+    detail.setFrozenRows(1);
   }
 
   Logger.log('設定完成');
@@ -109,6 +117,7 @@ function incrementCounters_(body) {
 
   if (eventId) rememberProcessed_(eventId);
   logEvent_(eventId, 'increment', monthsDelta, giftDelta, months, gifts);
+  logDetail_(eventId, body.detail || {}, monthsDelta, giftDelta);
 
   return json_({ ok: true, subscriptionMonths: months, giftSubCount: gifts });
 }
@@ -153,6 +162,52 @@ function logEvent_(eventId, type, monthsDelta, giftDelta, months, gifts) {
     sheet.appendRow(['時間', 'eventId', '類型', '月份增加', '贈禮增加', '更新後月份', '更新後贈禮']);
   }
   sheet.appendRow([new Date(), eventId, type, monthsDelta, giftDelta, months, gifts]);
+}
+
+function logDetail_(eventId, detail, monthsDelta, giftDelta) {
+  if (!detail || typeof detail !== 'object') return;
+
+  const type = cleanCell_(detail.type);
+  if (type !== 'resub' && type !== 'community_sub_gift') return;
+
+  const id = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
+  const ss = SpreadsheetApp.openById(id);
+  let sheet = ss.getSheetByName(DETAIL_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(DETAIL_SHEET);
+    sheet.appendRow(['時間', 'eventId', '類型', '誰', '訂閱層級', '一次幾個月', '第幾個月續訂', '贈送訂閱數', '計數增加']);
+    sheet.setFrozenRows(1);
+  }
+
+  const who = cleanCell_(detail.who);
+  const tier = cleanCell_(detail.tier);
+  const durationMonths = type === 'resub' ? nullableInt_(detail.durationMonths) : '';
+  const cumulativeMonths = type === 'resub' ? nullableInt_(detail.cumulativeMonths) : '';
+  const giftTotal = type === 'community_sub_gift' ? nullableInt_(detail.total) : '';
+  const counterDelta = type === 'resub' ? monthsDelta : giftDelta;
+
+  sheet.appendRow([
+    new Date(),
+    eventId,
+    type === 'resub' ? '續訂' : '贈送訂閱',
+    who,
+    tier,
+    durationMonths,
+    cumulativeMonths,
+    giftTotal,
+    counterDelta,
+  ]);
+}
+
+function cleanCell_(value) {
+  if (value === null || value === undefined) return '';
+  return String(value).replace(/^[=+\-@]/, "'$&");
+}
+
+function nullableInt_(value) {
+  if (value === null || value === undefined || value === '') return '';
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.floor(n) : '';
 }
 
 function alreadyProcessed_(eventId) {
