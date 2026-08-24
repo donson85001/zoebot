@@ -214,12 +214,27 @@
       const d=ev.resub||{}, months=Number(d.cumulative_months); state.counts.resub++; counts();
       const item={type:'resub',tier:tier(d.sub_tier),cumulativeMonths:d.cumulative_months??null,durationMonths:d.duration_months??null,streakMonths:d.streak_months??null}; last(item);
       card('resub','續訂',who,ev.message?.text||'',Object.entries(item).map(([k,v])=>`${k}=${v}`));
-      if(Number.isFinite(months)&&months>0) increment(months,0,p.metadata?.message_id);
+      if(Number.isFinite(months)&&months>0) {
+        increment(months,0,p.metadata?.message_id,{
+          type:'resub',
+          who,
+          tier:tier(d.sub_tier),
+          durationMonths:d.duration_months??null,
+          cumulativeMonths:d.cumulative_months??null
+        });
+      }
     } else if(n==='community_sub_gift'){
       const d=ev.community_sub_gift||{}, total=Number(d.total), plus=Number.isFinite(total)?Math.floor(total/5):0; state.counts.gift++; counts();
       const item={type:'community_sub_gift',tier:tier(d.sub_tier),total:d.total??null,cumulativeTotal:d.cumulative_total??null}; last(item);
       card('gift','批次贈訂',who,ev.message?.text||'',Object.entries(item).map(([k,v])=>`${k}=${v}`));
-      if(plus>0) increment(0,plus,p.metadata?.message_id);
+      if(plus>0) {
+        increment(0,plus,p.metadata?.message_id,{
+          type:'community_sub_gift',
+          who,
+          tier:tier(d.sub_tier),
+          total:d.total??null
+        });
+      }
     } else if(n==='sub_gift'){
       state.counts.gift++; counts(); const d=ev.sub_gift||{};
       const item={type:'sub_gift',tier:tier(d.sub_tier),durationMonths:d.duration_months??null}; last(item);
@@ -256,10 +271,15 @@
     log(`聊天室已發送：${message}`);
   }
 
-  async function increment(monthDelta,giftDelta,eventId){
+  async function increment(monthDelta,giftDelta,eventId,detail=null){
     state.public.subscriptionMonths+=monthDelta; state.public.giftSubCount+=giftDelta; refresh();
     try{
-      const d=await gasPost('increment',{subscriptionMonthsDelta:monthDelta,giftSubCountDelta:giftDelta,eventId:eventId||null});
+      const d=await gasPost('increment',{
+        subscriptionMonthsDelta:monthDelta,
+        giftSubCountDelta:giftDelta,
+        eventId:eventId||null,
+        detail
+      });
       state.public.subscriptionMonths=Number(d.subscriptionMonths); state.public.giftSubCount=Number(d.giftSubCount); refresh();
       try{ await sendCounterChat(); }catch(chatErr){ log(`聊天室發送失敗：${chatErr.message}`); }
     }catch(err){ log(`試算表同步失敗：${err.message}`); }
