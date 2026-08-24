@@ -4,12 +4,7 @@
  * 規則：
  * 1. 續訂：把該人的 cumulativeMonths 整個加到 subscriptionMonths。
  * 2. 批次贈訂：每 5 份 +1；10 份 +2。
- *
- * 使用方式：
- * - 在 Google 試算表：擴充功能 > Apps Script
- * - 貼上本檔內容
- * - 先執行 setup() 一次
- * - 部署為 Web App：執行身分「我」、存取權「任何人」
+ * 3. SubscriptionDetail 永遠依時間由舊到新排列（最舊在上、最新在下）。
  */
 
 const UPDATE_KEY = 'donson-twitch-2026-change-this';
@@ -39,15 +34,13 @@ function setup() {
   if (!log) log = ss.insertSheet(LOG_SHEET);
   if (log.getLastRow() === 0) {
     log.appendRow(['時間', 'eventId', '類型', '月份增加', '贈禮增加', '更新後月份', '更新後贈禮']);
-    log.setFrozenRows(1);
   }
+  log.setFrozenRows(1);
 
   let detail = ss.getSheetByName(DETAIL_SHEET);
   if (!detail) detail = ss.insertSheet(DETAIL_SHEET);
-  if (detail.getLastRow() === 0) {
-    detail.appendRow(['時間', 'eventId', '類型', '誰', '訂閱層級', '一次幾個月', '第幾個月續訂', '贈送訂閱數', '計數增加']);
-    detail.setFrozenRows(1);
-  }
+  ensureDetailLayout_(detail);
+  sortDetailOldestFirst_(detail);
 
   Logger.log('設定完成');
   Logger.log('UPDATE_KEY = ' + UPDATE_KEY);
@@ -95,7 +88,7 @@ function setCounters_(body) {
   const months = toNonNegativeInt_(body.subscriptionMonths, 'subscriptionMonths');
   const gifts = toNonNegativeInt_(body.giftSubCount, 'giftSubCount');
   writeCounters_(months, gifts);
-  logEvent_('', 'manual_set', 0, 0, months, gifts);
+  // 手動設定不屬於訂閱／贈訂事件，不再寫入 EventLog 的 0 / 0 紀錄。
   return json_({ ok: true, subscriptionMonths: months, giftSubCount: gifts });
 }
 
@@ -117,7 +110,7 @@ function incrementCounters_(body) {
 
   if (eventId) rememberProcessed_(eventId);
   logEvent_(eventId, 'increment', monthsDelta, giftDelta, months, gifts);
-  logDetail_(eventId, body.detail || {}, monthsDelta, giftDelta);
+  logDetail_(eventId, body.detail || {}, monthsDelta, giftDelta, months, gifts);
 
   return json_({ ok: true, subscriptionMonths: months, giftSubCount: gifts });
 }
@@ -154,17 +147,21 @@ function getCounterSheet_() {
 }
 
 function logEvent_(eventId, type, monthsDelta, giftDelta, months, gifts) {
+  // 兩種增量都為 0 的紀錄沒有事件資訊價值，直接略過。
+  if (Number(monthsDelta) === 0 && Number(giftDelta) === 0) return;
+
   const id = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
   const ss = SpreadsheetApp.openById(id);
   let sheet = ss.getSheetByName(LOG_SHEET);
   if (!sheet) {
     sheet = ss.insertSheet(LOG_SHEET);
     sheet.appendRow(['時間', 'eventId', '類型', '月份增加', '贈禮增加', '更新後月份', '更新後贈禮']);
+    sheet.setFrozenRows(1);
   }
   sheet.appendRow([new Date(), eventId, type, monthsDelta, giftDelta, months, gifts]);
 }
 
-function logDetail_(eventId, detail, monthsDelta, giftDelta) {
+function logDetail_(eventId, detail, monthsDelta, giftDelta, months, gifts) {
   if (!detail || typeof detail !== 'object') return;
 
   const type = cleanCell_(detail.type);
@@ -173,18 +170,15 @@ function logDetail_(eventId, detail, monthsDelta, giftDelta) {
   const id = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
   const ss = SpreadsheetApp.openById(id);
   let sheet = ss.getSheetByName(DETAIL_SHEET);
-  if (!sheet) {
-    sheet = ss.insertSheet(DETAIL_SHEET);
-    sheet.appendRow(['時間', 'eventId', '類型', '誰', '訂閱層級', '一次幾個月', '第幾個月續訂', '贈送訂閱數', '計數增加']);
-    sheet.setFrozenRows(1);
-  }
+  if (!sheet) sheet = ss.insertSheet(DETAIL_SHEET);
+  ensureDetailLayout_(sheet);
 
   const who = cleanCell_(detail.who);
-  const tier = cleanCell_(detail.tier);
-  const durationMonths = type === 'resub' ? nullableInt_(detail.durationMonths) : '';
+  const tier = nullableInt_(detail.tier);
+  const quantityOrDuration = type === 'resub'
+    ? nullableInt_(detail.durationMonths)
+    : nullableInt_(detail.total);
   const cumulativeMonths = type === 'resub' ? nullableInt_(detail.cumulativeMonths) : '';
-  const giftTotal = type === 'community_sub_gift' ? nullableInt_(detail.total) : '';
-  const counterDelta = type === 'resub' ? monthsDelta : giftDelta;
 
   sheet.appendRow([
     new Date(),
@@ -192,11 +186,37 @@ function logDetail_(eventId, detail, monthsDelta, giftDelta) {
     type === 'resub' ? '續訂' : '贈送訂閱',
     who,
     tier,
-    durationMonths,
+    quantityOrDuration,
     cumulativeMonths,
-    giftTotal,
-    counterDelta,
+    months,
+    gifts,
   ]);
+
+  // 新資料寫入後強制維持：最舊在上、最新在下。
+  sortDetailOldestFirst_(sheet);
+}
+
+function ensureDetailLayout_(sheet) {
+  const headers = ['時間', 'eventId', '類型', '誰', 'Tier', '數量／一次幾個月', '累積第幾月', '增加後豬叫', '增加後海豹拍'];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  sheet.setFrozenRows(1);
+
+  // 整張明細表統一對齊；未來 appendRow 也會沿用欄位格式。
+  const rows = Math.max(sheet.getMaxRows(), 2);
+  sheet.getRange(1, 1, rows, headers.length)
+    .setHorizontalAlignment('center')
+    .setVerticalAlignment('middle');
+
+  sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
+  sheet.setColumnWidth(1, 175);
+  sheet.setColumnWidth(2, 300);
+  for (let c = 3; c <= 9; c++) sheet.setColumnWidth(c, 125);
+}
+
+function sortDetailOldestFirst_(sheet) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 2) return;
+  sheet.getRange(2, 1, lastRow - 1, 9).sort({ column: 1, ascending: true });
 }
 
 function cleanCell_(value) {
