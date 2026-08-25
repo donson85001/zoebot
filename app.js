@@ -202,7 +202,7 @@
     const type=p.payload.subscription?.type, ev=p.payload.event||{};
     if(type==='channel.chat.message'){
       state.counts.chat++; counts();
-      const chatText=(ev.message?.text||'').trim();
+      const chatText=(ev.message?.text||'').replace(/\s+/g,'').trim();
       if(chatText==='!餘興節目累積') {
         sendEntertainmentReply(ev).catch(err=>log(`餘興節目指令回覆失敗：${err.message}`));
       }
@@ -275,10 +275,8 @@
   }
 
   async function sendEntertainmentReply(ev){
-    const r=await fetch(`${GAS_URL}?action=stats&_=${Date.now()}`,{cache:'no-store'}),d=await r.json();
-    const m=Number(d.subscriptionMonths),g=Number(d.giftSubCount);
-    if(!Number.isFinite(m)||!Number.isFinite(g)) throw new Error('回傳格式不正確');
-    state.public.subscriptionMonths=m; state.public.giftSubCount=g; refresh();
+    const m=Number(state.public.subscriptionMonths),g=Number(state.public.giftSubCount);
+    if(!Number.isFinite(m)||!Number.isFinite(g)) throw new Error('目前累積數字無效');
     const who=ev.chatter_user_login||ev.chatter_user_name||'觀眾';
     await sendChatMessage(`@${who} 目前累積豬叫聲${m}次，累積海豹拍${g}次。`);
   }
