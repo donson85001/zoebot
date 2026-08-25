@@ -202,6 +202,10 @@
     const type=p.payload.subscription?.type, ev=p.payload.event||{};
     if(type==='channel.chat.message'){
       state.counts.chat++; counts();
+      const chatText=(ev.message?.text||'').trim();
+      if(chatText==='!餘興節目') {
+        sendEntertainmentReply(ev).catch(err=>log(`餘興節目指令回覆失敗：${err.message}`));
+      }
       if(el.showChat.checked) card('chat','聊天室',ev.chatter_user_name||ev.chatter_user_login||'未知',ev.message?.text||'');
       return;
     }
@@ -262,13 +266,26 @@
     const d=await r.json(); if(!r.ok||d.ok===false)throw Error(d.error||d.message||`HTTP ${r.status}`); return d;
   }
 
-  async function sendCounterChat(){
+  async function sendChatMessage(message){
     if(!state.target || !state.viewer) throw new Error('尚未選擇頻道或登入 Twitch');
-    const message=`累積豬叫聲:(${state.public.subscriptionMonths})次 累積海豹拍肚:(${state.public.giftSubCount})次`;
     const d=await helix('/chat/messages',{method:'POST',body:JSON.stringify({broadcaster_id:state.target.id,sender_id:state.viewer.id,message})});
     const result=d?.data?.[0];
     if(result?.is_sent===false) throw new Error(result.drop_reason?.message||'Twitch 沒有送出訊息');
     log(`聊天室已發送：${message}`);
+  }
+
+  async function sendEntertainmentReply(ev){
+    const r=await fetch(`${GAS_URL}?action=stats&_=${Date.now()}`,{cache:'no-store'}),d=await r.json();
+    const m=Number(d.subscriptionMonths),g=Number(d.giftSubCount);
+    if(!Number.isFinite(m)||!Number.isFinite(g)) throw new Error('回傳格式不正確');
+    state.public.subscriptionMonths=m; state.public.giftSubCount=g; refresh();
+    const who=ev.chatter_user_login||ev.chatter_user_name||'觀眾';
+    await sendChatMessage(`@${who} 目前累積豬叫聲${m}次，累積海豹拍${g}次。`);
+  }
+
+  async function sendCounterChat(){
+    const message=`累積豬叫聲:${state.public.subscriptionMonths}次，累積海豹拍肚:${state.public.giftSubCount}次。`;
+    await sendChatMessage(message);
   }
 
   async function increment(monthDelta,giftDelta,eventId,detail=null){
