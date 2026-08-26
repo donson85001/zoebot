@@ -7,7 +7,7 @@
   const SCOPES = ['user:read:chat', 'user:write:chat'];
   const CLIENT_ID = '75se22u3rxqy926g81rxkzq6wb4fvt';
   const REDIRECT_URI = 'https://donson85001.github.io/zoebot/index.html';
-  const GAS_URL = 'https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec';
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbxaGXiDJT0t3x70b8Q5SKPAQLAvobSh-5D_lNNtaZRGE6UJSlVQ45RKhO314BnIcKH2Aw/exec';
 
   const $ = (s) => document.querySelector(s);
   const el = {
@@ -74,7 +74,7 @@
     if (!token) return false;
     const expected = localStorage.getItem('oauthState');
     if (expected && p.get('state') !== expected) {
-      status(el.authInfo, 'OAuth 驗證失敗，請重新登入', 'error');
+      status(el.authInfo, 'OAuth 驗證失敗，請重新登入 Twitch', 'error');
       return false;
     }
     localStorage.removeItem('oauthState');
