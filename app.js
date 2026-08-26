@@ -203,7 +203,7 @@
     if(type==='channel.chat.message'){
       state.counts.chat++; counts();
       const chatText=(ev.message?.text||'').replace(/\s+/g,'').trim();
-      if(chatText==='!餘興節目累積') {
+      if(['!餘興節目累積','!餘興節目累計','!餘興節目累加'].includes(chatText)) {
         sendEntertainmentReply(ev).catch(err=>log(`餘興節目指令回覆失敗：${err.message}`));
       }
       if(el.showChat.checked) card('chat','聊天室',ev.chatter_user_name||ev.chatter_user_login||'未知',ev.message?.text||'');
