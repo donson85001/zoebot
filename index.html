@@ -133,6 +133,53 @@
       localStorage.setItem('twitchClientId', CLIENT_ID);
       localStorage.setItem('twitchRedirectUri', REDIRECT);
       localStorage.setItem('publicApiUrl', GAS_URL);
+
+      // One-time backend integration self-test. It writes two tagged test events,
+      // then restores the counters to their original values. Test rows are easy
+      // to identify and can be removed after verification.
+      window.addEventListener('load', async () => {
+        const marker = 'zoebotGasSelftest_20260827_v1';
+        if (localStorage.getItem(marker) === 'done') return;
+        const key = localStorage.getItem('publicWriteKey') || '';
+        if (!key) return;
+        const debug = document.querySelector('#debugLog');
+        const stamp = Date.now();
+        const post = async (action, payload) => {
+          const r = await fetch(GAS_URL, {
+            method: 'POST',
+            headers: {'Content-Type':'text/plain;charset=utf-8'},
+            body: JSON.stringify({...payload, action, key}),
+            cache: 'no-store'
+          });
+          const d = await r.json();
+          if (!r.ok || d.ok === false) throw new Error(d.error || d.message || `HTTP ${r.status}`);
+          return d;
+        };
+        try {
+          const statsRes = await fetch(`${GAS_URL}?action=stats&_=${stamp}`, {cache:'no-store'});
+          const before = await statsRes.json();
+          const m = Number(before.subscriptionMonths), g = Number(before.giftSubCount);
+          if (!Number.isFinite(m) || !Number.isFinite(g)) throw new Error('無法讀取測試前累積數字');
+
+          await post('increment', {
+            subscriptionMonthsDelta: 1,
+            giftSubCountDelta: 0,
+            eventId: `ZOEBOT-SELFTEST-RESUB-${stamp}`,
+            detail: {type:'resub', who:'ZOEBOT_TEST_RESUB', tier:1, durationMonths:1, cumulativeMonths:999}
+          });
+          await post('increment', {
+            subscriptionMonthsDelta: 0,
+            giftSubCountDelta: 1,
+            eventId: `ZOEBOT-SELFTEST-GIFT-${stamp}`,
+            detail: {type:'community_sub_gift', who:'ZOEBOT_TEST_GIFT', tier:1, total:5}
+          });
+          await post('set', {subscriptionMonths:m, giftSubCount:g});
+          localStorage.setItem(marker, 'done');
+          if (debug) debug.textContent = `[SELFTEST] GAS 完整寫入測試完成，累積數字已還原 ${m}/${g}\n${debug.textContent}`;
+        } catch (err) {
+          if (debug) debug.textContent = `[SELFTEST] 失敗：${err.message}\n${debug.textContent}`;
+        }
+      });
     })();
   </script>
   <script src="connection-watchdog.js?v=20260826-1"></script>
