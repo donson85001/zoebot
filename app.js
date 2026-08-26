@@ -203,7 +203,7 @@
     if(type==='channel.chat.message'){
       state.counts.chat++; counts();
       const chatText=(ev.message?.text||'').replace(/\s+/g,'').trim();
-      if(['!餘興節目累積','!餘興節目累計','!餘興節目累加'].includes(chatText)) {
+      if(chatText==='!餘興節目') {
         sendEntertainmentReply(ev).catch(err=>log(`餘興節目指令回覆失敗：${err.message}`));
       }
       if(el.showChat.checked) card('chat','聊天室',ev.chatter_user_name||ev.chatter_user_login||'未知',ev.message?.text||'');
@@ -278,7 +278,7 @@
     const m=Number(state.public.subscriptionMonths),g=Number(state.public.giftSubCount);
     if(!Number.isFinite(m)||!Number.isFinite(g)) throw new Error('目前累積數字無效');
     const who=ev.chatter_user_login||ev.chatter_user_name||'觀眾';
-    await sendChatMessage(`@${who} 目前累積豬叫聲${m}次，累積海豹拍${g}次。`);
+    await sendChatMessage(`@${who} 目前累積豬叫聲${m}次，累積海豹拍${g}次。【續訂月數=豬叫】【贈訂5份=1海豹拍肚】累積到 WirForce 期間表演`);
   }
 
   async function sendCounterChat(){
