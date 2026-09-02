@@ -6,7 +6,7 @@
  * 2. 批次贈訂：每 5 份 +1；10 份 +2。
  * 3. EventLog 保存完整原始明細，SubscriptionDetail 可完全由 EventLog 重建。
  * 4. SubscriptionDetail 永遠依時間由舊到新排列（最舊在上、最新在下）。
- * 5. TwitchCounter 每天保留日結；若連續跨日數值不變，只保留第一個沒變動的日期。
+ * 5. TwitchCounter 每天檢查日結；若數值和上一筆完全相同，就不新增重複日期。
  */
 
 const UPDATE_KEY = 'donson-twitch-2026-change-this';
@@ -60,8 +60,8 @@ function getCounterSheet_(){const id=PropertiesService.getScriptProperties().get
 /**
  * 每次有人讀取/寫入公開計數時，先檢查是否已跨日。
  * 日結記錄的是「昨天結束時」的 B2/B3。
- * 若連續多天完全沒變：保留第一個沒變的日期，後續相同日期略過。
- * 例如 8/30 有更新，8/31、9/1、9/2 都不變，會保留 8/31，但略過 9/1、9/2。
+ * 若數值和上一個已記錄日完全相同，就直接略過，不建立新日期欄。
+ * 例如 8/30 = 2592/704，8/31 仍是 2592/704，則只保留 8/30。
  */
 function syncDailyCounterSnapshot_(){
   const props=PropertiesService.getScriptProperties();
@@ -95,18 +95,7 @@ function recordDailyCounterSnapshot_(s,label,months,gifts){
   if(lastHistoryCol>=3){
     const lastMonths=Number(s.getRange(2,lastHistoryCol).getValue())||0;
     const lastGifts=Number(s.getRange(3,lastHistoryCol).getValue())||0;
-    const sameAsLast=lastMonths===months&&lastGifts===gifts;
-    if(sameAsLast){
-      let prevHistoryCol=0;
-      for(let c=lastHistoryCol-1;c>=3;c--){
-        if(String(s.getRange(1,c).getDisplayValue()||'').trim()){prevHistoryCol=c;break;}
-      }
-      if(prevHistoryCol>=3){
-        const prevMonths=Number(s.getRange(2,prevHistoryCol).getValue())||0;
-        const prevGifts=Number(s.getRange(3,prevHistoryCol).getValue())||0;
-        if(prevMonths===lastMonths&&prevGifts===lastGifts)return;
-      }
-    }
+    if(lastMonths===months&&lastGifts===gifts)return;
   }
 
   const targetCol=lastHistoryCol>=3?lastHistoryCol+1:3;
@@ -119,7 +108,7 @@ function ensureLogLayout_(s){
   s.setFrozenRows(1);
   const rows=Math.max(s.getMaxRows(),2);
   s.getRange(1,1,rows,LOG_HEADERS.length).setHorizontalAlignment('center').setVerticalAlignment('middle');
-  s.getRange(2,1,rows-1,1).setNumberFormat('yyyy/m/d hh:mm:ss');
+  s.getRange(2,1,rows-1,1).setNumberFormat('yyyy/m/d HH:mm:ss');
   s.getRange(1,1,1,LOG_HEADERS.length).setFontWeight('bold');
   s.setColumnWidth(1,175);s.setColumnWidth(2,300);for(let c=3;c<=12;c++)s.setColumnWidth(c,125);
 }
@@ -172,7 +161,7 @@ function rebuildSubscriptionDetailFromLog_(){
   sortDetailOldestFirst_(detail);SpreadsheetApp.flush();return out.length;
 }
 
-function ensureDetailLayout_(s){const headers=DETAIL_HEADERS;s.getRange(1,1,1,9).setValues([headers]);s.setFrozenRows(1);const rows=Math.max(s.getMaxRows(),2);s.getRange(1,1,rows,9).setHorizontalAlignment('center').setVerticalAlignment('middle');s.getRange(2,1,rows-1,1).setNumberFormat('yyyy/m/d hh:mm:ss');s.getRange(1,1,1,9).setFontWeight('bold');s.setColumnWidth(1,175);for(let c=2;c<=8;c++)s.setColumnWidth(c,125);s.setColumnWidth(9,300);}
+function ensureDetailLayout_(s){const headers=DETAIL_HEADERS;s.getRange(1,1,1,9).setValues([headers]);s.setFrozenRows(1);const rows=Math.max(s.getMaxRows(),2);s.getRange(1,1,rows,9).setHorizontalAlignment('center').setVerticalAlignment('middle');s.getRange(2,1,rows-1,1).setNumberFormat('yyyy/m/d HH:mm:ss');s.getRange(1,1,1,9).setFontWeight('bold');s.setColumnWidth(1,175);for(let c=2;c<=8;c++)s.setColumnWidth(c,125);s.setColumnWidth(9,300);}
 function sortDetailOldestFirst_(s){const last=s.getLastRow();if(last<=2)return;s.getRange(2,1,last-1,9).sort({column:1,ascending:true});}
 function cleanCell_(v){if(v===null||v===undefined)return'';return String(v).replace(/^[=+\-@]/,"'$&");}
 function nullableInt_(v){if(v===null||v===undefined||v==='')return'';const n=Number(v);return Number.isFinite(n)?Math.floor(n):'';}
