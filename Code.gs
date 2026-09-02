@@ -6,6 +6,7 @@
  * 2. 批次贈訂：每 5 份 +1；10 份 +2。
  * 3. EventLog 保存完整原始明細，SubscriptionDetail 可完全由 EventLog 重建。
  * 4. SubscriptionDetail 永遠依時間由舊到新排列（最舊在上、最新在下）。
+ * 5. TwitchCounter 每天保留日結；若連續跨日數值不變，只保留第一個沒變動的日期。
  */
 
 const UPDATE_KEY = 'donson-twitch-2026-change-this';
@@ -34,8 +35,8 @@ function setup() {
   sortDetailOldestFirst_(detail);
 }
 
-function doGet(e){try{const action=String((e&&e.parameter&&e.parameter.action)||'stats').toLowerCase(),c=readCounters_();if(action==='months'||action==='subscription-months')return text_(String(c.subscriptionMonths));if(action==='gifts'||action==='gift-count')return text_(String(c.giftSubCount));return json_({ok:true,...c,updatedAt:new Date().toISOString()});}catch(err){return json_({ok:false,error:String(err&&err.message?err.message:err)});}}
-function doPost(e){const lock=LockService.getScriptLock();lock.waitLock(10000);try{const body=parseBody_(e);if(String(body.key||'')!==UPDATE_KEY)return json_({ok:false,error:'更新金鑰錯誤'});const action=String(body.action||'').toLowerCase();if(action==='set')return setCounters_(body);if(action==='increment')return incrementCounters_(body);if(action==='rebuild-detail')return json_({ok:true,rows:rebuildSubscriptionDetailFromLog_()});return json_({ok:false,error:'未知 action'});}catch(err){return json_({ok:false,error:String(err&&err.message?err.message:err)});}finally{lock.releaseLock();}}
+function doGet(e){try{syncDailyCounterSnapshot_();const action=String((e&&e.parameter&&e.parameter.action)||'stats').toLowerCase(),c=readCounters_();if(action==='months'||action==='subscription-months')return text_(String(c.subscriptionMonths));if(action==='gifts'||action==='gift-count')return text_(String(c.giftSubCount));return json_({ok:true,...c,updatedAt:new Date().toISOString()});}catch(err){return json_({ok:false,error:String(err&&err.message?err.message:err)});}}
+function doPost(e){const lock=LockService.getScriptLock();lock.waitLock(10000);try{const body=parseBody_(e);if(String(body.key||'')!==UPDATE_KEY)return json_({ok:false,error:'更新金鑰錯誤'});syncDailyCounterSnapshot_();const action=String(body.action||'').toLowerCase();if(action==='set')return setCounters_(body);if(action==='increment')return incrementCounters_(body);if(action==='rebuild-detail')return json_({ok:true,rows:rebuildSubscriptionDetailFromLog_()});return json_({ok:false,error:'未知 action'});}catch(err){return json_({ok:false,error:String(err&&err.message?err.message:err)});}finally{lock.releaseLock();}}
 function setCounters_(body){const months=toNonNegativeInt_(body.subscriptionMonths,'subscriptionMonths'),gifts=toNonNegativeInt_(body.giftSubCount,'giftSubCount');writeCounters_(months,gifts);return json_({ok:true,subscriptionMonths:months,giftSubCount:gifts});}
 
 function incrementCounters_(body){
@@ -55,6 +56,63 @@ function incrementCounters_(body){
 function readCounters_(){const v=getCounterSheet_().getRange('B2:B3').getValues().flat();return{subscriptionMonths:Number(v[0])||0,giftSubCount:Number(v[1])||0};}
 function writeCounters_(months,gifts){getCounterSheet_().getRange('B2:B3').setValues([[months],[gifts]]);SpreadsheetApp.flush();}
 function getCounterSheet_(){const id=PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');if(!id)throw new Error('尚未執行 setup()');const ss=SpreadsheetApp.openById(id);let s=ss.getSheetByName(COUNTER_SHEET);if(!s){s=ss.insertSheet(COUNTER_SHEET);s.getRange('A1:B3').setValues([['名稱','數值'],['subscriptionMonths',INITIAL_MONTHS],['giftSubCount',INITIAL_GIFTS]]);}return s;}
+
+/**
+ * 每次有人讀取/寫入公開計數時，先檢查是否已跨日。
+ * 日結記錄的是「昨天結束時」的 B2/B3。
+ * 若連續多天完全沒變：保留第一個沒變的日期，後續相同日期略過。
+ * 例如 8/30 有更新，8/31、9/1、9/2 都不變，會保留 8/31，但略過 9/1、9/2。
+ */
+function syncDailyCounterSnapshot_(){
+  const props=PropertiesService.getScriptProperties();
+  const id=props.getProperty('SPREADSHEET_ID');if(!id)return;
+  const ss=SpreadsheetApp.openById(id);let s=ss.getSheetByName(COUNTER_SHEET);if(!s)return;
+  const tz=ss.getSpreadsheetTimeZone()||Session.getScriptTimeZone()||'Asia/Taipei';
+  const now=new Date();
+  const todayKey=Utilities.formatDate(now,tz,'yyyy-MM-dd');
+  if(props.getProperty('COUNTER_HISTORY_LAST_SYNC_DATE')===todayKey)return;
+  const yesterday=new Date(now.getTime()-24*60*60*1000);
+  const label=Utilities.formatDate(yesterday,tz,'M/d');
+  const v=s.getRange('B2:B3').getValues().flat();
+  const months=Number(v[0])||0,gifts=Number(v[1])||0;
+  recordDailyCounterSnapshot_(s,label,months,gifts);
+  props.setProperty('COUNTER_HISTORY_LAST_SYNC_DATE',todayKey);
+}
+
+function recordDailyCounterSnapshot_(s,label,months,gifts){
+  const maxCols=s.getMaxColumns();
+  const lastCol=Math.max(2,s.getLastColumn());
+  if(lastCol>=3){
+    const headers=s.getRange(1,3,1,lastCol-2).getDisplayValues()[0];
+    if(headers.indexOf(label)!==-1)return;
+  }
+
+  let lastHistoryCol=0;
+  for(let c=lastCol;c>=3;c--){
+    if(String(s.getRange(1,c).getDisplayValue()||'').trim()){lastHistoryCol=c;break;}
+  }
+
+  if(lastHistoryCol>=3){
+    const lastMonths=Number(s.getRange(2,lastHistoryCol).getValue())||0;
+    const lastGifts=Number(s.getRange(3,lastHistoryCol).getValue())||0;
+    const sameAsLast=lastMonths===months&&lastGifts===gifts;
+    if(sameAsLast){
+      let prevHistoryCol=0;
+      for(let c=lastHistoryCol-1;c>=3;c--){
+        if(String(s.getRange(1,c).getDisplayValue()||'').trim()){prevHistoryCol=c;break;}
+      }
+      if(prevHistoryCol>=3){
+        const prevMonths=Number(s.getRange(2,prevHistoryCol).getValue())||0;
+        const prevGifts=Number(s.getRange(3,prevHistoryCol).getValue())||0;
+        if(prevMonths===lastMonths&&prevGifts===lastGifts)return;
+      }
+    }
+  }
+
+  const targetCol=lastHistoryCol>=3?lastHistoryCol+1:3;
+  if(targetCol>maxCols)s.insertColumnsAfter(maxCols,targetCol-maxCols);
+  s.getRange(1,targetCol,3,1).setValues([[label],[months],[gifts]]).setHorizontalAlignment('center').setVerticalAlignment('middle');
+}
 
 function ensureLogLayout_(s){
   s.getRange(1,1,1,LOG_HEADERS.length).setValues([LOG_HEADERS]);
