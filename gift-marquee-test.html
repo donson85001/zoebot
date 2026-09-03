@@ -3,158 +3,102 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Zoebot 贈訂跑馬燈測試台</title>
+<title>Zoebot 贈訂跑馬燈測試</title>
 <style>
 *{box-sizing:border-box}
 body{
   margin:0;
   min-height:100vh;
-  background:#12131a;
-  color:#f7f7fb;
+  background:#151821;
+  color:#fff;
   font-family:Arial,'Noto Sans TC','Microsoft JhengHei',sans-serif;
 }
-.page{max-width:1120px;margin:0 auto;padding:28px}
-h1{margin:0 0 8px;font-size:30px}
-.sub{color:#a9adba;margin-bottom:22px;line-height:1.6}
-.grid{display:grid;grid-template-columns:360px 1fr;gap:28px;align-items:start}
-.panel{
-  background:#1d202a;
-  border:1px solid #343846;
-  border-radius:18px;
-  padding:20px;
-  box-shadow:0 18px 40px rgba(0,0,0,.25);
+.page{padding:24px;display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+.controls{
+  width:330px;
+  background:#20242f;
+  border:1px solid #383e4d;
+  border-radius:16px;
+  padding:18px;
 }
-label{display:block;font-size:14px;color:#b8bdca;margin:14px 0 7px}
-input{
-  width:100%;
-  height:44px;
-  border-radius:10px;
-  border:1px solid #3d4354;
-  background:#141721;
-  color:#fff;
-  padding:0 12px;
-  font-size:18px;
-}
-.buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:14px}
-button{
-  border:0;
-  border-radius:10px;
-  min-height:42px;
-  padding:8px 10px;
-  font-weight:800;
-  cursor:pointer;
-  background:#f0639d;
-  color:white;
-  font-size:15px;
-}
-button:hover{filter:brightness(1.08)}
-button.alt{background:#42485a}
-button.gold{background:#b88922}
+h1{font-size:23px;margin:0 0 8px}
+.note{font-size:13px;color:#aeb4c2;line-height:1.55;margin-bottom:14px}
+label{display:block;margin:12px 0 6px;color:#cdd2dc;font-size:14px}
+input{width:100%;height:42px;border-radius:9px;border:1px solid #454c5e;background:#11141c;color:white;padding:0 11px;font-size:17px}
+.buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+button{height:40px;border:0;border-radius:9px;background:#ef629a;color:#fff;font-weight:800;cursor:pointer}
+button.low{background:#485063}
+button.high{background:#a97816}
 button.wide{grid-column:1/-1}
-.rule{
-  margin-top:18px;
-  padding:14px;
-  background:#151822;
-  border-radius:12px;
-  line-height:1.65;
-  color:#d3d7e2;
-}
-.rule strong{color:white}
-#status{margin-top:14px;min-height:24px;color:#ffd7e7;line-height:1.5}
-.preview-col{display:flex;flex-direction:column;align-items:center;gap:12px}
-.preview-title{width:630px;color:#cdd2df;font-size:14px;line-height:1.6}
-.preview-shell{
+#status{margin-top:14px;font-size:14px;color:#ffd5e5;line-height:1.5}
+.preview-area{display:flex;flex-direction:column;gap:8px}
+.preview-title{font-size:14px;color:#c4c9d4}
+.preview-box{
   width:630px;
   height:510px;
   position:relative;
+  background:transparent;
   overflow:hidden;
-  background:transparent;
+  border:1px dashed #545b6d;
 }
-#preview{
-  width:630px;
-  height:510px;
-  border:0;
-  display:block;
-  background:transparent;
-}
-.note{width:630px;color:#9298a8;font-size:13px;line-height:1.65}
-@media(max-width:1050px){
-  .grid{grid-template-columns:1fr}
-  .panel{max-width:630px;margin:0 auto}
-  .page{padding:16px}
-}
+#preview{width:630px;height:510px;border:0;display:block;background:transparent}
+@media(max-width:1050px){.page{padding:14px}.controls{width:100%;max-width:630px}.preview-box{max-width:100%}}
 </style>
 </head>
 <body>
 <div class="page">
-  <h1>贈訂跑馬燈測試台</h1>
-  <div class="sub">右邊直接使用現在正式的「累積豬叫 / 海豹拍」OBS 畫面，所以底下那張圖、數字位置、尺寸都跟現行版本一樣。跑馬燈只放在那張圖的正上方，不做全畫面特效。</div>
+  <section class="controls">
+    <h1>跑馬燈測試</h1>
+    <div class="note">右邊不是模擬直播畫面。下面直接就是目前正式的 <b>obs-overlay.html</b>，630×420 原尺寸，上面只多跑馬燈。</div>
 
-  <div class="grid">
-    <section class="panel">
-      <label for="name">贈訂者名稱</label>
-      <input id="name" value="調皮0123" autocomplete="off">
+    <label for="name">贈訂者名稱</label>
+    <input id="name" value="調皮0123">
 
-      <label for="count">贈訂份數</label>
-      <input id="count" type="number" min="1" step="1" value="50">
+    <label for="count">贈訂份數</label>
+    <input id="count" type="number" value="50" min="1">
 
-      <div class="buttons">
-        <button class="alt" data-count="5">5 份</button>
-        <button class="alt" data-count="10">10 份</button>
-        <button data-count="50">50 份</button>
-        <button data-count="80">80 份</button>
-        <button class="gold" data-count="100">100 份</button>
-        <button class="gold" data-count="150">150 份</button>
-        <button class="gold" data-count="200">200 份</button>
-        <button id="custom">自訂播放</button>
-        <button id="sequence" class="wide">連續測試：50 → 100 → 150 → 200</button>
-      </div>
+    <div class="buttons">
+      <button class="low" data-count="5">5</button>
+      <button class="low" data-count="10">10</button>
+      <button data-count="50">50</button>
+      <button data-count="80">80</button>
+      <button class="high" data-count="100">100</button>
+      <button class="high" data-count="150">150</button>
+      <button class="high" data-count="200">200</button>
+      <button id="custom">自訂</button>
+      <button id="sequence" class="wide">連續測試 50 → 100 → 150 → 200</button>
+    </div>
+    <div id="status">待命中</div>
+  </section>
 
-      <div class="rule">
-        <strong>目前規則</strong><br>
-        1～49：不顯示<br>
-        50～99：一般跑馬燈<br>
-        100：089457<br>
-        150：香港13太飽<br>
-        200+：全場起飛<br>
-        多筆：排隊逐筆播放
-      </div>
-      <div id="status">待命中</div>
-    </section>
-
-    <section class="preview-col">
-      <div class="preview-title">OBS 實際尺寸預覽：630 × 420 的現行畫面，跑馬燈額外佔上方 90px。</div>
-      <div class="preview-shell">
-        <iframe id="preview" src="gift-marquee-obs-test.html" title="現行 OBS 畫面 + 跑馬燈測試"></iframe>
-      </div>
-      <div class="note">這個測試頁不會寫入試算表，也不會動到正式 `obs-overlay.html`。底下計數畫面是直接載入正式 OBS 頁面，所以會顯示目前真正的累積數字。</div>
-    </section>
-  </div>
+  <section class="preview-area">
+    <div class="preview-title">實際組合尺寸：630 × 510（上方跑馬燈 + 現行 630 × 420 OBS 計數器）</div>
+    <div class="preview-box">
+      <iframe id="preview" src="gift-marquee-obs-test.html" scrolling="no" title="OBS 計數器加跑馬燈測試"></iframe>
+    </div>
+  </section>
 </div>
 <script>
 (() => {
+  const preview=document.getElementById('preview');
   const name=document.getElementById('name');
   const count=document.getElementById('count');
-  const preview=document.getElementById('preview');
   const status=document.getElementById('status');
 
-  function send(n){
-    const c=Math.max(0,Math.floor(Number(n)||0));
+  function send(v){
+    const c=Math.max(0,Math.floor(Number(v)||0));
     const who=name.value.trim()||'匿名';
     count.value=c;
     preview.contentWindow?.postMessage({type:'zoebot-gift-marquee',name:who,count:c},'*');
-    if(c<50)status.textContent=`${who} ${c} 份：低於 50，不顯示。`;
-    else if(c===100)status.textContent=`${who} 100 份 → 089457`;
-    else if(c===150)status.textContent=`${who} 150 份 → 香港13太飽`;
-    else if(c>=200)status.textContent=`${who} ${c} 份 → 全場起飛`;
-    else status.textContent=`${who} ${c} 份 → 一般跑馬燈`;
+    if(c<50) status.textContent=`${c} 份：不觸發跑馬燈`;
+    else status.textContent=`已測試：${who} / ${c} 份`;
   }
 
-  document.querySelectorAll('[data-count]').forEach(btn=>btn.addEventListener('click',()=>send(btn.dataset.count)));
+  document.querySelectorAll('[data-count]').forEach(b=>b.addEventListener('click',()=>send(b.dataset.count)));
   document.getElementById('custom').addEventListener('click',()=>send(count.value));
   document.getElementById('sequence').addEventListener('click',()=>{
-    [50,100,150,200].forEach((v,i)=>setTimeout(()=>send(v),i*250));
-    status.textContent='已塞入 50 / 100 / 150 / 200，會照順序排隊播放。';
+    [50,100,150,200].forEach((v,i)=>setTimeout(()=>send(v),i*220));
+    status.textContent='已送入 50 → 100 → 150 → 200 排隊測試';
   });
   count.addEventListener('keydown',e=>{if(e.key==='Enter')send(count.value)});
 })();
