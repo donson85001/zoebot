@@ -16,7 +16,7 @@ html,body{
   font-family:Arial,'Noto Sans TC','Microsoft JhengHei',sans-serif;
 }
 #stage{position:relative;width:630px;height:510px;overflow:hidden}
-#marqueeSlot{position:absolute;left:0;top:0;width:630px;height:84px;overflow:hidden;z-index:2}
+#marqueeSlot{position:absolute;left:0;top:0;width:630px;height:84px;overflow:hidden;z-index:2;pointer-events:none}
 #banner{
   position:absolute;
   left:0;
@@ -84,9 +84,11 @@ html,body{
   margin:0;
   padding:0;
   background:transparent;
-  transition:top .46s cubic-bezier(.2,.9,.25,1);
+  transform:translateY(0);
+  transition:transform .68s cubic-bezier(.22,.78,.24,1);
+  will-change:transform;
 }
-#stage.active #counterFrame{top:90px}
+#stage.active #counterFrame{transform:translateY(90px)}
 </style>
 </head>
 <body>
@@ -150,7 +152,7 @@ html,body{
     setLook(item);
     text.style.transition='none';
     text.style.transform='translateX(0)';
-    await sleep(100);
+    await sleep(80);
 
     const distance=lane.clientWidth+text.scrollWidth+36;
     const deluxe=item.count>=DELUXE_GIFT;
@@ -165,24 +167,28 @@ html,body{
     if(playing)return;
     playing=true;
 
+    // 先讓原本 630×420 計數器明顯往下推，再露出跑馬燈。
     stage.classList.add('active');
+    await sleep(720);
     banner.classList.add('show');
-    await sleep(500);
+    await sleep(460);
 
     while(true){
       while(queue.length){
         await playOne(queue.shift());
-        await sleep(100);
+        await sleep(110);
       }
-      await sleep(350);
+      // 給連續贈訂一個短暫併入時間；這段期間畫面維持在下方，不會再移動。
+      await sleep(420);
       if(queue.length)continue;
       break;
     }
 
+    // 所有跑馬燈播完後，先收跑馬燈，再把原畫面推回最上面。
     banner.classList.remove('show');
-    await sleep(180);
+    await sleep(430);
     stage.classList.remove('active');
-    await sleep(480);
+    await sleep(720);
     playing=false;
 
     if(queue.length)drain();
