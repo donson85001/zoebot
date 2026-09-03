@@ -16,7 +16,7 @@ html,body{
   font-family:Arial,'Noto Sans TC','Microsoft JhengHei',sans-serif;
 }
 #stage{position:relative;width:630px;height:510px;overflow:hidden}
-#marqueeSlot{position:absolute;left:0;top:0;width:630px;height:84px;overflow:hidden}
+#marqueeSlot{position:absolute;left:0;top:0;width:630px;height:84px;overflow:hidden;z-index:2}
 #banner{
   position:absolute;
   left:0;
@@ -41,7 +41,7 @@ html,body{
   box-shadow:inset 0 0 16px rgba(255,255,255,.22);
 }
 #shine{position:absolute;inset:0;background:linear-gradient(115deg,transparent 0 38%,rgba(255,255,255,.34) 45%,transparent 52%);transform:translateX(-125%)}
-#banner.show #shine{animation:shine 1.25s .28s ease-out 1}
+#banner.shine-now #shine{animation:shine 1.25s ease-out 1}
 @keyframes shine{to{transform:translateX(125%)}}
 #badge{
   position:absolute;
@@ -77,14 +77,16 @@ html,body{
 #counterFrame{
   position:absolute;
   left:0;
-  top:90px;
+  top:0;
   width:630px;
   height:420px;
   border:0;
   margin:0;
   padding:0;
   background:transparent;
+  transition:top .46s cubic-bezier(.2,.9,.25,1);
 }
+#stage.active #counterFrame{top:90px}
 </style>
 </head>
 <body>
@@ -102,6 +104,7 @@ html,body{
 (() => {
   const MIN_GIFT=50;
   const DELUXE_GIFT=100;
+  const stage=document.getElementById('stage');
   const banner=document.getElementById('banner');
   const badge=document.getElementById('badge');
   const lane=document.getElementById('lane');
@@ -133,31 +136,56 @@ html,body{
     return `🎁 ${name} 贈送 ${count} 份訂閱！海豹拍肚 +${pats}！`;
   }
 
-  async function playOne(item){
+  function setLook(item){
     const deluxe=item.count>=DELUXE_GIFT;
-    banner.className=deluxe?'deluxe':'standard';
+    banner.classList.remove('standard','deluxe','shine-now');
+    banner.classList.add(deluxe?'deluxe':'standard');
     badge.textContent=deluxe?`👑 ${item.count} 贈`:`🎁 ${item.count} 贈`;
     text.textContent=messageFor(item);
+    void banner.offsetWidth;
+    banner.classList.add('shine-now');
+  }
+
+  async function playOne(item){
+    setLook(item);
     text.style.transition='none';
     text.style.transform='translateX(0)';
-    banner.classList.add('show');
-    await sleep(460);
+    await sleep(100);
 
     const distance=lane.clientWidth+text.scrollWidth+36;
+    const deluxe=item.count>=DELUXE_GIFT;
     const pxPerSecond=deluxe?118:132;
     const duration=Math.max(deluxe?6.6:5.8,distance/pxPerSecond);
     text.style.transition=`transform ${duration}s linear`;
     requestAnimationFrame(()=>requestAnimationFrame(()=>text.style.transform=`translateX(-${distance}px)`));
     await sleep(duration*1000);
-    banner.classList.remove('show');
-    await sleep(420);
   }
 
   async function drain(){
     if(playing)return;
     playing=true;
-    while(queue.length)await playOne(queue.shift());
+
+    stage.classList.add('active');
+    banner.classList.add('show');
+    await sleep(500);
+
+    while(true){
+      while(queue.length){
+        await playOne(queue.shift());
+        await sleep(100);
+      }
+      await sleep(350);
+      if(queue.length)continue;
+      break;
+    }
+
+    banner.classList.remove('show');
+    await sleep(180);
+    stage.classList.remove('active');
+    await sleep(480);
     playing=false;
+
+    if(queue.length)drain();
   }
 
   function enqueue(payload){
