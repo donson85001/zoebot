@@ -154,6 +154,12 @@
 
   function messageFor({name,count}){
     const pats = Math.floor(count / 5);
+    if(count === 100){
+      return `🔥 ${name} 豪擲 100 份訂閱！089457！海豹拍肚 +${pats} 🔥`;
+    }
+    if(count === 150){
+      return `🔥 ${name} 豪擲 150 份訂閱！香港13太飽！海豹拍肚 +${pats} 🔥`;
+    }
     if(count >= DELUXE_GIFT){
       return `🔥 ${name} 豪擲 ${count} 份訂閱！全場起飛！海豹拍肚 +${pats} 🔥`;
     }
