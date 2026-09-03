@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zoebot 贈訂跑馬燈 Overlay</title>
+<style>
+  :root{
+    --banner-h:128px;
+    --banner-w:min(1620px,92vw);
+  }
+  *{box-sizing:border-box}
+  html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:transparent;
+    font-family:Arial,'Noto Sans TC','Microsoft JhengHei',sans-serif;
+  }
+  #stage{
+    position:relative;
+    width:100vw;
+    height:100vh;
+    pointer-events:none;
+  }
+  #banner{
+    position:absolute;
+    left:50%;
+    top:42px;
+    width:var(--banner-w);
+    height:var(--banner-h);
+    transform:translateX(-50%) translateY(-180px);
+    opacity:0;
+    border-radius:28px;
+    overflow:hidden;
+    transition:transform .55s cubic-bezier(.16,.86,.22,1),opacity .35s ease;
+    filter:drop-shadow(0 12px 28px rgba(0,0,0,.35));
+  }
+  #banner.show{
+    transform:translateX(-50%) translateY(0);
+    opacity:1;
+  }
+  #banner.standard{
+    background:linear-gradient(90deg,rgba(255,103,157,.96),rgba(255,174,205,.95) 46%,rgba(255,103,157,.96));
+    border:4px solid rgba(255,255,255,.92);
+    box-shadow:inset 0 0 0 4px rgba(160,35,91,.18);
+  }
+  #banner.deluxe{
+    background:linear-gradient(100deg,rgba(120,38,143,.98),rgba(238,80,158,.98) 30%,rgba(255,207,79,.99) 55%,rgba(238,80,158,.98) 80%,rgba(120,38,143,.98));
+    border:5px solid #fff3b0;
+    box-shadow:0 0 26px rgba(255,215,78,.88),inset 0 0 22px rgba(255,255,255,.28);
+  }
+  .shine{
+    position:absolute;
+    inset:0;
+    background:linear-gradient(115deg,transparent 0 38%,rgba(255,255,255,.34) 45%,transparent 52% 100%);
+    transform:translateX(-130%);
+  }
+  #banner.show .shine{animation:shine 1.6s .4s ease-out 1}
+  @keyframes shine{to{transform:translateX(130%)}}
+  #badge{
+    position:absolute;
+    left:24px;
+    top:20px;
+    height:80px;
+    min-width:168px;
+    padding:0 24px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:22px;
+    background:rgba(255,255,255,.95);
+    color:#c62f6b;
+    font-size:31px;
+    font-weight:900;
+    letter-spacing:2px;
+    white-space:nowrap;
+    z-index:3;
+  }
+  .deluxe #badge{
+    color:#8e2b75;
+    background:linear-gradient(180deg,#fff8ca,#fff);
+    box-shadow:0 0 18px rgba(255,229,122,.7);
+  }
+  #lane{
+    position:absolute;
+    left:216px;
+    right:22px;
+    top:0;
+    height:100%;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+  }
+  #text{
+    position:absolute;
+    left:100%;
+    white-space:nowrap;
+    font-size:48px;
+    font-weight:950;
+    letter-spacing:1px;
+    color:white;
+    text-shadow:0 4px 0 rgba(121,21,62,.28),0 2px 10px rgba(65,0,33,.35);
+    will-change:transform;
+  }
+  #banner.deluxe #text{
+    color:#fffef0;
+    text-shadow:0 4px 0 rgba(79,24,84,.3),0 0 14px rgba(255,237,137,.6);
+  }
+  #particles{position:absolute;inset:0;overflow:visible;z-index:4}
+  .particle{
+    position:absolute;
+    top:64px;
+    left:50%;
+    font-size:32px;
+    opacity:0;
+    animation:pop 1.35s ease-out forwards;
+  }
+  @keyframes pop{
+    0%{opacity:0;transform:translate(0,0) scale(.2) rotate(0deg)}
+    14%{opacity:1}
+    100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.15) rotate(var(--rot))}
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="banner" aria-live="polite">
+    <div class="shine"></div>
+    <div id="badge">🎁 50+</div>
+    <div id="lane"><div id="text"></div></div>
+  </div>
+  <div id="particles"></div>
+</div>
+<script>
+(() => {
+  const MIN_GIFT = 50;
+  const DELUXE_GIFT = 100;
+  const banner = document.getElementById('banner');
+  const text = document.getElementById('text');
+  const badge = document.getElementById('badge');
+  const particles = document.getElementById('particles');
+  const queue = [];
+  let playing = false;
+
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  function normalize(payload){
+    const name = String(payload?.name || payload?.who || '匿名').trim() || '匿名';
+    const count = Math.max(0, Math.floor(Number(payload?.count ?? payload?.total ?? 0) || 0));
+    return { name, count };
+  }
+
+  function messageFor({name,count}){
+    const pats = Math.floor(count / 5);
+    if(count >= DELUXE_GIFT){
+      return `🔥 ${name} 豪擲 ${count} 份訂閱！全場起飛！海豹拍肚 +${pats} 🔥`;
+    }
+    return `🎁 ${name} 贈送 ${count} 份訂閱！海豹拍肚 +${pats}！`;
+  }
+
+  function burst(deluxe){
+    const icons = deluxe ? ['✨','⭐','💛','🎁','🔥','✨'] : ['✨','🎁','💗','✨'];
+    const amount = deluxe ? 26 : 12;
+    for(let i=0;i<amount;i++){
+      const p=document.createElement('span');
+      p.className='particle';
+      p.textContent=icons[i%icons.length];
+      const a=Math.random()*Math.PI*2;
+      const d=120+Math.random()*(deluxe?310:180);
+      p.style.left=(18+Math.random()*64)+'%';
+      p.style.top=(45+Math.random()*50)+'px';
+      p.style.setProperty('--dx',Math.cos(a)*d+'px');
+      p.style.setProperty('--dy',Math.sin(a)*d+'px');
+      p.style.setProperty('--rot',(-120+Math.random()*240)+'deg');
+      p.style.animationDelay=(Math.random()*.25)+'s';
+      particles.appendChild(p);
+      p.addEventListener('animationend',()=>p.remove());
+    }
+  }
+
+  async function playOne(item){
+    const deluxe = item.count >= DELUXE_GIFT;
+    banner.className = deluxe ? 'deluxe' : 'standard';
+    badge.textContent = deluxe ? `👑 ${item.count} 贈` : `🎁 ${item.count} 贈`;
+    text.textContent = messageFor(item);
+    text.style.transition='none';
+    text.style.transform='translateX(0)';
+    banner.classList.add('show');
+    burst(deluxe);
+    await sleep(650);
+
+    const lane = document.getElementById('lane');
+    const distance = lane.clientWidth + text.scrollWidth + 80;
+    const pxPerSecond = deluxe ? 185 : 205;
+    const duration = Math.max(deluxe ? 8.5 : 7.2, distance / pxPerSecond);
+    text.style.transition = `transform ${duration}s linear`;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      text.style.transform=`translateX(-${distance}px)`;
+    }));
+    await sleep(duration*1000);
+    banner.classList.remove('show');
+    await sleep(600);
+  }
+
+  async function drain(){
+    if(playing) return;
+    playing=true;
+    while(queue.length){
+      const item=queue.shift();
+      await playOne(item);
+    }
+    playing=false;
+  }
+
+  function enqueue(payload){
+    const item=normalize(payload);
+    if(item.count < MIN_GIFT) return {accepted:false,reason:'below-threshold'};
+    queue.push(item);
+    drain();
+    return {accepted:true,queued:queue.length+(playing?1:0)};
+  }
+
+  window.ZoeGiftMarquee = { enqueue, getQueue:()=>queue.slice(), isPlaying:()=>playing };
+
+  window.addEventListener('message',e=>{
+    if(e?.data?.type==='zoebot-gift-marquee') enqueue(e.data);
+  });
+
+  const params=new URLSearchParams(location.search);
+  if(params.has('count')){
+    setTimeout(()=>enqueue({name:params.get('name')||'測試觀眾',count:params.get('count')}),500);
+  }
+})();
+</script>
+</body>
+</html>
