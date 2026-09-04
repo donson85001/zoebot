@@ -38,13 +38,14 @@ button{height:40px;border:0;border-radius:9px;background:#ef629a;color:#fff;font
   </section>
   <section class="preview-area">
     <div class="preview-title"><b>紅色虛線就是實際 630×420 的底線。</b> 觸發後，紅線下面露出的那一截，就是正式 OBS 裡會被裁掉的內容。</div>
-    <div class="preview-box"><iframe id="preview" src="gift-marquee-obs-test.html?debug=1" scrolling="no" title="固定 630x420 裁切檢視"></iframe></div>
+    <div class="preview-box"><iframe id="preview" scrolling="no" title="固定 630x420 裁切檢視"></iframe></div>
     <div class="legend">正式使用時紅線以下完全看不到；這個測試頁只是額外把那 56px 顯示出來，方便你判斷裁掉得多不多。</div>
   </section>
 </div>
 <script>
 (() => {
   const preview=document.getElementById('preview'),name=document.getElementById('name'),count=document.getElementById('count'),status=document.getElementById('status');
+  preview.src='gift-marquee-obs-test.html?debug=1&_='+Date.now();
   function send(v){const c=Math.max(0,Math.floor(Number(v)||0)),who=name.value.trim()||'匿名';count.value=c;preview.contentWindow?.postMessage({type:'zoebot-gift-marquee',name:who,count:c},'*');status.textContent=c<50?`${c} 份：不觸發跑馬燈`:`已測試：${who} / ${c} 份；看紅線下方就是會被裁掉的部分`;}
   document.querySelectorAll('[data-count]').forEach(b=>b.addEventListener('click',()=>send(b.dataset.count)));
   document.getElementById('custom').addEventListener('click',()=>send(count.value));
