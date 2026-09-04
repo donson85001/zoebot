@@ -162,7 +162,7 @@ html,body{
   'use strict';
 
   /* 自動版本檢查：這版之後若 GitHub Pages 有新版，OBS 會自行重新載入，不必再請主播手動重整。 */
-  const OBS_BUILD='20260904-2202-emergency-replay-v3';
+  const OBS_BUILD='20260904-2210-emergency-replay-v4';
   const UPDATE_CHECK_MS=60000;
 
   async function checkForPageUpdate(){
@@ -445,7 +445,7 @@ html,body{
   }
 
   /* 緊急補播：只補畫面，不寫入任何計數或試算表；同一台 OBS 只會播一次。 */
-  const EMERGENCY_REPLAY_KEY='zoebot-emergency-replay-20260904-2201-v3';
+  const EMERGENCY_REPLAY_KEY='zoebot-emergency-replay-20260904-2210-v4';
   const emergencyReplay=()=>{
     enqueue({
       name:'三瓶水',
@@ -466,6 +466,16 @@ html,body{
       name:'Lemonck',
       count:200,
       eventId:'replay-h5a8ds9g6nBQwdA-MQ3UZ4kBwXKrkPgYDv6XBLihG_o='
+    });
+    enqueue({
+      name:'獸獸羅德',
+      count:50,
+      eventId:'replay-AL2Cc4SZNDD5PCVAl9pvua2xScdyeqT-ckK5PTNILXI='
+    });
+    enqueue({
+      name:'調皮0123',
+      count:150,
+      eventId:'replay-7h_M83Kl6F9FAwp2uDZeiO-lUYZFsVLsCMvZ02YbzS8='
     });
   };
   try{
