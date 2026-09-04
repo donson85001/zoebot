@@ -22,8 +22,6 @@ html,body{
   overflow:hidden;
   background:transparent;
 }
-
-/* 原本的 630×420 計數器；跑馬燈期間只往下移，不縮放。 */
 #counterPanel{
   position:absolute;
   left:0;
@@ -56,8 +54,6 @@ html,body{
 }
 #months{left:464px;top:198px}
 #gifts{left:464px;top:278px}
-
-/* 跑馬燈固定在同一個 630×420 畫布內，原圖下移後底部自然被裁掉 56px。 */
 #marqueeSlot{
   position:absolute;
   left:0;
@@ -147,7 +143,6 @@ html,body{
     <div id="months" class="num">1546</div>
     <div id="gifts" class="num">395</div>
   </div>
-
   <div id="marqueeSlot">
     <div id="banner">
       <div id="shine"></div>
@@ -156,15 +151,11 @@ html,body{
     </div>
   </div>
 </div>
-
 <script>
 (() => {
   'use strict';
-
-  /* 自動版本檢查：這版之後若 GitHub Pages 有新版，OBS 會自行重新載入，不必再請主播手動重整。 */
-  const OBS_BUILD='20260904-2210-emergency-replay-v4';
-  const UPDATE_CHECK_MS=60000;
-
+  const OBS_BUILD='20260904-2220-sheet-marquee-v5';
+  const UPDATE_CHECK_MS=10000;
   async function checkForPageUpdate(){
     try{
       const probe=new URL(location.href);
@@ -181,14 +172,11 @@ html,body{
       }
     }catch(_){ }
   }
-  setTimeout(checkForPageUpdate,15000);
+  setTimeout(checkForPageUpdate,5000);
   setInterval(checkForPageUpdate,UPDATE_CHECK_MS);
-
-  /* 保留現行計數器資料來源，避免動到既有累積數字機制。 */
   const COUNTER_API='https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec?action=stats';
   const months=document.getElementById('months');
   const gifts=document.getElementById('gifts');
-
   async function updateCounters(){
     try{
       const r=await fetch(COUNTER_API+'&_='+Date.now(),{cache:'no-store'});
@@ -199,14 +187,10 @@ html,body{
         if(Number.isFinite(m)) months.textContent=String(Math.trunc(m));
         if(Number.isFinite(g)) gifts.textContent=String(Math.trunc(g));
       }
-    }catch(e){
-      console.error('Counter update failed',e);
-    }
+    }catch(e){console.error('Counter update failed',e);}
   }
   updateCounters();
   setInterval(updateCounters,5000);
-
-  /* 跑馬燈：50+ 才觸發；整體畫布永遠是 630×420。 */
   const MIN_GIFT=50;
   const DELUXE_GIFT=100;
   const IDLE_GRACE_MS=1100;
@@ -220,7 +204,6 @@ html,body{
   let playing=false;
   let lastEnqueueAt=0;
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-
   function normalize(payload){
     return {
       name:String(payload?.name||payload?.who||'匿名').trim()||'匿名',
@@ -228,14 +211,12 @@ html,body{
       eventId:String(payload?.eventId||payload?.id||'').trim()
     };
   }
-
   function specialText(count){
     if(count===100)return '089457';
     if(count===150)return '香港13太飽';
     if(count>=200)return '全場起飛';
     return '';
   }
-
   function messageFor({name,count}){
     const pats=Math.floor(count/5);
     const special=specialText(count);
@@ -244,7 +225,6 @@ html,body{
     }
     return `🎁 ${name} 贈送 ${count} 份訂閱！海豹拍肚 +${pats}！`;
   }
-
   function setLook(item){
     const deluxe=item.count>=DELUXE_GIFT;
     banner.classList.remove('standard','deluxe','shine-now');
@@ -254,13 +234,11 @@ html,body{
     void banner.offsetWidth;
     banner.classList.add('shine-now');
   }
-
   async function playOne(item){
     setLook(item);
     text.style.transition='none';
     text.style.transform='translateX(0)';
     await sleep(70);
-
     const distance=lane.clientWidth+text.scrollWidth+30;
     const deluxe=item.count>=DELUXE_GIFT;
     const pxPerSecond=deluxe?112:126;
@@ -271,7 +249,6 @@ html,body{
     }));
     await sleep(duration*1000);
   }
-
   async function waitForTrueIdle(){
     while(true){
       if(queue.length)return false;
@@ -280,26 +257,19 @@ html,body{
       await sleep(Math.min(120,left));
     }
   }
-
   async function drain(){
     if(playing)return;
     playing=true;
-
-    /* 第一筆進來只下移一次。 */
     stage.classList.add('active');
     await sleep(580);
     banner.classList.add('show');
     await sleep(430);
-
     while(true){
       while(queue.length){
         await playOne(queue.shift());
         await sleep(100);
       }
-
       if(!(await waitForTrueIdle()))continue;
-
-      /* 先收跑馬燈；若這段時間又有新贈訂，維持圖片在下方，不重複上下。 */
       banner.classList.remove('show');
       await sleep(420);
       if(queue.length){
@@ -307,7 +277,6 @@ html,body{
         await sleep(430);
         continue;
       }
-
       stage.classList.remove('active');
       await sleep(580);
       if(queue.length){
@@ -319,11 +288,9 @@ html,body{
       }
       break;
     }
-
     playing=false;
     if(queue.length)drain();
   }
-
   function enqueue(payload){
     const item=normalize(payload);
     if(item.count<MIN_GIFT)return {accepted:false,reason:'below-threshold'};
@@ -337,105 +304,99 @@ html,body{
     drain();
     return {accepted:true};
   }
-
-  /* 保留測試／外部注入入口，不會影響正式 Twitch 監聽。 */
   window.ZoeGiftMarquee={enqueue,getQueue:()=>queue.slice(),isPlaying:()=>playing,messageFor};
   window.addEventListener('message',e=>{
     if(e?.data?.type==='zoebot-gift-marquee')enqueue(e.data);
   });
-
-  /*
-   * 正式觸發來源：直接從 OBS Browser Source 連 Twitch IRC。
-   * 只處理 community gift 的 USERNOTICE (submysterygift)，所以不會把後續每一份 subgift 重複播一次。
-   * 不需要 OAuth、不改現有 zoebot 計數寫入流程。
-   */
   const params=new URLSearchParams(location.search);
-  const channel=(params.get('channel')||'puruniii').trim().replace(/^#/,'').toLowerCase();
-  const IRC_URL='wss://irc-ws.chat.twitch.tv:443';
-  let irc=null;
-  let reconnectTimer=null;
-  let reconnectAttempt=0;
-  let stopped=false;
-
-  function decodeTag(v){
-    return String(v||'').replace(/\\s/g,' ').replace(/\\:/g,';').replace(/\\r/g,'\r').replace(/\\n/g,'\n').replace(/\\\\/g,'\\');
+  const SHEET_ID='14Yv_DyqvCsgQJQ98vZk_IkQ527xLPSVvLaNBnDGcMug';
+  const SHEET_NAME='SubscriptionDetail';
+  const SHEET_POLL_MS=1200;
+  const SHEET_BASELINE_EVENT='7h_M83Kl6F9FAwp2uDZeiO-lUYZFsVLsCMvZ02YbzS8=';
+  const SHEET_SEEN_KEY='zoebot-marquee-sheet-seen-v1';
+  const SHEET_INIT_KEY='zoebot-marquee-sheet-initialized-v1';
+  let sheetBusy=false;
+  let sheetTimer=null;
+  const sheetSeen=new Set();
+  try{
+    const saved=JSON.parse(localStorage.getItem(SHEET_SEEN_KEY)||'[]');
+    if(Array.isArray(saved)) saved.slice(-300).forEach(x=>sheetSeen.add(String(x)));
+  }catch(_){ }
+  function saveSheetSeen(){
+    try{
+      const arr=[...sheetSeen];
+      localStorage.setItem(SHEET_SEEN_KEY,JSON.stringify(arr.slice(-300)));
+    }catch(_){ }
   }
-
-  function parseTags(line){
-    if(!line.startsWith('@'))return {};
-    const end=line.indexOf(' ');
-    if(end<0)return {};
-    const out={};
-    line.slice(1,end).split(';').forEach(part=>{
-      const i=part.indexOf('=');
-      const k=i<0?part:part.slice(0,i);
-      const v=i<0?'':part.slice(i+1);
-      out[k]=decodeTag(v);
-    });
-    return out;
+  function cellValue(cell){
+    if(!cell)return '';
+    if(cell.v===null||cell.v===undefined)return '';
+    return cell.v;
   }
-
-  function handleIrcLine(line){
-    if(!line)return;
-    if(line.startsWith('PING')){
-      try{irc?.send(line.replace(/^PING/,'PONG'));}catch(_){ }
+  function parseGiftRows(resp){
+    const rows=resp?.table?.rows||[];
+    return rows.map(r=>{
+      const c=r?.c||[];
+      return {
+        who:String(cellValue(c[2])||'匿名').trim()||'匿名',
+        count:Math.max(0,Math.floor(Number(cellValue(c[3]))||0)),
+        eventId:String(cellValue(c[4])||'').trim()
+      };
+    }).filter(x=>x.eventId);
+  }
+  function handleSheetRows(items){
+    if(!items.length)return;
+    const initialized=(()=>{try{return localStorage.getItem(SHEET_INIT_KEY)==='1';}catch(_){return false;}})();
+    if(!initialized){
+      const marker=items.findIndex(x=>x.eventId===SHEET_BASELINE_EVENT);
+      const catchup=marker>=0?items.slice(0,marker):[];
+      items.forEach(x=>sheetSeen.add(x.eventId));
+      saveSheetSeen();
+      try{localStorage.setItem(SHEET_INIT_KEY,'1');}catch(_){ }
+      catchup.slice().reverse().forEach(x=>{
+        if(x.count>=MIN_GIFT)enqueue({name:x.who,count:x.count,eventId:x.eventId});
+      });
       return;
     }
-    if(!line.includes(' USERNOTICE '))return;
-
-    const tags=parseTags(line);
-    const msgId=String(tags['msg-id']||'').toLowerCase();
-    if(msgId!=='submysterygift' && msgId!=='anonsubmysterygift')return;
-
-    const count=Number(tags['msg-param-mass-gift-count']);
-    if(!Number.isFinite(count)||count<MIN_GIFT)return;
-
-    const login=String(tags.login||'').toLowerCase();
-    let name=tags['display-name']||tags.login||'匿名';
-    if(!name || login==='ananonymousgifter' || login==='anonymousgifter')name='匿名';
-
-    enqueue({
-      name,
-      count,
-      eventId:tags.id||`${tags['tmi-sent-ts']||Date.now()}-${name}-${count}`
+    const fresh=[];
+    for(const item of items){
+      if(sheetSeen.has(item.eventId))continue;
+      sheetSeen.add(item.eventId);
+      fresh.push(item);
+    }
+    if(!fresh.length)return;
+    saveSheetSeen();
+    fresh.reverse().forEach(x=>{
+      if(x.count>=MIN_GIFT)enqueue({name:x.who,count:x.count,eventId:x.eventId});
     });
   }
-
-  function scheduleReconnect(){
-    if(stopped||reconnectTimer)return;
-    const delay=Math.min(30000,2000*Math.pow(1.6,reconnectAttempt++));
-    reconnectTimer=setTimeout(()=>{
-      reconnectTimer=null;
-      connectIrc();
-    },delay);
-  }
-
-  function connectIrc(){
-    if(stopped||params.get('noIrc')==='1'||!channel)return;
-    try{irc?.close();}catch(_){ }
+  async function pollGiftSheet(){
+    if(sheetBusy)return;
+    sheetBusy=true;
     try{
-      irc=new WebSocket(IRC_URL);
-      irc.onopen=()=>{
-        reconnectAttempt=0;
-        const nick='justinfan'+Math.floor(10000+Math.random()*89999);
-        irc.send('PASS SCHMOOPIIE');
-        irc.send('NICK '+nick);
-        irc.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
-        irc.send('JOIN #'+channel);
-      };
-      irc.onmessage=e=>{
-        String(e.data||'').split(/\r?\n/).forEach(handleIrcLine);
-      };
-      irc.onerror=()=>{};
-      irc.onclose=()=>scheduleReconnect();
-    }catch(_){
-      scheduleReconnect();
+      const q="select A,B,C,E,I where B = '贈送訂閱' order by A desc limit 60";
+      const u=new URL(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`);
+      u.searchParams.set('sheet',SHEET_NAME);
+      u.searchParams.set('headers','1');
+      u.searchParams.set('tq',q);
+      u.searchParams.set('tqx','out:json');
+      u.searchParams.set('_',String(Date.now()));
+      const r=await fetch(u.toString(),{cache:'no-store'});
+      if(!r.ok)throw new Error(`sheet HTTP ${r.status}`);
+      const raw=await r.text();
+      const m=raw.match(/google\.visualization\.Query\.setResponse\(([\s\S]*?)\);?\s*$/);
+      if(!m)throw new Error('sheet response parse failed');
+      const resp=JSON.parse(m[1]);
+      if(resp?.status && resp.status!=='ok')throw new Error('sheet query failed');
+      handleSheetRows(parseGiftRows(resp));
+    }catch(e){
+      console.error('Gift sheet poll failed',e);
+    }finally{
+      sheetBusy=false;
     }
   }
-
-  connectIrc();
-
-  /* 手動測正式頁：?noIrc=1&testCount=100&testName=測試 */
+  pollGiftSheet();
+  sheetTimer=setInterval(pollGiftSheet,SHEET_POLL_MS);
   if(params.has('testCount')){
     setTimeout(()=>enqueue({
       name:params.get('testName')||'測試觀眾',
@@ -443,54 +404,23 @@ html,body{
       eventId:'manual-'+Date.now()
     }),500);
   }
-
-  /* 緊急補播：只補畫面，不寫入任何計數或試算表；同一台 OBS 只會播一次。 */
   const EMERGENCY_REPLAY_KEY='zoebot-emergency-replay-20260904-2210-v4';
   const emergencyReplay=()=>{
-    enqueue({
-      name:'三瓶水',
-      count:100,
-      eventId:'replay-sc2GeP6pHjXN2mjZ9FFTuzKgiWGawrLJDpfnGXLmo68='
-    });
-    enqueue({
-      name:'挖洗小盧',
-      count:50,
-      eventId:'replay-eylSiWegB-QUkiX3x_OAvRHYh4SDyujIxauQ1rvYMEQ='
-    });
-    enqueue({
-      name:'嵐色',
-      count:50,
-      eventId:'replay-20260904-215740-lanse-50'
-    });
-    enqueue({
-      name:'Lemonck',
-      count:200,
-      eventId:'replay-h5a8ds9g6nBQwdA-MQ3UZ4kBwXKrkPgYDv6XBLihG_o='
-    });
-    enqueue({
-      name:'獸獸羅德',
-      count:50,
-      eventId:'replay-AL2Cc4SZNDD5PCVAl9pvua2xScdyeqT-ckK5PTNILXI='
-    });
-    enqueue({
-      name:'調皮0123',
-      count:150,
-      eventId:'replay-7h_M83Kl6F9FAwp2uDZeiO-lUYZFsVLsCMvZ02YbzS8='
-    });
+    enqueue({name:'三瓶水',count:100,eventId:'replay-sc2GeP6pHjXN2mjZ9FFTuzKgiWGawrLJDpfnGXLmo68='});
+    enqueue({name:'挖洗小盧',count:50,eventId:'replay-eylSiWegB-QUkiX3x_OAvRHYh4SDyujIxauQ1rvYMEQ='});
+    enqueue({name:'嵐色',count:50,eventId:'replay-20260904-215740-lanse-50'});
+    enqueue({name:'Lemonck',count:200,eventId:'replay-h5a8ds9g6nBQwdA-MQ3UZ4kBwXKrkPgYDv6XBLihG_o='});
+    enqueue({name:'獸獸羅德',count:50,eventId:'replay-AL2Cc4SZNDD5PCVAl9pvua2xScdyeqT-ckK5PTNILXI='});
+    enqueue({name:'調皮0123',count:150,eventId:'replay-7h_M83Kl6F9FAwp2uDZeiO-lUYZFsVLsCMvZ02YbzS8='});
   };
   try{
     if(localStorage.getItem(EMERGENCY_REPLAY_KEY)!=='done'){
       localStorage.setItem(EMERGENCY_REPLAY_KEY,'done');
       setTimeout(emergencyReplay,2500);
     }
-  }catch(_){
-    setTimeout(emergencyReplay,2500);
-  }
-
+  }catch(_){setTimeout(emergencyReplay,2500);}
   window.addEventListener('beforeunload',()=>{
-    stopped=true;
-    if(reconnectTimer)clearTimeout(reconnectTimer);
-    try{irc?.close();}catch(_){ }
+    if(sheetTimer)clearInterval(sheetTimer);
   });
 })();
 </script>
