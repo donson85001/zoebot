@@ -56,7 +56,7 @@ html,body{margin:0;padding:0;width:630px;height:420px;overflow:hidden;background
 <script>
 (() => {
   'use strict';
-  const OBS_BUILD='20260905-0427-production-marquee-v8';
+  const OBS_BUILD='20260905-0430-production-marquee-v9';
   const UPDATE_CHECK_MS=10000;
   const MIN_GIFT=50;
   const IDLE_GRACE_MS=1100;
@@ -115,7 +115,7 @@ html,body{margin:0;padding:0;width:630px;height:420px;overflow:hidden;background
   function normalize(payload){return{name:String(payload?.name||payload?.who||'匿名').trim()||'匿名',count:Math.max(0,Math.floor(Number(payload?.count??payload?.total??0)||0)),eventId:String(payload?.eventId||payload?.id||'').trim()}}
   function modeFor(count){if(count>=200)return'mode200';if(count>=150)return'mode150';if(count>=100)return'mode100';return'mode50'}
   function iconFor(count){if(count>=200)return'🔥';if(count>=150)return'👑';if(count>=100)return'⭐';return'🎁'}
-  function messageFor({name,count}){const pats=Math.floor(count/5);if(count>=200)return`${name} 請肉乙吃 ${count} 份 土豆！台中0859457！海豹拍肚 +${pats} !`;if(count>=150)return`${name} 讓肉乙得到 ${count} 個 山羌！cheer10000 我只是剛好看到列車！海豹拍肚 +${pats} !`;if(count>=100)return`肉乙塞給 ${name} ${count} 份 蛋塔！香港13太飽猴！海豹拍肚 +${pats} !`;return`${name} 喝了 ${count} 瓶 水！電競媽祖保持微笑 :) ！海豹拍肚 +${pats} !`}
+  function messageFor({name,count}){const pats=Math.floor(count/5);if(count>=200)return`${name} 請肉乙吃 ${count} 份 土豆！台中0859457！海豹拍肚 +${pats} !`;if(count>=150)return`肉乙爆氣把 ${name} 丟地板了 ${count} 次！cheer10000 我只是剛好看到列車 大家安安！海豹拍肚 +${pats} !`;if(count>=100)return`肉乙塞給 ${name} ${count} 份 蛋塔！香港13太飽猴！海豹拍肚 +${pats} !`;return`${name} 喝了 ${count} 瓶 水！電競媽祖保持微笑 :) ！海豹拍肚 +${pats} !`}
   function setLook(item){const mode=modeFor(item.count);banner.classList.remove('mode50','mode100','mode150','mode200','shine-now');banner.classList.add(mode);badgeIcon.textContent=iconFor(item.count);badgeCount.textContent=String(item.count);text.textContent=messageFor(item);void banner.offsetWidth;banner.classList.add('shine-now')}
   const SHEET_ID='14Yv_DyqvCsgQJQ98vZk_IkQ527xLPSVvLaNBnDGcMug';
   const SHEET_NAME='SubscriptionDetail';
