@@ -30,7 +30,7 @@ html,body{margin:0;padding:0;width:630px;height:420px;overflow:hidden;background
 #text{position:absolute;left:100%;white-space:nowrap;font-size:60px;line-height:1.02;font-weight:900;letter-spacing:.2px;color:#fff;text-shadow:0 4px 10px rgba(60,0,30,.34);will-change:transform}
 #counterFrame{position:absolute;left:0;top:0;width:630px;height:420px;border:0;margin:0;padding:0;background:transparent;transform:translateY(0);transition:transform .55s cubic-bezier(.22,.78,.24,1);will-change:transform}
 #stage.active #counterFrame{transform:translateY(56px)}
-#tier50Gif{position:absolute;left:0;bottom:0;width:240px;height:140px;object-fit:cover;display:none;z-index:5;pointer-events:none}
+#tier50Gif{position:absolute;left:8px;top:270px;bottom:auto;width:240px;height:140px;object-fit:cover;display:none;z-index:5;pointer-events:none}
 #tier50Gif.show{display:block}
 #cropLine,#cropLabel{display:none}
 body.debug{height:476px;overflow:visible;background:#171a22}
@@ -44,7 +44,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
 <div id="stage">
   <div id="marqueeSlot"><div id="banner"><div id="shine"></div><div id="badge"><div id="badgeIcon">🎁</div><div id="badgeValueRow"><span id="badgeCount">50</span><span id="badgeUnit">贈</span></div></div><div id="lane"><div id="text"></div></div></div></div>
   <iframe id="counterFrame" src="obs-overlay.html" scrolling="no" title="現行累積豬叫與海豹拍"></iframe>
-  <img id="tier50Gif" alt="50 贈訂左下角測試圖">
+  <img id="tier50Gif" alt="50 贈訂左下角測試 GIF">
   <div id="cropLine"></div><div id="cropLabel">↓ 被裁掉 56px</div>
 </div>
 <script src="test-water-image.js"></script>
