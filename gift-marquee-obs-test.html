@@ -10,27 +10,35 @@ html,body{
   margin:0;
   padding:0;
   width:630px;
-  height:510px;
+  height:420px;
   overflow:hidden;
   background:transparent;
   font-family:Arial,'Noto Sans TC','Microsoft JhengHei',sans-serif;
 }
-#stage{position:relative;width:630px;height:510px;overflow:hidden}
-#marqueeSlot{position:absolute;left:0;top:0;width:630px;height:84px;overflow:hidden;z-index:2;pointer-events:none}
+#stage{position:relative;width:630px;height:420px;overflow:hidden}
+#marqueeSlot{
+  position:absolute;
+  left:0;
+  top:0;
+  width:630px;
+  height:56px;
+  overflow:hidden;
+  z-index:3;
+  pointer-events:none;
+}
 #banner{
   position:absolute;
   left:0;
   top:0;
   width:630px;
-  height:78px;
-  border-radius:18px;
+  height:54px;
   overflow:hidden;
   opacity:0;
-  transform:translateY(-92px);
-  transition:transform .42s cubic-bezier(.2,.9,.25,1),opacity .25s ease;
-  filter:drop-shadow(0 8px 14px rgba(0,0,0,.28));
+  transform:translateX(-650px);
+  transition:transform .42s cubic-bezier(.2,.9,.25,1),opacity .22s ease;
+  filter:drop-shadow(0 5px 10px rgba(0,0,0,.28));
 }
-#banner.show{opacity:1;transform:translateY(0)}
+#banner.show{opacity:1;transform:translateX(0)}
 #banner.standard{
   background:linear-gradient(90deg,rgba(255,103,157,.97),rgba(255,180,210,.97),rgba(255,103,157,.97));
   border:3px solid rgba(255,255,255,.95);
@@ -38,40 +46,39 @@ html,body{
 #banner.deluxe{
   background:linear-gradient(100deg,#7c258d,#ed4f99 31%,#ffd04d 55%,#ed4f99 80%,#7c258d);
   border:3px solid #fff0a2;
-  box-shadow:inset 0 0 16px rgba(255,255,255,.22);
+  box-shadow:inset 0 0 14px rgba(255,255,255,.22);
 }
 #shine{position:absolute;inset:0;background:linear-gradient(115deg,transparent 0 38%,rgba(255,255,255,.34) 45%,transparent 52%);transform:translateX(-125%)}
-#banner.shine-now #shine{animation:shine 1.25s ease-out 1}
+#banner.shine-now #shine{animation:shine 1.15s ease-out 1}
 @keyframes shine{to{transform:translateX(125%)}}
 #badge{
   position:absolute;
-  left:12px;
-  top:10px;
-  height:52px;
-  min-width:116px;
-  padding:0 14px;
-  border-radius:14px;
+  left:8px;
+  top:7px;
+  height:36px;
+  min-width:94px;
+  padding:0 10px;
   display:flex;
   align-items:center;
   justify-content:center;
   background:rgba(255,255,255,.96);
   color:#c62f6b;
-  font-size:21px;
+  font-size:17px;
   font-weight:900;
   white-space:nowrap;
   z-index:2;
 }
 .deluxe #badge{color:#8c2872;background:linear-gradient(180deg,#fff5b6,#fff)}
-#lane{position:absolute;left:140px;right:12px;top:0;height:100%;overflow:hidden;display:flex;align-items:center}
+#lane{position:absolute;left:112px;right:8px;top:0;height:100%;overflow:hidden;display:flex;align-items:center}
 #text{
   position:absolute;
   left:100%;
   white-space:nowrap;
-  font-size:29px;
+  font-size:22px;
   line-height:1;
   font-weight:900;
   color:#fff;
-  text-shadow:0 2px 7px rgba(80,0,35,.34);
+  text-shadow:0 2px 6px rgba(80,0,35,.34);
   will-change:transform;
 }
 #counterFrame{
@@ -85,10 +92,11 @@ html,body{
   padding:0;
   background:transparent;
   transform:translateY(0);
-  transition:transform .68s cubic-bezier(.22,.78,.24,1);
+  transition:transform .52s cubic-bezier(.22,.78,.24,1);
   will-change:transform;
+  z-index:1;
 }
-#stage.active #counterFrame{transform:translateY(90px)}
+#stage.active #counterFrame{transform:translateY(56px)}
 </style>
 </head>
 <body>
@@ -154,10 +162,10 @@ html,body{
     text.style.transform='translateX(0)';
     await sleep(80);
 
-    const distance=lane.clientWidth+text.scrollWidth+36;
+    const distance=lane.clientWidth+text.scrollWidth+32;
     const deluxe=item.count>=DELUXE_GIFT;
-    const pxPerSecond=deluxe?118:132;
-    const duration=Math.max(deluxe?6.6:5.8,distance/pxPerSecond);
+    const pxPerSecond=deluxe?112:126;
+    const duration=Math.max(deluxe?6.4:5.6,distance/pxPerSecond);
     text.style.transition=`transform ${duration}s linear`;
     requestAnimationFrame(()=>requestAnimationFrame(()=>text.style.transform=`translateX(-${distance}px)`));
     await sleep(duration*1000);
@@ -167,28 +175,30 @@ html,body{
     if(playing)return;
     playing=true;
 
-    // 先讓原本 630×420 計數器明顯往下推，再露出跑馬燈。
+    // 630x420 外框完全不變：先把原圖往下推 56px，底部自然被裁掉 56px。
     stage.classList.add('active');
-    await sleep(720);
+    await sleep(560);
+
+    // 圖片下移完成後，跑馬燈才從左上方滑進來。
     banner.classList.add('show');
-    await sleep(460);
+    await sleep(430);
 
     while(true){
       while(queue.length){
         await playOne(queue.shift());
-        await sleep(110);
+        await sleep(100);
       }
-      // 給連續贈訂一個短暫併入時間；這段期間畫面維持在下方，不會再移動。
+      // 連續贈訂時保持同一個下移狀態，不重複推動圖片。
       await sleep(420);
       if(queue.length)continue;
       break;
     }
 
-    // 所有跑馬燈播完後，先收跑馬燈，再把原畫面推回最上面。
+    // 全部播完：先收跑馬燈，再讓原圖回到最上面。
     banner.classList.remove('show');
     await sleep(430);
     stage.classList.remove('active');
-    await sleep(720);
+    await sleep(560);
     playing=false;
 
     if(queue.length)drain();
