@@ -35,13 +35,13 @@ button.wide{grid-column:1/-1}
 .preview-title{font-size:14px;color:#c4c9d4;max-width:630px;line-height:1.5}
 .preview-box{
   width:630px;
-  height:510px;
+  height:420px;
   position:relative;
   background:transparent;
   overflow:hidden;
   border:1px dashed #545b6d;
 }
-#preview{width:630px;height:510px;border:0;display:block;background:transparent}
+#preview{width:630px;height:420px;border:0;display:block;background:transparent}
 @media(max-width:1050px){.page{padding:14px}.controls{width:100%;max-width:630px}.preview-box{max-width:100%}}
 </style>
 </head>
@@ -49,7 +49,7 @@ button.wide{grid-column:1/-1}
 <div class="page">
   <section class="controls">
     <h1>跑馬燈測試</h1>
-    <div class="note">平常右邊就是原本的 <b>obs-overlay.html</b> 位置與大小。只有收到 50 份以上時，原畫面才往下推一次，頂部露出跑馬燈；連續贈訂會一直維持在下面，不會每一筆又下移一次。</div>
+    <div class="note">這版全程固定 <b>630 × 420</b>。平常就是原本 OBS 畫面；50+ 時原圖往下移 56px，底部會被裁掉一點，上方跑馬燈再從左邊滑進來。連續贈訂期間不會重複下移。</div>
 
     <label for="name">贈訂者名稱</label>
     <input id="name" value="調皮0123">
@@ -72,9 +72,9 @@ button.wide{grid-column:1/-1}
   </section>
 
   <section class="preview-area">
-    <div class="preview-title">平常：原本 630 × 420 畫面貼在最上方。觸發時：整張原畫面只往下推一次，上方出現跑馬燈；全部排隊播完才回原位。</div>
+    <div class="preview-title">實際輸出尺寸：固定 630 × 420。觸發跑馬燈時不增加畫布高度，直接吃掉底部約 56px。</div>
     <div class="preview-box">
-      <iframe id="preview" src="gift-marquee-obs-test.html" scrolling="no" title="OBS 計數器加跑馬燈測試"></iframe>
+      <iframe id="preview" src="gift-marquee-obs-test.html" scrolling="no" title="固定 630x420 跑馬燈測試"></iframe>
     </div>
   </section>
 </div>
@@ -98,7 +98,7 @@ button.wide{grid-column:1/-1}
   document.getElementById('custom').addEventListener('click',()=>send(count.value));
   document.getElementById('sequence').addEventListener('click',()=>{
     [50,100,150,200].forEach((v,i)=>setTimeout(()=>send(v),i*220));
-    status.textContent='已送入 50 → 100 → 150 → 200 排隊測試；畫面只會下移一次';
+    status.textContent='已送入 50 → 100 → 150 → 200 排隊測試；整張圖只會下移一次';
   });
   count.addEventListener('keydown',e=>{if(e.key==='Enter')send(count.value)});
 })();
