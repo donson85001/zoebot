@@ -161,6 +161,29 @@ html,body{
 (() => {
   'use strict';
 
+  /* 自動版本檢查：這版之後若 GitHub Pages 有新版，OBS 會自行重新載入，不必再請主播手動重整。 */
+  const OBS_BUILD='20260904-2058-autoreload-v1';
+  const UPDATE_CHECK_MS=60000;
+
+  async function checkForPageUpdate(){
+    try{
+      const probe=new URL(location.href);
+      probe.searchParams.set('__obs_update_check',String(Date.now()));
+      const r=await fetch(probe.toString(),{cache:'no-store'});
+      if(!r.ok)return;
+      const html=await r.text();
+      const m=html.match(/const OBS_BUILD='([^']+)'/);
+      const remoteBuild=m&&m[1];
+      if(remoteBuild && remoteBuild!==OBS_BUILD){
+        const next=new URL(location.href);
+        next.searchParams.set('__obs_build',remoteBuild);
+        location.replace(next.toString());
+      }
+    }catch(_){ }
+  }
+  setTimeout(checkForPageUpdate,15000);
+  setInterval(checkForPageUpdate,UPDATE_CHECK_MS);
+
   /* 保留現行計數器資料來源，避免動到既有累積數字機制。 */
   const COUNTER_API='https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec?action=stats';
   const months=document.getElementById('months');
