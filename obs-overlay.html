@@ -6,135 +6,34 @@
 <title>OBS 餘興節目計數器</title>
 <style>
 *{box-sizing:border-box}
-html,body{
-  margin:0;
-  padding:0;
-  width:630px;
-  height:420px;
-  background:transparent;
-  overflow:hidden;
-  font-family:Arial,'Noto Sans TC','Microsoft JhengHei',sans-serif;
-}
-#stage{
-  position:relative;
-  width:630px;
-  height:420px;
-  overflow:hidden;
-  background:transparent;
-}
-#counterPanel{
-  position:absolute;
-  left:0;
-  top:0;
-  width:630px;
-  height:420px;
-  background:url('WF拍肚.png') 0 0 / 630px 420px no-repeat;
-  transform:translateY(0);
-  transition:transform .55s cubic-bezier(.22,.78,.24,1);
-  will-change:transform;
-}
+html,body{margin:0;padding:0;width:630px;height:420px;overflow:hidden;background:transparent;font-family:Arial,'Noto Sans TC','Microsoft JhengHei',sans-serif}
+#stage{position:relative;width:630px;height:420px;overflow:hidden;background:transparent}
+#counterPanel{position:absolute;left:0;top:0;width:630px;height:420px;background:url('WF拍肚.png') 0 0 / 630px 420px no-repeat;transform:translateY(0);transition:transform .55s cubic-bezier(.22,.78,.24,1);will-change:transform}
 #stage.active #counterPanel{transform:translateY(56px)}
-.num{
-  position:absolute;
-  width:102px;
-  height:54px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:transparent;
-  border:0;
-  box-shadow:none;
-  color:#d94f72;
-  font-weight:800;
-  font-size:38px;
-  line-height:1;
-  letter-spacing:0;
-  text-shadow:none;
-  white-space:nowrap;
-}
+.num{position:absolute;width:102px;height:54px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;box-shadow:none;color:#d94f72;font-weight:800;font-size:38px;line-height:1;letter-spacing:0;text-shadow:none;white-space:nowrap}
 #months{left:464px;top:198px}
 #gifts{left:464px;top:278px}
-#marqueeSlot{
-  position:absolute;
-  left:0;
-  top:0;
-  width:630px;
-  height:56px;
-  overflow:hidden;
-  z-index:3;
-  pointer-events:none;
-}
-#banner{
-  position:absolute;
-  left:0;
-  top:0;
-  width:630px;
-  height:54px;
-  border-radius:14px;
-  overflow:hidden;
-  opacity:0;
-  transform:translateX(-650px);
-  transition:transform .42s cubic-bezier(.2,.9,.25,1),opacity .25s ease;
-  filter:drop-shadow(0 6px 10px rgba(0,0,0,.25));
-}
+#marqueeSlot{position:absolute;left:0;top:0;width:630px;height:168px;overflow:hidden;z-index:3;pointer-events:none}
+#banner{position:absolute;left:0;top:0;width:630px;height:162px;border-radius:24px;overflow:hidden;opacity:0;transform:translateX(-650px);transition:transform .42s cubic-bezier(.2,.9,.25,1),opacity .25s ease;filter:drop-shadow(0 8px 14px rgba(0,0,0,.22))}
 #banner.show{opacity:1;transform:translateX(0)}
-#banner.standard{
-  background:linear-gradient(90deg,rgba(255,103,157,.97),rgba(255,180,210,.97),rgba(255,103,157,.97));
-  border:3px solid rgba(255,255,255,.95);
-}
-#banner.deluxe{
-  background:linear-gradient(100deg,#7c258d,#ed4f99 31%,#ffd04d 55%,#ed4f99 80%,#7c258d);
-  border:3px solid #fff0a2;
-  box-shadow:inset 0 0 14px rgba(255,255,255,.22);
-}
-#shine{
-  position:absolute;
-  inset:0;
-  background:linear-gradient(115deg,transparent 0 38%,rgba(255,255,255,.34) 45%,transparent 52%);
-  transform:translateX(-125%);
-}
+#banner.mode50{background:linear-gradient(90deg,#ef6598,#f79bc0 52%,#ef6598);border:5px solid rgba(255,255,255,.96);box-shadow:inset 0 1px 0 rgba(255,255,255,.28)}
+#banner.mode100{background:linear-gradient(100deg,#d94f72 0%,#f07fa1 38%,#ffd56b 62%,#ec7099 100%);border:5px solid #fff3bd;box-shadow:inset 0 0 20px rgba(255,255,255,.22)}
+#banner.mode150{background:linear-gradient(100deg,#70207f 0%,#b9328b 32%,#f04f9c 58%,#8b2b99 100%);border:5px solid #ffd6f0;box-shadow:inset 0 0 24px rgba(255,255,255,.18)}
+#banner.mode200{background:linear-gradient(100deg,#25133f 0%,#5c2679 30%,#d34794 58%,#f5b63a 100%);border:5px solid #ffe28a;box-shadow:inset 0 0 28px rgba(255,230,155,.16)}
+#shine{position:absolute;inset:0;background:linear-gradient(115deg,transparent 0 38%,rgba(255,255,255,.28) 45%,transparent 52%);transform:translateX(-125%)}
 #banner.shine-now #shine{animation:shine 1.1s ease-out 1}
 @keyframes shine{to{transform:translateX(125%)}}
-#badge{
-  position:absolute;
-  left:8px;
-  top:7px;
-  height:36px;
-  min-width:96px;
-  padding:0 10px;
-  border-radius:10px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:rgba(255,255,255,.96);
-  color:#c62f6b;
-  font-size:17px;
-  font-weight:900;
-  white-space:nowrap;
-  z-index:2;
-}
-.deluxe #badge{color:#8c2872;background:linear-gradient(180deg,#fff5b6,#fff)}
-#lane{
-  position:absolute;
-  left:112px;
-  right:10px;
-  top:0;
-  height:100%;
-  overflow:hidden;
-  display:flex;
-  align-items:center;
-}
-#text{
-  position:absolute;
-  left:100%;
-  white-space:nowrap;
-  font-size:23px;
-  line-height:1;
-  font-weight:900;
-  color:#fff;
-  text-shadow:0 2px 7px rgba(80,0,35,.34);
-  will-change:transform;
-}
+#badge{position:absolute;left:18px;top:37px;width:102px;height:88px;border-radius:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2;border:2px solid rgba(255,255,255,.92);box-shadow:0 4px 12px rgba(100,20,55,.12),inset 0 1px 0 #fff;transition:background .2s ease,color .2s ease}
+.mode50 #badge{background:linear-gradient(180deg,#fff,#fff7fb);color:#be2d66}
+.mode100 #badge{background:linear-gradient(180deg,#fff7c7,#fffdf0 62%,#fff);color:#a06400}
+.mode150 #badge{background:linear-gradient(180deg,#ffeaf7,#fff 65%);color:#7d2678}
+.mode200 #badge{background:linear-gradient(180deg,#fff0ac,#fff8d9 58%,#fff);color:#6f3e00}
+#badgeIcon{font-size:23px;line-height:1;margin-bottom:7px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.08))}
+#badgeValueRow{display:flex;align-items:flex-end;justify-content:center;gap:4px;line-height:1;max-width:90px;white-space:nowrap}
+#badgeCount{font-size:29px;line-height:.92;font-weight:900;letter-spacing:-1.2px}
+#badgeUnit{font-size:13px;line-height:1;font-weight:900;margin-bottom:2px;letter-spacing:.2px}
+#lane{position:absolute;left:132px;right:18px;top:0;height:100%;overflow:hidden;display:flex;align-items:center}
+#text{position:absolute;left:100%;white-space:nowrap;font-size:60px;line-height:1.02;font-weight:900;letter-spacing:.2px;color:#fff;text-shadow:0 4px 10px rgba(60,0,30,.34);will-change:transform}
 </style>
 </head>
 <body>
@@ -146,7 +45,10 @@ html,body{
   <div id="marqueeSlot">
     <div id="banner">
       <div id="shine"></div>
-      <div id="badge">🎁 50 贈</div>
+      <div id="badge">
+        <div id="badgeIcon">🎁</div>
+        <div id="badgeValueRow"><span id="badgeCount">50</span><span id="badgeUnit">贈</span></div>
+      </div>
       <div id="lane"><div id="text"></div></div>
     </div>
   </div>
@@ -154,8 +56,31 @@ html,body{
 <script>
 (() => {
   'use strict';
-  const OBS_BUILD='20260904-2220-sheet-marquee-v5';
+  const OBS_BUILD='20260905-0158-production-marquee-v6';
   const UPDATE_CHECK_MS=10000;
+  const MIN_GIFT=50;
+  const IDLE_GRACE_MS=1100;
+  const stage=document.getElementById('stage');
+  const banner=document.getElementById('banner');
+  const badgeIcon=document.getElementById('badgeIcon');
+  const badgeCount=document.getElementById('badgeCount');
+  const lane=document.getElementById('lane');
+  const text=document.getElementById('text');
+  const months=document.getElementById('months');
+  const gifts=document.getElementById('gifts');
+  const queue=[];
+  const seenEventIds=new Set();
+  let playing=false;
+  let lastEnqueueAt=0;
+  let pendingBuild='';
+  let recoveryReloadPending=false;
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  function reloadToBuild(build){
+    const next=new URL(location.href);
+    next.searchParams.set('__obs_build',build||OBS_BUILD);
+    next.searchParams.set('_',String(Date.now()));
+    location.replace(next.toString());
+  }
   async function checkForPageUpdate(){
     try{
       const probe=new URL(location.href);
@@ -166,262 +91,66 @@ html,body{
       const m=html.match(/const OBS_BUILD='([^']+)'/);
       const remoteBuild=m&&m[1];
       if(remoteBuild && remoteBuild!==OBS_BUILD){
-        const next=new URL(location.href);
-        next.searchParams.set('__obs_build',remoteBuild);
-        location.replace(next.toString());
+        if(playing||queue.length)pendingBuild=remoteBuild;
+        else reloadToBuild(remoteBuild);
       }
     }catch(_){ }
   }
   setTimeout(checkForPageUpdate,5000);
   setInterval(checkForPageUpdate,UPDATE_CHECK_MS);
   const COUNTER_API='https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec?action=stats';
-  const months=document.getElementById('months');
-  const gifts=document.getElementById('gifts');
   async function updateCounters(){
     try{
       const r=await fetch(COUNTER_API+'&_='+Date.now(),{cache:'no-store'});
       const d=await r.json();
-      if(d && d.ok!==false){
-        const m=Number(d.subscriptionMonths);
-        const g=Number(d.giftSubCount);
-        if(Number.isFinite(m)) months.textContent=String(Math.trunc(m));
-        if(Number.isFinite(g)) gifts.textContent=String(Math.trunc(g));
+      if(d&&d.ok!==false){
+        const m=Number(d.subscriptionMonths),g=Number(d.giftSubCount);
+        if(Number.isFinite(m))months.textContent=String(Math.trunc(m));
+        if(Number.isFinite(g))gifts.textContent=String(Math.trunc(g));
       }
     }catch(e){console.error('Counter update failed',e);}
   }
   updateCounters();
   setInterval(updateCounters,5000);
-  const MIN_GIFT=50;
-  const DELUXE_GIFT=100;
-  const IDLE_GRACE_MS=1100;
-  const stage=document.getElementById('stage');
-  const banner=document.getElementById('banner');
-  const badge=document.getElementById('badge');
-  const lane=document.getElementById('lane');
-  const text=document.getElementById('text');
-  const queue=[];
-  const seenEventIds=new Set();
-  let playing=false;
-  let lastEnqueueAt=0;
-  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-  function normalize(payload){
-    return {
-      name:String(payload?.name||payload?.who||'匿名').trim()||'匿名',
-      count:Math.max(0,Math.floor(Number(payload?.count??payload?.total??0)||0)),
-      eventId:String(payload?.eventId||payload?.id||'').trim()
-    };
-  }
-  function specialText(count){
-    if(count===100)return '089457';
-    if(count===150)return '香港13太飽';
-    if(count>=200)return '全場起飛';
-    return '';
-  }
-  function messageFor({name,count}){
-    const pats=Math.floor(count/5);
-    const special=specialText(count);
-    if(count>=DELUXE_GIFT){
-      return `🔥 ${name} 豪擲 ${count} 份訂閱！${special?special+'！':''}海豹拍肚 +${pats} 🔥`;
-    }
-    return `🎁 ${name} 贈送 ${count} 份訂閱！海豹拍肚 +${pats}！`;
-  }
-  function setLook(item){
-    const deluxe=item.count>=DELUXE_GIFT;
-    banner.classList.remove('standard','deluxe','shine-now');
-    banner.classList.add(deluxe?'deluxe':'standard');
-    badge.textContent=deluxe?`👑 ${item.count} 贈`:`🎁 ${item.count} 贈`;
-    text.textContent=messageFor(item);
-    void banner.offsetWidth;
-    banner.classList.add('shine-now');
-  }
-  async function playOne(item){
-    setLook(item);
-    text.style.transition='none';
-    text.style.transform='translateX(0)';
-    await sleep(70);
-    const distance=lane.clientWidth+text.scrollWidth+30;
-    const deluxe=item.count>=DELUXE_GIFT;
-    const pxPerSecond=deluxe?112:126;
-    const duration=Math.max(deluxe?6.2:5.4,distance/pxPerSecond);
-    text.style.transition=`transform ${duration}s linear`;
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      text.style.transform=`translateX(-${distance}px)`;
-    }));
-    await sleep(duration*1000);
-  }
-  async function waitForTrueIdle(){
-    while(true){
-      if(queue.length)return false;
-      const left=IDLE_GRACE_MS-(Date.now()-lastEnqueueAt);
-      if(left<=0)return true;
-      await sleep(Math.min(120,left));
-    }
-  }
-  async function drain(){
-    if(playing)return;
-    playing=true;
-    stage.classList.add('active');
-    await sleep(580);
-    banner.classList.add('show');
-    await sleep(430);
-    while(true){
-      while(queue.length){
-        await playOne(queue.shift());
-        await sleep(100);
-      }
-      if(!(await waitForTrueIdle()))continue;
-      banner.classList.remove('show');
-      await sleep(420);
-      if(queue.length){
-        banner.classList.add('show');
-        await sleep(430);
-        continue;
-      }
-      stage.classList.remove('active');
-      await sleep(580);
-      if(queue.length){
-        stage.classList.add('active');
-        await sleep(580);
-        banner.classList.add('show');
-        await sleep(430);
-        continue;
-      }
-      break;
-    }
-    playing=false;
-    if(queue.length)drain();
-  }
-  function enqueue(payload){
-    const item=normalize(payload);
-    if(item.count<MIN_GIFT)return {accepted:false,reason:'below-threshold'};
-    if(item.eventId){
-      if(seenEventIds.has(item.eventId))return {accepted:false,reason:'duplicate'};
-      seenEventIds.add(item.eventId);
-      if(seenEventIds.size>500)seenEventIds.delete(seenEventIds.values().next().value);
-    }
-    lastEnqueueAt=Date.now();
-    queue.push(item);
-    drain();
-    return {accepted:true};
-  }
-  window.ZoeGiftMarquee={enqueue,getQueue:()=>queue.slice(),isPlaying:()=>playing,messageFor};
-  window.addEventListener('message',e=>{
-    if(e?.data?.type==='zoebot-gift-marquee')enqueue(e.data);
-  });
-  const params=new URLSearchParams(location.search);
+  function normalize(payload){return{name:String(payload?.name||payload?.who||'匿名').trim()||'匿名',count:Math.max(0,Math.floor(Number(payload?.count??payload?.total??0)||0)),eventId:String(payload?.eventId||payload?.id||'').trim()}}
+  function modeFor(count){if(count>=200)return'mode200';if(count>=150)return'mode150';if(count>=100)return'mode100';return'mode50'}
+  function iconFor(count){if(count>=200)return'🔥';if(count>=150)return'👑';if(count>=100)return'⭐';return'🎁'}
+  function messageFor({name,count}){const pats=Math.floor(count/5);if(count>=200)return`${name} 打了 ${count} 次= =！電競媽祖保持微笑 :) ！海豹拍肚 +${pats} !`;if(count>=150)return`${name} 請肉乙吃 ${count} 份土豆！台中0859457！海豹拍肚 +${pats} !`;if(count>=100)return`${name} 塞給肉乙 ${count} 份檸檬蛋塔！香港13太飽猴！海豹拍肚 +${pats} !`;return`${name} 點了 ${count} 次肉月老光明燈！海豹拍肚 +${pats}！`}
+  function setLook(item){const mode=modeFor(item.count);banner.classList.remove('mode50','mode100','mode150','mode200','shine-now');banner.classList.add(mode);badgeIcon.textContent=iconFor(item.count);badgeCount.textContent=String(item.count);text.textContent=messageFor(item);void banner.offsetWidth;banner.classList.add('shine-now')}
   const SHEET_ID='14Yv_DyqvCsgQJQ98vZk_IkQ527xLPSVvLaNBnDGcMug';
   const SHEET_NAME='SubscriptionDetail';
   const SHEET_POLL_MS=1200;
-  const SHEET_BASELINE_EVENT='7h_M83Kl6F9FAwp2uDZeiO-lUYZFsVLsCMvZ02YbzS8=';
   const SHEET_SEEN_KEY='zoebot-marquee-sheet-seen-v1';
+  const SHEET_PENDING_KEY='zoebot-marquee-sheet-pending-v2';
   const SHEET_INIT_KEY='zoebot-marquee-sheet-initialized-v1';
-  let sheetBusy=false;
-  let sheetTimer=null;
   const sheetSeen=new Set();
-  try{
-    const saved=JSON.parse(localStorage.getItem(SHEET_SEEN_KEY)||'[]');
-    if(Array.isArray(saved)) saved.slice(-300).forEach(x=>sheetSeen.add(String(x)));
-  }catch(_){ }
-  function saveSheetSeen(){
-    try{
-      const arr=[...sheetSeen];
-      localStorage.setItem(SHEET_SEEN_KEY,JSON.stringify(arr.slice(-300)));
-    }catch(_){ }
-  }
-  function cellValue(cell){
-    if(!cell)return '';
-    if(cell.v===null||cell.v===undefined)return '';
-    return cell.v;
-  }
-  function parseGiftRows(resp){
-    const rows=resp?.table?.rows||[];
-    return rows.map(r=>{
-      const c=r?.c||[];
-      return {
-        who:String(cellValue(c[2])||'匿名').trim()||'匿名',
-        count:Math.max(0,Math.floor(Number(cellValue(c[3]))||0)),
-        eventId:String(cellValue(c[4])||'').trim()
-      };
-    }).filter(x=>x.eventId);
-  }
-  function handleSheetRows(items){
-    if(!items.length)return;
-    const initialized=(()=>{try{return localStorage.getItem(SHEET_INIT_KEY)==='1';}catch(_){return false;}})();
-    if(!initialized){
-      const marker=items.findIndex(x=>x.eventId===SHEET_BASELINE_EVENT);
-      const catchup=marker>=0?items.slice(0,marker):[];
-      items.forEach(x=>sheetSeen.add(x.eventId));
-      saveSheetSeen();
-      try{localStorage.setItem(SHEET_INIT_KEY,'1');}catch(_){ }
-      catchup.slice().reverse().forEach(x=>{
-        if(x.count>=MIN_GIFT)enqueue({name:x.who,count:x.count,eventId:x.eventId});
-      });
-      return;
-    }
-    const fresh=[];
-    for(const item of items){
-      if(sheetSeen.has(item.eventId))continue;
-      sheetSeen.add(item.eventId);
-      fresh.push(item);
-    }
-    if(!fresh.length)return;
-    saveSheetSeen();
-    fresh.reverse().forEach(x=>{
-      if(x.count>=MIN_GIFT)enqueue({name:x.who,count:x.count,eventId:x.eventId});
-    });
-  }
-  async function pollGiftSheet(){
-    if(sheetBusy)return;
-    sheetBusy=true;
-    try{
-      const q="select A,B,C,E,I where B = '贈送訂閱' order by A desc limit 60";
-      const u=new URL(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`);
-      u.searchParams.set('sheet',SHEET_NAME);
-      u.searchParams.set('headers','1');
-      u.searchParams.set('tq',q);
-      u.searchParams.set('tqx','out:json');
-      u.searchParams.set('_',String(Date.now()));
-      const r=await fetch(u.toString(),{cache:'no-store'});
-      if(!r.ok)throw new Error(`sheet HTTP ${r.status}`);
-      const raw=await r.text();
-      const m=raw.match(/google\.visualization\.Query\.setResponse\(([\s\S]*?)\);?\s*$/);
-      if(!m)throw new Error('sheet response parse failed');
-      const resp=JSON.parse(m[1]);
-      if(resp?.status && resp.status!=='ok')throw new Error('sheet query failed');
-      handleSheetRows(parseGiftRows(resp));
-    }catch(e){
-      console.error('Gift sheet poll failed',e);
-    }finally{
-      sheetBusy=false;
-    }
-  }
+  const sheetPending=new Map();
+  let firstSheetSuccess=true;
+  let sheetBusy=false;
+  let lastSheetSuccess=Date.now();
+  try{const saved=JSON.parse(localStorage.getItem(SHEET_SEEN_KEY)||'[]');if(Array.isArray(saved))saved.slice(-500).forEach(x=>sheetSeen.add(String(x)))}catch(_){}
+  try{const saved=JSON.parse(localStorage.getItem(SHEET_PENDING_KEY)||'[]');if(Array.isArray(saved))saved.slice(-100).forEach(x=>{const item=normalize(x);if(item.eventId&&item.count>=MIN_GIFT)sheetPending.set(item.eventId,item)})}catch(_){}
+  function saveSheetState(){try{localStorage.setItem(SHEET_SEEN_KEY,JSON.stringify([...sheetSeen].slice(-500)));localStorage.setItem(SHEET_PENDING_KEY,JSON.stringify([...sheetPending.values()].slice(-100)));localStorage.setItem(SHEET_INIT_KEY,'1')}catch(_){}}
+  function markEventComplete(item){if(!item?.eventId)return;sheetPending.delete(item.eventId);sheetSeen.add(item.eventId);if(sheetSeen.size>500)sheetSeen.delete(sheetSeen.values().next().value);saveSheetState()}
+  async function playOne(item){setLook(item);text.style.transition='none';text.style.transform='translateX(0)';await sleep(70);const distance=lane.clientWidth+text.scrollWidth+54,pxPerSecond=item.count<100?188:172,duration=Math.max(item.count<100?6.8:7.2,distance/pxPerSecond);text.style.transition=`transform ${duration}s linear`;requestAnimationFrame(()=>requestAnimationFrame(()=>text.style.transform=`translateX(-${distance}px)`));await sleep(duration*1000);markEventComplete(item)}
+  async function waitForTrueIdle(){while(true){if(queue.length)return false;const left=IDLE_GRACE_MS-(Date.now()-lastEnqueueAt);if(left<=0)return true;await sleep(Math.min(120,left))}}
+  async function drain(){if(playing)return;playing=true;stage.classList.add('active');await sleep(580);banner.classList.add('show');await sleep(430);while(true){while(queue.length){await playOne(queue.shift());await sleep(100)}if(!(await waitForTrueIdle()))continue;banner.classList.remove('show');await sleep(420);if(queue.length){banner.classList.add('show');await sleep(430);continue}stage.classList.remove('active');await sleep(580);if(queue.length){stage.classList.add('active');await sleep(580);banner.classList.add('show');await sleep(430);continue}break}playing=false;if(pendingBuild){const build=pendingBuild;pendingBuild='';reloadToBuild(build);return}if(recoveryReloadPending){recoveryReloadPending=false;reloadToBuild(OBS_BUILD);return}if(queue.length)drain()}
+  function enqueue(payload){const item=normalize(payload);if(item.count<MIN_GIFT)return{accepted:false,reason:'below-threshold'};if(item.eventId){if(seenEventIds.has(item.eventId))return{accepted:false,reason:'duplicate'};seenEventIds.add(item.eventId);if(seenEventIds.size>500)seenEventIds.delete(seenEventIds.values().next().value)}lastEnqueueAt=Date.now();queue.push(item);drain();return{accepted:true}}
+  window.ZoeGiftMarquee={enqueue,getQueue:()=>queue.slice(),isPlaying:()=>playing,messageFor};
+  window.addEventListener('message',e=>{if(e?.data?.type==='zoebot-gift-marquee')enqueue(e.data)});
+  function cellValue(cell){if(!cell||cell.v===null||cell.v===undefined)return'';return cell.v}
+  function parseSheetTime(cell){const v=cellValue(cell);if(typeof v==='string'){const m=v.match(/^Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)$/);if(m)return new Date(+m[1],+m[2],+m[3],+m[4],+m[5],+m[6]).getTime()}const f=String(cell?.f||''),m=f.match(/(\d{4})\/(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{2}):(\d{2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6]).getTime();return 0}
+  function parseGiftRows(resp){const rows=resp?.table?.rows||[];return rows.map(r=>{const c=r?.c||[];return{tsMs:parseSheetTime(c[0]),who:String(cellValue(c[2])||'匿名').trim()||'匿名',count:Math.max(0,Math.floor(Number(cellValue(c[3]))||0)),eventId:String(cellValue(c[4])||'').trim()}}).filter(x=>x.eventId)}
+  function queueSheetItem(item){if(!item?.eventId||sheetSeen.has(item.eventId)||sheetPending.has(item.eventId))return;if(item.count<MIN_GIFT){sheetSeen.add(item.eventId);if(sheetSeen.size>500)sheetSeen.delete(sheetSeen.values().next().value);saveSheetState();return}const normalized=normalize({name:item.who,count:item.count,eventId:item.eventId});sheetPending.set(item.eventId,normalized);saveSheetState();enqueue(normalized)}
+  function handleSheetRows(items){if(!items.length)return;if(firstSheetSuccess){firstSheetSuccess=false;let legacyInitialized=false;try{legacyInitialized=localStorage.getItem(SHEET_INIT_KEY)==='1'}catch(_){}const hasState=legacyInitialized||sheetSeen.size>0||sheetPending.size>0;if(!hasState){const now=Date.now(),recentCutoff=3*60*1000,recent=[];for(const item of items){if(item.count>=MIN_GIFT&&item.tsMs&&now-item.tsMs>=0&&now-item.tsMs<=recentCutoff)recent.push(item);else sheetSeen.add(item.eventId)}saveSheetState();recent.slice().reverse().forEach(queueSheetItem);return}}const fresh=[];for(const item of items){if(sheetSeen.has(item.eventId)||sheetPending.has(item.eventId))continue;fresh.push(item)}fresh.reverse().forEach(queueSheetItem)}
+  function buildSheetUrl(callbackName=''){const q="select A,B,C,E,I where B = '贈送訂閱' order by A desc limit 100";const u=new URL(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`);u.searchParams.set('sheet',SHEET_NAME);u.searchParams.set('headers','1');u.searchParams.set('tq',q);u.searchParams.set('tqx',callbackName?`out:json;responseHandler:${callbackName}`:'out:json');u.searchParams.set('_',String(Date.now()));return u}
+  async function fetchGiftRows(){const r=await fetch(buildSheetUrl().toString(),{cache:'no-store'});if(!r.ok)throw new Error(`sheet HTTP ${r.status}`);const raw=await r.text(),m=raw.match(/google\.visualization\.Query\.setResponse\(([\s\S]*?)\);?\s*$/);if(!m)throw new Error('sheet response parse failed');const resp=JSON.parse(m[1]);if(resp?.status&&resp.status!=='ok')throw new Error('sheet query failed');return parseGiftRows(resp)}
+  function fetchGiftRowsJsonp(){return new Promise((resolve,reject)=>{const cb='__zoeSheetCb_'+Date.now()+'_'+Math.floor(Math.random()*100000),s=document.createElement('script');let done=false;const cleanup=()=>{if(done)return;done=true;clearTimeout(timer);try{delete window[cb]}catch(_){window[cb]=undefined}s.remove()};const timer=setTimeout(()=>{cleanup();reject(new Error('sheet jsonp timeout'))},7000);window[cb]=resp=>{try{if(resp?.status&&resp.status!=='ok')throw new Error('sheet jsonp query failed');const rows=parseGiftRows(resp);cleanup();resolve(rows)}catch(e){cleanup();reject(e)}};s.onerror=()=>{cleanup();reject(new Error('sheet jsonp load failed'))};s.src=buildSheetUrl(cb).toString();document.head.appendChild(s)})}
+  async function pollGiftSheet(){if(sheetBusy)return;sheetBusy=true;try{let rows;try{rows=await fetchGiftRows()}catch(fetchErr){console.warn('Gift sheet fetch failed; trying JSONP fallback',fetchErr);rows=await fetchGiftRowsJsonp()}lastSheetSuccess=Date.now();handleSheetRows(rows)}catch(e){console.error('Gift sheet poll failed',e)}finally{sheetBusy=false}}
+  if(sheetPending.size)[...sheetPending.values()].forEach(item=>enqueue(item));
   pollGiftSheet();
-  sheetTimer=setInterval(pollGiftSheet,SHEET_POLL_MS);
-  if(params.has('testCount')){
-    setTimeout(()=>enqueue({
-      name:params.get('testName')||'測試觀眾',
-      count:params.get('testCount'),
-      eventId:'manual-'+Date.now()
-    }),500);
-  }
-  const EMERGENCY_REPLAY_KEY='zoebot-emergency-replay-20260904-2210-v4';
-  const emergencyReplay=()=>{
-    enqueue({name:'三瓶水',count:100,eventId:'replay-sc2GeP6pHjXN2mjZ9FFTuzKgiWGawrLJDpfnGXLmo68='});
-    enqueue({name:'挖洗小盧',count:50,eventId:'replay-eylSiWegB-QUkiX3x_OAvRHYh4SDyujIxauQ1rvYMEQ='});
-    enqueue({name:'嵐色',count:50,eventId:'replay-20260904-215740-lanse-50'});
-    enqueue({name:'Lemonck',count:200,eventId:'replay-h5a8ds9g6nBQwdA-MQ3UZ4kBwXKrkPgYDv6XBLihG_o='});
-    enqueue({name:'獸獸羅德',count:50,eventId:'replay-AL2Cc4SZNDD5PCVAl9pvua2xScdyeqT-ckK5PTNILXI='});
-    enqueue({name:'調皮0123',count:150,eventId:'replay-7h_M83Kl6F9FAwp2uDZeiO-lUYZFsVLsCMvZ02YbzS8='});
-  };
-  try{
-    if(localStorage.getItem(EMERGENCY_REPLAY_KEY)!=='done'){
-      localStorage.setItem(EMERGENCY_REPLAY_KEY,'done');
-      setTimeout(emergencyReplay,2500);
-    }
-  }catch(_){setTimeout(emergencyReplay,2500);}
-  window.addEventListener('beforeunload',()=>{
-    if(sheetTimer)clearInterval(sheetTimer);
-  });
+  setInterval(pollGiftSheet,SHEET_POLL_MS);
+  setInterval(()=>{if(Date.now()-lastSheetSuccess<90000)return;if(playing||queue.length)recoveryReloadPending=true;else reloadToBuild(OBS_BUILD)},15000);
 })();
 </script>
 </body>
