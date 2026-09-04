@@ -162,7 +162,7 @@ html,body{
   'use strict';
 
   /* 自動版本檢查：這版之後若 GitHub Pages 有新版，OBS 會自行重新載入，不必再請主播手動重整。 */
-  const OBS_BUILD='20260904-2058-autoreload-v1';
+  const OBS_BUILD='20260904-2100-live-marquee-test-v1';
   const UPDATE_CHECK_MS=60000;
 
   async function checkForPageUpdate(){
@@ -442,6 +442,21 @@ html,body{
       count:params.get('testCount'),
       eventId:'manual-'+Date.now()
     }),500);
+  }
+
+  /* 一次性正式 OBS 畫面測試：只顯示跑馬燈，不寫入任何計數或試算表。 */
+  const LIVE_TEST_KEY='zoebot-live-marquee-test-20260904-2100-v1';
+  try{
+    if(localStorage.getItem(LIVE_TEST_KEY)!=='done'){
+      localStorage.setItem(LIVE_TEST_KEY,'done');
+      setTimeout(()=>enqueue({
+        name:'OBS測試',
+        count:100,
+        eventId:'live-marquee-test-20260904-2100-v1'
+      }),2500);
+    }
+  }catch(_){
+    setTimeout(()=>enqueue({name:'OBS測試',count:100,eventId:'live-marquee-test-fallback-20260904-2100-v1'}),2500);
   }
 
   window.addEventListener('beforeunload',()=>{
