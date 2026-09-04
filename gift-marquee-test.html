@@ -6,42 +6,19 @@
 <title>Zoebot 贈訂跑馬燈測試</title>
 <style>
 *{box-sizing:border-box}
-body{
-  margin:0;
-  min-height:100vh;
-  background:#151821;
-  color:#fff;
-  font-family:Arial,'Noto Sans TC','Microsoft JhengHei',sans-serif;
-}
+body{margin:0;min-height:100vh;background:#151821;color:#fff;font-family:Arial,'Noto Sans TC','Microsoft JhengHei',sans-serif}
 .page{padding:24px;display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
-.controls{
-  width:330px;
-  background:#20242f;
-  border:1px solid #383e4d;
-  border-radius:16px;
-  padding:18px;
-}
-h1{font-size:23px;margin:0 0 8px}
-.note{font-size:13px;color:#aeb4c2;line-height:1.55;margin-bottom:14px}
+.controls{width:330px;background:#20242f;border:1px solid #383e4d;border-radius:16px;padding:18px}
+h1{font-size:23px;margin:0 0 8px}.note{font-size:13px;color:#aeb4c2;line-height:1.55;margin-bottom:14px}
 label{display:block;margin:12px 0 6px;color:#cdd2dc;font-size:14px}
 input{width:100%;height:42px;border-radius:9px;border:1px solid #454c5e;background:#11141c;color:white;padding:0 11px;font-size:17px}
 .buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
-button{height:40px;border:0;border-radius:9px;background:#ef629a;color:#fff;font-weight:800;cursor:pointer}
-button.low{background:#485063}
-button.high{background:#a97816}
-button.wide{grid-column:1/-1}
+button{height:40px;border:0;border-radius:9px;background:#ef629a;color:#fff;font-weight:800;cursor:pointer}button.low{background:#485063}button.high{background:#a97816}button.wide{grid-column:1/-1}
 #status{margin-top:14px;font-size:14px;color:#ffd5e5;line-height:1.5}
-.preview-area{display:flex;flex-direction:column;gap:8px}
-.preview-title{font-size:14px;color:#c4c9d4;max-width:630px;line-height:1.5}
-.preview-box{
-  width:630px;
-  height:420px;
-  position:relative;
-  background:transparent;
-  overflow:hidden;
-  border:1px dashed #545b6d;
-}
-#preview{width:630px;height:420px;border:0;display:block;background:transparent}
+.preview-area{display:flex;flex-direction:column;gap:8px}.preview-title{font-size:14px;color:#c4c9d4;max-width:630px;line-height:1.5}
+.preview-box{width:630px;height:476px;position:relative;background:#171a22;overflow:visible;border:1px dashed #545b6d}
+#preview{width:630px;height:476px;border:0;display:block;background:transparent}
+.legend{font-size:13px;color:#ff9eaa;max-width:630px;line-height:1.55}
 @media(max-width:1050px){.page{padding:14px}.controls{width:100%;max-width:630px}.preview-box{max-width:100%}}
 </style>
 </head>
@@ -49,57 +26,29 @@ button.wide{grid-column:1/-1}
 <div class="page">
   <section class="controls">
     <h1>跑馬燈測試</h1>
-    <div class="note">這版全程固定 <b>630 × 420</b>。平常就是原本 OBS 畫面；50+ 時原圖往下移 56px，底部會被裁掉一點，上方跑馬燈再從左邊滑進來。連續贈訂期間不會重複下移。</div>
-
-    <label for="name">贈訂者名稱</label>
-    <input id="name" value="調皮0123">
-
-    <label for="count">贈訂份數</label>
-    <input id="count" type="number" value="50" min="1">
-
+    <div class="note">正式輸出仍然是 <b>630 × 420</b>。右邊現在故意開啟「裁切檢視」，讓你看到圖片往下 56px 之後，真正有哪 56px 會被 OBS 畫面吃掉。</div>
+    <label for="name">贈訂者名稱</label><input id="name" value="調皮0123">
+    <label for="count">贈訂份數</label><input id="count" type="number" value="50" min="1">
     <div class="buttons">
-      <button class="low" data-count="5">5</button>
-      <button class="low" data-count="10">10</button>
-      <button data-count="50">50</button>
-      <button data-count="80">80</button>
-      <button class="high" data-count="100">100</button>
-      <button class="high" data-count="150">150</button>
-      <button class="high" data-count="200">200</button>
-      <button id="custom">自訂</button>
-      <button id="sequence" class="wide">連續測試 50 → 100 → 150 → 200</button>
+      <button class="low" data-count="5">5</button><button class="low" data-count="10">10</button><button data-count="50">50</button>
+      <button data-count="80">80</button><button class="high" data-count="100">100</button><button class="high" data-count="150">150</button>
+      <button class="high" data-count="200">200</button><button id="custom">自訂</button><button id="sequence" class="wide">連續測試 50 → 100 → 150 → 200</button>
     </div>
     <div id="status">待命中</div>
   </section>
-
   <section class="preview-area">
-    <div class="preview-title">實際輸出尺寸：固定 630 × 420。觸發跑馬燈時不增加畫布高度，直接吃掉底部約 56px。</div>
-    <div class="preview-box">
-      <iframe id="preview" src="gift-marquee-obs-test.html" scrolling="no" title="固定 630x420 跑馬燈測試"></iframe>
-    </div>
+    <div class="preview-title"><b>紅色虛線就是實際 630×420 的底線。</b> 觸發後，紅線下面露出的那一截，就是正式 OBS 裡會被裁掉的內容。</div>
+    <div class="preview-box"><iframe id="preview" src="gift-marquee-obs-test.html?debug=1" scrolling="no" title="固定 630x420 裁切檢視"></iframe></div>
+    <div class="legend">正式使用時紅線以下完全看不到；這個測試頁只是額外把那 56px 顯示出來，方便你判斷裁掉得多不多。</div>
   </section>
 </div>
 <script>
 (() => {
-  const preview=document.getElementById('preview');
-  const name=document.getElementById('name');
-  const count=document.getElementById('count');
-  const status=document.getElementById('status');
-
-  function send(v){
-    const c=Math.max(0,Math.floor(Number(v)||0));
-    const who=name.value.trim()||'匿名';
-    count.value=c;
-    preview.contentWindow?.postMessage({type:'zoebot-gift-marquee',name:who,count:c},'*');
-    if(c<50) status.textContent=`${c} 份：不觸發跑馬燈`;
-    else status.textContent=`已測試：${who} / ${c} 份`;
-  }
-
+  const preview=document.getElementById('preview'),name=document.getElementById('name'),count=document.getElementById('count'),status=document.getElementById('status');
+  function send(v){const c=Math.max(0,Math.floor(Number(v)||0)),who=name.value.trim()||'匿名';count.value=c;preview.contentWindow?.postMessage({type:'zoebot-gift-marquee',name:who,count:c},'*');status.textContent=c<50?`${c} 份：不觸發跑馬燈`:`已測試：${who} / ${c} 份；看紅線下方就是會被裁掉的部分`;}
   document.querySelectorAll('[data-count]').forEach(b=>b.addEventListener('click',()=>send(b.dataset.count)));
   document.getElementById('custom').addEventListener('click',()=>send(count.value));
-  document.getElementById('sequence').addEventListener('click',()=>{
-    [50,100,150,200].forEach((v,i)=>setTimeout(()=>send(v),i*220));
-    status.textContent='已送入 50 → 100 → 150 → 200 排隊測試；整張圖只會下移一次';
-  });
+  document.getElementById('sequence').addEventListener('click',()=>{[50,100,150,200].forEach((v,i)=>setTimeout(()=>send(v),i*220));status.textContent='已送入連續測試；畫面只下移一次，紅線下方即裁切區';});
   count.addEventListener('keydown',e=>{if(e.key==='Enter')send(count.value)});
 })();
 </script>
