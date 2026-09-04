@@ -5,21 +5,37 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>OBS 餘興節目計數器</title>
 <style>
+*{box-sizing:border-box}
 html,body{
   margin:0;
   padding:0;
-  width:100%;
-  height:100%;
+  width:630px;
+  height:420px;
   background:transparent;
   overflow:hidden;
+  font-family:Arial,'Noto Sans TC','Microsoft JhengHei',sans-serif;
 }
-#wrap{
+#stage{
   position:relative;
   width:630px;
   height:420px;
-  background:url('WF拍肚.png') 0 0 / 630px 420px no-repeat;
-  font-family:Arial,'Noto Sans TC','Microsoft JhengHei',sans-serif;
+  overflow:hidden;
+  background:transparent;
 }
+
+/* 原本的 630×420 計數器；跑馬燈期間只往下移，不縮放。 */
+#counterPanel{
+  position:absolute;
+  left:0;
+  top:0;
+  width:630px;
+  height:420px;
+  background:url('WF拍肚.png') 0 0 / 630px 420px no-repeat;
+  transform:translateY(0);
+  transition:transform .55s cubic-bezier(.22,.78,.24,1);
+  will-change:transform;
+}
+#stage.active #counterPanel{transform:translateY(56px)}
 .num{
   position:absolute;
   width:102px;
@@ -38,24 +54,121 @@ html,body{
   text-shadow:none;
   white-space:nowrap;
 }
-#months{left:464px;top:198px;}
-#gifts{left:464px;top:278px;}
+#months{left:464px;top:198px}
+#gifts{left:464px;top:278px}
+
+/* 跑馬燈固定在同一個 630×420 畫布內，原圖下移後底部自然被裁掉 56px。 */
+#marqueeSlot{
+  position:absolute;
+  left:0;
+  top:0;
+  width:630px;
+  height:56px;
+  overflow:hidden;
+  z-index:3;
+  pointer-events:none;
+}
+#banner{
+  position:absolute;
+  left:0;
+  top:0;
+  width:630px;
+  height:54px;
+  border-radius:14px;
+  overflow:hidden;
+  opacity:0;
+  transform:translateX(-650px);
+  transition:transform .42s cubic-bezier(.2,.9,.25,1),opacity .25s ease;
+  filter:drop-shadow(0 6px 10px rgba(0,0,0,.25));
+}
+#banner.show{opacity:1;transform:translateX(0)}
+#banner.standard{
+  background:linear-gradient(90deg,rgba(255,103,157,.97),rgba(255,180,210,.97),rgba(255,103,157,.97));
+  border:3px solid rgba(255,255,255,.95);
+}
+#banner.deluxe{
+  background:linear-gradient(100deg,#7c258d,#ed4f99 31%,#ffd04d 55%,#ed4f99 80%,#7c258d);
+  border:3px solid #fff0a2;
+  box-shadow:inset 0 0 14px rgba(255,255,255,.22);
+}
+#shine{
+  position:absolute;
+  inset:0;
+  background:linear-gradient(115deg,transparent 0 38%,rgba(255,255,255,.34) 45%,transparent 52%);
+  transform:translateX(-125%);
+}
+#banner.shine-now #shine{animation:shine 1.1s ease-out 1}
+@keyframes shine{to{transform:translateX(125%)}}
+#badge{
+  position:absolute;
+  left:8px;
+  top:7px;
+  height:36px;
+  min-width:96px;
+  padding:0 10px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.96);
+  color:#c62f6b;
+  font-size:17px;
+  font-weight:900;
+  white-space:nowrap;
+  z-index:2;
+}
+.deluxe #badge{color:#8c2872;background:linear-gradient(180deg,#fff5b6,#fff)}
+#lane{
+  position:absolute;
+  left:112px;
+  right:10px;
+  top:0;
+  height:100%;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+}
+#text{
+  position:absolute;
+  left:100%;
+  white-space:nowrap;
+  font-size:23px;
+  line-height:1;
+  font-weight:900;
+  color:#fff;
+  text-shadow:0 2px 7px rgba(80,0,35,.34);
+  will-change:transform;
+}
 </style>
 </head>
 <body>
-<div id="wrap">
-  <div id="months" class="num">1546</div>
-  <div id="gifts" class="num">395</div>
+<div id="stage">
+  <div id="counterPanel">
+    <div id="months" class="num">1546</div>
+    <div id="gifts" class="num">395</div>
+  </div>
+
+  <div id="marqueeSlot">
+    <div id="banner">
+      <div id="shine"></div>
+      <div id="badge">🎁 50 贈</div>
+      <div id="lane"><div id="text"></div></div>
+    </div>
+  </div>
 </div>
+
 <script>
 (() => {
-  const API='https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec?action=stats';
+  'use strict';
+
+  /* 保留現行計數器資料來源，避免動到既有累積數字機制。 */
+  const COUNTER_API='https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec?action=stats';
   const months=document.getElementById('months');
   const gifts=document.getElementById('gifts');
 
-  async function update(){
+  async function updateCounters(){
     try{
-      const r=await fetch(API+'&_='+Date.now(),{cache:'no-store'});
+      const r=await fetch(COUNTER_API+'&_='+Date.now(),{cache:'no-store'});
       const d=await r.json();
       if(d && d.ok!==false){
         const m=Number(d.subscriptionMonths);
@@ -67,9 +180,252 @@ html,body{
       console.error('Counter update failed',e);
     }
   }
+  updateCounters();
+  setInterval(updateCounters,5000);
 
-  update();
-  setInterval(update,5000);
+  /* 跑馬燈：50+ 才觸發；整體畫布永遠是 630×420。 */
+  const MIN_GIFT=50;
+  const DELUXE_GIFT=100;
+  const IDLE_GRACE_MS=1100;
+  const stage=document.getElementById('stage');
+  const banner=document.getElementById('banner');
+  const badge=document.getElementById('badge');
+  const lane=document.getElementById('lane');
+  const text=document.getElementById('text');
+  const queue=[];
+  const seenEventIds=new Set();
+  let playing=false;
+  let lastEnqueueAt=0;
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+  function normalize(payload){
+    return {
+      name:String(payload?.name||payload?.who||'匿名').trim()||'匿名',
+      count:Math.max(0,Math.floor(Number(payload?.count??payload?.total??0)||0)),
+      eventId:String(payload?.eventId||payload?.id||'').trim()
+    };
+  }
+
+  function specialText(count){
+    if(count===100)return '089457';
+    if(count===150)return '香港13太飽';
+    if(count>=200)return '全場起飛';
+    return '';
+  }
+
+  function messageFor({name,count}){
+    const pats=Math.floor(count/5);
+    const special=specialText(count);
+    if(count>=DELUXE_GIFT){
+      return `🔥 ${name} 豪擲 ${count} 份訂閱！${special?special+'！':''}海豹拍肚 +${pats} 🔥`;
+    }
+    return `🎁 ${name} 贈送 ${count} 份訂閱！海豹拍肚 +${pats}！`;
+  }
+
+  function setLook(item){
+    const deluxe=item.count>=DELUXE_GIFT;
+    banner.classList.remove('standard','deluxe','shine-now');
+    banner.classList.add(deluxe?'deluxe':'standard');
+    badge.textContent=deluxe?`👑 ${item.count} 贈`:`🎁 ${item.count} 贈`;
+    text.textContent=messageFor(item);
+    void banner.offsetWidth;
+    banner.classList.add('shine-now');
+  }
+
+  async function playOne(item){
+    setLook(item);
+    text.style.transition='none';
+    text.style.transform='translateX(0)';
+    await sleep(70);
+
+    const distance=lane.clientWidth+text.scrollWidth+30;
+    const deluxe=item.count>=DELUXE_GIFT;
+    const pxPerSecond=deluxe?112:126;
+    const duration=Math.max(deluxe?6.2:5.4,distance/pxPerSecond);
+    text.style.transition=`transform ${duration}s linear`;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      text.style.transform=`translateX(-${distance}px)`;
+    }));
+    await sleep(duration*1000);
+  }
+
+  async function waitForTrueIdle(){
+    while(true){
+      if(queue.length)return false;
+      const left=IDLE_GRACE_MS-(Date.now()-lastEnqueueAt);
+      if(left<=0)return true;
+      await sleep(Math.min(120,left));
+    }
+  }
+
+  async function drain(){
+    if(playing)return;
+    playing=true;
+
+    /* 第一筆進來只下移一次。 */
+    stage.classList.add('active');
+    await sleep(580);
+    banner.classList.add('show');
+    await sleep(430);
+
+    while(true){
+      while(queue.length){
+        await playOne(queue.shift());
+        await sleep(100);
+      }
+
+      if(!(await waitForTrueIdle()))continue;
+
+      /* 先收跑馬燈；若這段時間又有新贈訂，維持圖片在下方，不重複上下。 */
+      banner.classList.remove('show');
+      await sleep(420);
+      if(queue.length){
+        banner.classList.add('show');
+        await sleep(430);
+        continue;
+      }
+
+      stage.classList.remove('active');
+      await sleep(580);
+      if(queue.length){
+        stage.classList.add('active');
+        await sleep(580);
+        banner.classList.add('show');
+        await sleep(430);
+        continue;
+      }
+      break;
+    }
+
+    playing=false;
+    if(queue.length)drain();
+  }
+
+  function enqueue(payload){
+    const item=normalize(payload);
+    if(item.count<MIN_GIFT)return {accepted:false,reason:'below-threshold'};
+    if(item.eventId){
+      if(seenEventIds.has(item.eventId))return {accepted:false,reason:'duplicate'};
+      seenEventIds.add(item.eventId);
+      if(seenEventIds.size>500)seenEventIds.delete(seenEventIds.values().next().value);
+    }
+    lastEnqueueAt=Date.now();
+    queue.push(item);
+    drain();
+    return {accepted:true};
+  }
+
+  /* 保留測試／外部注入入口，不會影響正式 Twitch 監聽。 */
+  window.ZoeGiftMarquee={enqueue,getQueue:()=>queue.slice(),isPlaying:()=>playing,messageFor};
+  window.addEventListener('message',e=>{
+    if(e?.data?.type==='zoebot-gift-marquee')enqueue(e.data);
+  });
+
+  /*
+   * 正式觸發來源：直接從 OBS Browser Source 連 Twitch IRC。
+   * 只處理 community gift 的 USERNOTICE (submysterygift)，所以不會把後續每一份 subgift 重複播一次。
+   * 不需要 OAuth、不改現有 zoebot 計數寫入流程。
+   */
+  const params=new URLSearchParams(location.search);
+  const channel=(params.get('channel')||'puruniii').trim().replace(/^#/,'').toLowerCase();
+  const IRC_URL='wss://irc-ws.chat.twitch.tv:443';
+  let irc=null;
+  let reconnectTimer=null;
+  let reconnectAttempt=0;
+  let stopped=false;
+
+  function decodeTag(v){
+    return String(v||'').replace(/\\s/g,' ').replace(/\\:/g,';').replace(/\\r/g,'\r').replace(/\\n/g,'\n').replace(/\\\\/g,'\\');
+  }
+
+  function parseTags(line){
+    if(!line.startsWith('@'))return {};
+    const end=line.indexOf(' ');
+    if(end<0)return {};
+    const out={};
+    line.slice(1,end).split(';').forEach(part=>{
+      const i=part.indexOf('=');
+      const k=i<0?part:part.slice(0,i);
+      const v=i<0?'':part.slice(i+1);
+      out[k]=decodeTag(v);
+    });
+    return out;
+  }
+
+  function handleIrcLine(line){
+    if(!line)return;
+    if(line.startsWith('PING')){
+      try{irc?.send(line.replace(/^PING/,'PONG'));}catch(_){ }
+      return;
+    }
+    if(!line.includes(' USERNOTICE '))return;
+
+    const tags=parseTags(line);
+    const msgId=String(tags['msg-id']||'').toLowerCase();
+    if(msgId!=='submysterygift' && msgId!=='anonsubmysterygift')return;
+
+    const count=Number(tags['msg-param-mass-gift-count']);
+    if(!Number.isFinite(count)||count<MIN_GIFT)return;
+
+    const login=String(tags.login||'').toLowerCase();
+    let name=tags['display-name']||tags.login||'匿名';
+    if(!name || login==='ananonymousgifter' || login==='anonymousgifter')name='匿名';
+
+    enqueue({
+      name,
+      count,
+      eventId:tags.id||`${tags['tmi-sent-ts']||Date.now()}-${name}-${count}`
+    });
+  }
+
+  function scheduleReconnect(){
+    if(stopped||reconnectTimer)return;
+    const delay=Math.min(30000,2000*Math.pow(1.6,reconnectAttempt++));
+    reconnectTimer=setTimeout(()=>{
+      reconnectTimer=null;
+      connectIrc();
+    },delay);
+  }
+
+  function connectIrc(){
+    if(stopped||params.get('noIrc')==='1'||!channel)return;
+    try{irc?.close();}catch(_){ }
+    try{
+      irc=new WebSocket(IRC_URL);
+      irc.onopen=()=>{
+        reconnectAttempt=0;
+        const nick='justinfan'+Math.floor(10000+Math.random()*89999);
+        irc.send('PASS SCHMOOPIIE');
+        irc.send('NICK '+nick);
+        irc.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
+        irc.send('JOIN #'+channel);
+      };
+      irc.onmessage=e=>{
+        String(e.data||'').split(/\r?\n/).forEach(handleIrcLine);
+      };
+      irc.onerror=()=>{};
+      irc.onclose=()=>scheduleReconnect();
+    }catch(_){
+      scheduleReconnect();
+    }
+  }
+
+  connectIrc();
+
+  /* 手動測正式頁：?noIrc=1&testCount=100&testName=測試 */
+  if(params.has('testCount')){
+    setTimeout(()=>enqueue({
+      name:params.get('testName')||'測試觀眾',
+      count:params.get('testCount'),
+      eventId:'manual-'+Date.now()
+    }),500);
+  }
+
+  window.addEventListener('beforeunload',()=>{
+    stopped=true;
+    if(reconnectTimer)clearTimeout(reconnectTimer);
+    try{irc?.close();}catch(_){ }
+  });
 })();
 </script>
 </body>
