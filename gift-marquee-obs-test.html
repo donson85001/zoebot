@@ -52,10 +52,10 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
     </div>
   </div>
   <iframe id="counterFrame" src="obs-overlay.html" scrolling="no" title="現行累積豬叫與海豹拍"></iframe>
-  <div id="tier50Media"><video id="tier50Video" src="3xwater-260.mp4?v=910414b99450" muted playsinline preload="metadata"></video></div>
-  <div id="tier100Media"><video id="tier100Video" src="egg-780.mp4?v=b7d56d800a11" muted playsinline preload="metadata"></video></div>
-  <div id="tier150Media"><video id="tier150Video" src="lemon-780.mp4?v=c51774af6d5f" muted playsinline preload="metadata"></video></div>
-  <div id="tier200Media"><video id="tier200Video" src="cel-780.mp4?v=e7dcd42873ad" muted playsinline preload="metadata"></video></div>
+  <div id="tier50Media"><video id="tier50Video" src="3xwater-260.mp4?v=910414b99450" muted playsinline preload="auto"></video></div>
+  <div id="tier100Media"><video id="tier100Video" src="egg-780.mp4?v=b7d56d800a11" muted playsinline preload="auto"></video></div>
+  <div id="tier150Media"><video id="tier150Video" src="lemon-780.mp4?v=c51774af6d5f" muted playsinline preload="auto"></video></div>
+  <div id="tier200Media"><video id="tier200Video" src="cel-780.mp4?v=e7dcd42873ad" muted playsinline preload="auto"></video></div>
   <div id="cropLine"></div><div id="cropLabel">↓ 被裁掉 56px</div>
 </div>
 <script>
@@ -66,6 +66,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   const stage=document.getElementById('stage'),banner=document.getElementById('banner'),badgeIcon=document.getElementById('badgeIcon'),badgeCount=document.getElementById('badgeCount'),lane=document.getElementById('lane'),text=document.getElementById('text'),tier50Media=document.getElementById('tier50Media'),tier50Video=document.getElementById('tier50Video'),tier100Media=document.getElementById('tier100Media'),tier100Video=document.getElementById('tier100Video'),tier150Media=document.getElementById('tier150Media'),tier150Video=document.getElementById('tier150Video'),tier200Media=document.getElementById('tier200Media'),tier200Video=document.getElementById('tier200Video');
   const queue=[];let playing=false;const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   const mediaForCount=count=>count>=200?[tier200Media,tier200Video]:count>=150?[tier150Media,tier150Video]:count>=100?[tier100Media,tier100Video]:[tier50Media,tier50Video];
+  [tier50Video,tier100Video,tier150Video,tier200Video].forEach(video=>{video.preload='auto';try{video.load()}catch(e){}});
   function primeMediaForCount(count){const [,video]=mediaForCount(count);if(video.preload!=='auto'){video.preload='auto';video.load()}}
   function waitUntilPlayable(video,timeout=1200){if(video.readyState>=3)return Promise.resolve();return new Promise(resolve=>{let done=false;const finish=()=>{if(done)return;done=true;video.removeEventListener('canplay',finish);clearTimeout(timer);resolve()};const timer=setTimeout(finish,timeout);video.addEventListener('canplay',finish,{once:true})})}
   function normalize(p){return{name:String(p?.name||p?.who||'匿名').trim()||'匿名',count:Math.max(0,Math.floor(Number(p?.count??p?.total??0)||0))}}
