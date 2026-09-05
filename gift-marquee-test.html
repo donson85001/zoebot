@@ -34,7 +34,7 @@ button{height:40px;border:0;border-radius:9px;background:#ef629a;color:#fff;font
       <button data-count="80">80</button><button class="high" data-count="100">100</button><button class="high" data-count="150">150</button>
       <button class="high" data-count="200">200</button><button id="custom">自訂</button><button id="sequence" class="wide">連續測試 50 → 100 → 150 → 200</button>
     </div>
-    <div id="status">待命中</div>
+    <div id="status">載入測試畫面中…</div>
   </section>
   <section class="preview-area">
     <div class="preview-title"><b>紅色虛線就是實際 630×420 的底線。</b> 觸發後，紅線下面露出的那一截，就是正式 OBS 裡會被裁掉的內容。</div>
@@ -45,11 +45,15 @@ button{height:40px;border:0;border-radius:9px;background:#ef629a;color:#fff;font
 <script>
 (() => {
   const preview=document.getElementById('preview'),name=document.getElementById('name'),count=document.getElementById('count'),status=document.getElementById('status');
+  let previewReady=false;const pending=[];
+  function post(payload){if(!previewReady){pending.push(payload);return}preview.contentWindow?.postMessage(payload,'*')}
+  function flush(){while(pending.length)preview.contentWindow?.postMessage(pending.shift(),'*')}
+  preview.addEventListener('load',()=>{previewReady=true;flush();status.textContent='待命中'});
   preview.src='gift-marquee-obs-test.html?debug=1&_='+Date.now();
-  function send(v){const c=Math.max(0,Math.floor(Number(v)||0)),who=name.value.trim()||'匿名';count.value=c;preview.contentWindow?.postMessage({type:'zoebot-gift-marquee',name:who,count:c},'*');status.textContent=c<50?`${c} 份：不觸發跑馬燈`:`已測試：${who} / ${c} 份；看紅線下方就是會被裁掉的部分`;}
+  function send(v){const c=Math.max(0,Math.floor(Number(v)||0)),who=name.value.trim()||'匿名';count.value=c;post({type:'zoebot-gift-marquee',name:who,count:c});status.textContent=c<50?`${c} 份：不觸發跑馬燈`:`已測試：${who} / ${c} 份；看紅線下方就是會被裁掉的部分`;}
   document.querySelectorAll('[data-count]').forEach(b=>b.addEventListener('click',()=>send(b.dataset.count)));
   document.getElementById('custom').addEventListener('click',()=>send(count.value));
-  document.getElementById('sequence').addEventListener('click',()=>{[50,100,150,200].forEach((v,i)=>setTimeout(()=>send(v),i*220));status.textContent='已送入連續測試；畫面只下移一次，紅線下方即裁切區';});
+  document.getElementById('sequence').addEventListener('click',()=>{[50,100,150,200].forEach((v,i)=>setTimeout(()=>send(v),i*220));status.textContent=previewReady?'已送入連續測試；順序固定 50 → 100 → 150 → 200':'測試畫面尚在載入，會等載入完成後照 50 → 100 → 150 → 200 送出';});
   count.addEventListener('keydown',e=>{if(e.key==='Enter')send(count.value)});
 })();
 </script>
