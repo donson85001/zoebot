@@ -31,8 +31,9 @@ html,body{margin:0;padding:0;width:630px;height:420px;overflow:hidden;background
 #text{position:absolute;left:100%;white-space:nowrap;font-size:60px;line-height:1.02;font-weight:900;letter-spacing:.2px;color:#fff;text-shadow:0 4px 10px rgba(60,0,30,.34);will-change:transform}
 #counterFrame{position:absolute;left:0;top:0;width:630px;height:420px;border:0;margin:0;padding:0;background:transparent;transform:translateY(0);transition:transform .55s cubic-bezier(.22,.78,.24,1);will-change:transform}
 #stage.active #counterFrame{transform:translateY(56px)}
-#tier50Video{position:absolute;left:0;bottom:0;width:260px;height:260px;object-fit:cover;display:none;z-index:5;pointer-events:none}
-#tier50Video.show{display:block}
+#tier50Media{position:absolute;left:12px;top:154px;width:260px;height:260px;overflow:hidden;border-radius:18px;display:none;z-index:2;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.22)}
+#tier50Media.show{display:block}
+#tier50Video{width:100%;height:100%;object-fit:cover;transform:scale(1.12);transform-origin:center center;display:block}
 #cropLine,#cropLabel{display:none}
 body.debug{height:476px;overflow:visible;background:#171a22}
 body.debug #stage{height:476px;overflow:visible;background:rgba(0,0,0,.06)}
@@ -51,7 +52,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
     </div>
   </div>
   <iframe id="counterFrame" src="obs-overlay.html" scrolling="no" title="現行累積豬叫與海豹拍"></iframe>
-  <video id="tier50Video" muted playsinline preload="auto"></video>
+  <div id="tier50Media"><video id="tier50Video" muted playsinline preload="auto"></video></div>
   <div id="cropLine"></div><div id="cropLabel">↓ 被裁掉 56px</div>
 </div>
 <script>
@@ -59,7 +60,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   const params=new URLSearchParams(location.search);
   if(params.get('debug')==='1')document.body.classList.add('debug');
   const MIN_GIFT=50;
-  const stage=document.getElementById('stage'),banner=document.getElementById('banner'),badgeIcon=document.getElementById('badgeIcon'),badgeCount=document.getElementById('badgeCount'),lane=document.getElementById('lane'),text=document.getElementById('text'),tier50Video=document.getElementById('tier50Video');
+  const stage=document.getElementById('stage'),banner=document.getElementById('banner'),badgeIcon=document.getElementById('badgeIcon'),badgeCount=document.getElementById('badgeCount'),lane=document.getElementById('lane'),text=document.getElementById('text'),tier50Media=document.getElementById('tier50Media'),tier50Video=document.getElementById('tier50Video');
   let tier50VideoUrl='';let tier50VideoPromise=null;
   async function ensureTier50Video(){
     if(tier50VideoUrl)return tier50VideoUrl;
@@ -81,8 +82,8 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   function iconFor(count){if(count>=200)return'🔥';if(count>=150)return'👑';if(count>=100)return'⭐';return'🎁'}
   function messageFor({name,count}){const pats=Math.floor(count/5);if(count>=200)return`${name} 跟肉乙去區公所領了 ${count}顆花生！台中0859457！海豹拍肚 +${pats}！`;if(count>=150)return`肉乙爆氣把 ${name} 丟地板了 ${count}次！cheer10000 我只是剛好看到列車 大家安安！海豹拍肚 +${pats}！`;if(count>=100)return`肉乙塞給 ${name} ${count}個蛋塔！香港13太飽猴！海豹拍肚 +${pats}！`;return`肉乙被 ${name} 逼喝了 ${count}瓶水！電競媽祖保持微笑 :)！海豹拍肚 +${pats}！`}
   function setLook(item){const mode=modeFor(item.count);banner.classList.remove('mode50','mode100','mode150','mode200','shine-now');banner.classList.add(mode);badgeIcon.textContent=iconFor(item.count);badgeCount.textContent=String(item.count);text.textContent=messageFor(item);void banner.offsetWidth;banner.classList.add('shine-now')}
-  async function playOne(item){setLook(item);const showTier50=item.count>=50&&item.count<100;if(showTier50){try{await ensureTier50Video()}catch(e){console.error(e)}tier50Video.pause();try{tier50Video.currentTime=0}catch(e){}tier50Video.classList.add('show');try{await tier50Video.play()}catch(e){console.error(e)}}else{tier50Video.pause();try{tier50Video.currentTime=0}catch(e){}tier50Video.classList.remove('show')}text.style.transition='none';text.style.transform='translateX(0)';await sleep(70);const distance=lane.clientWidth+text.scrollWidth+54,pxPerSecond=item.count<100?188:172,duration=Math.max(item.count<100?6.8:7.2,distance/pxPerSecond);text.style.transition=`transform ${duration}s linear`;requestAnimationFrame(()=>requestAnimationFrame(()=>text.style.transform=`translateX(-${distance}px)`));await sleep(duration*1000);tier50Video.pause();try{tier50Video.currentTime=0}catch(e){}tier50Video.classList.remove('show')}
-  async function drain(){if(playing)return;playing=true;stage.classList.add('active');await sleep(580);banner.classList.add('show');await sleep(430);while(true){while(queue.length){await playOne(queue.shift());await sleep(100)}await sleep(420);if(queue.length)continue;break}tier50Video.pause();tier50Video.currentTime=0;tier50Video.classList.remove('show');banner.classList.remove('show');await sleep(420);stage.classList.remove('active');await sleep(580);playing=false;if(queue.length)drain()}
+  async function playOne(item){setLook(item);const showTier50=item.count>=50&&item.count<100;if(showTier50){try{await ensureTier50Video()}catch(e){console.error(e)}tier50Video.pause();try{tier50Video.currentTime=0}catch(e){}tier50Media.classList.add('show');try{await tier50Video.play()}catch(e){console.error(e)}}else{tier50Video.pause();try{tier50Video.currentTime=0}catch(e){}tier50Media.classList.remove('show')}text.style.transition='none';text.style.transform='translateX(0)';await sleep(70);const distance=lane.clientWidth+text.scrollWidth+54,pxPerSecond=item.count<100?188:172,duration=Math.max(item.count<100?6.8:7.2,distance/pxPerSecond);text.style.transition=`transform ${duration}s linear`;requestAnimationFrame(()=>requestAnimationFrame(()=>text.style.transform=`translateX(-${distance}px)`));await sleep(duration*1000);tier50Video.pause();try{tier50Video.currentTime=0}catch(e){}tier50Media.classList.remove('show')}
+  async function drain(){if(playing)return;playing=true;stage.classList.add('active');await sleep(580);banner.classList.add('show');await sleep(430);while(true){while(queue.length){await playOne(queue.shift());await sleep(100)}await sleep(420);if(queue.length)continue;break}tier50Video.pause();tier50Video.currentTime=0;tier50Media.classList.remove('show');banner.classList.remove('show');await sleep(420);stage.classList.remove('active');await sleep(580);playing=false;if(queue.length)drain()}
   function enqueue(payload){const item=normalize(payload);if(item.count<MIN_GIFT)return{accepted:false,reason:'below-threshold'};queue.push(item);drain();return{accepted:true}}
   window.ZoeGiftMarquee={enqueue,getQueue:()=>queue.slice(),isPlaying:()=>playing};
   window.addEventListener('message',e=>{if(e?.data?.type==='zoebot-gift-marquee')enqueue(e.data)});
