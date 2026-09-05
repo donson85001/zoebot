@@ -52,7 +52,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
     </div>
   </div>
   <iframe id="counterFrame" src="obs-overlay.html" scrolling="no" title="現行累積豬叫與海豹拍"></iframe>
-  <div id="tier50Media"><video id="tier50Video" muted playsinline preload="auto"></video></div>
+  <div id="tier50Media"><video id="tier50Video" src="3xwater-260.mp4?v=20260905-0940" muted playsinline preload="auto"></video></div>
   <div id="cropLine"></div><div id="cropLabel">↓ 被裁掉 56px</div>
 </div>
 <script>
@@ -61,28 +61,13 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   if(params.get('debug')==='1')document.body.classList.add('debug');
   const MIN_GIFT=50;
   const stage=document.getElementById('stage'),banner=document.getElementById('banner'),badgeIcon=document.getElementById('badgeIcon'),badgeCount=document.getElementById('badgeCount'),lane=document.getElementById('lane'),text=document.getElementById('text'),tier50Media=document.getElementById('tier50Media'),tier50Video=document.getElementById('tier50Video');
-  let tier50VideoUrl='';let tier50VideoPromise=null;
-  async function ensureTier50Video(){
-    if(tier50VideoUrl)return tier50VideoUrl;
-    if(tier50VideoPromise)return tier50VideoPromise;
-    tier50VideoPromise=(async()=>{
-      const names=Array.from({length:9},(_,i)=>`water44-${String(i).padStart(2,'0')}.txt?v=20260905-0838`);
-      const parts=await Promise.all(names.map(async name=>{const r=await fetch(name,{cache:'no-store'});if(!r.ok)throw new Error(`media chunk ${name} ${r.status}`);return(await r.text()).trim()}));
-      const raw=atob(parts.join('')),bytes=new Uint8Array(raw.length);
-      for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
-      tier50VideoUrl=URL.createObjectURL(new Blob([bytes],{type:'video/mp4'}));
-      tier50Video.src=tier50VideoUrl;tier50Video.load();return tier50VideoUrl;
-    })();
-    return tier50VideoPromise;
-  }
-  ensureTier50Video().catch(console.error);
   const queue=[];let playing=false;const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   function normalize(p){return{name:String(p?.name||p?.who||'匿名').trim()||'匿名',count:Math.max(0,Math.floor(Number(p?.count??p?.total??0)||0))}}
   function modeFor(count){if(count>=200)return'mode200';if(count>=150)return'mode150';if(count>=100)return'mode100';return'mode50'}
   function iconFor(count){if(count>=200)return'🔥';if(count>=150)return'👑';if(count>=100)return'⭐';return'🎁'}
   function messageFor({name,count}){const pats=Math.floor(count/5);if(count>=200)return`${name} 跟肉乙去區公所領了 ${count}顆花生！台中0859457！海豹拍肚 +${pats}！`;if(count>=150)return`肉乙爆氣把 ${name} 丟地板了 ${count}次！cheer10000 我只是剛好看到列車 大家安安！海豹拍肚 +${pats}！`;if(count>=100)return`肉乙塞給 ${name} ${count}個蛋塔！香港13太飽猴！海豹拍肚 +${pats}！`;return`肉乙被 ${name} 逼喝了 ${count}瓶水！電競媽祖保持微笑 :)！海豹拍肚 +${pats}！`}
   function setLook(item){const mode=modeFor(item.count);banner.classList.remove('mode50','mode100','mode150','mode200','shine-now');banner.classList.add(mode);badgeIcon.textContent=iconFor(item.count);badgeCount.textContent=String(item.count);text.textContent=messageFor(item);void banner.offsetWidth;banner.classList.add('shine-now')}
-  async function playOne(item){setLook(item);const showTier50=item.count>=50&&item.count<100;if(showTier50){try{await ensureTier50Video()}catch(e){console.error(e)}tier50Video.pause();try{tier50Video.currentTime=0}catch(e){}tier50Media.classList.add('show');try{await tier50Video.play()}catch(e){console.error(e)}}else{tier50Video.pause();try{tier50Video.currentTime=0}catch(e){}tier50Media.classList.remove('show')}text.style.transition='none';text.style.transform='translateX(0)';await sleep(70);const distance=lane.clientWidth+text.scrollWidth+54,pxPerSecond=item.count<100?188:172,duration=Math.max(item.count<100?6.8:7.2,distance/pxPerSecond);text.style.transition=`transform ${duration}s linear`;requestAnimationFrame(()=>requestAnimationFrame(()=>text.style.transform=`translateX(-${distance}px)`));await sleep(duration*1000);tier50Video.pause();try{tier50Video.currentTime=0}catch(e){}tier50Media.classList.remove('show')}
+  async function playOne(item){setLook(item);const showTier50=item.count>=50&&item.count<100;if(showTier50){tier50Video.pause();try{tier50Video.currentTime=0}catch(e){}tier50Media.classList.add('show');try{await tier50Video.play()}catch(e){console.error(e)}}else{tier50Video.pause();try{tier50Video.currentTime=0}catch(e){}tier50Media.classList.remove('show')}text.style.transition='none';text.style.transform='translateX(0)';await sleep(70);const distance=lane.clientWidth+text.scrollWidth+54,pxPerSecond=item.count<100?188:172,duration=Math.max(item.count<100?6.8:7.2,distance/pxPerSecond);text.style.transition=`transform ${duration}s linear`;requestAnimationFrame(()=>requestAnimationFrame(()=>text.style.transform=`translateX(-${distance}px)`));await sleep(duration*1000);tier50Video.pause();try{tier50Video.currentTime=0}catch(e){}tier50Media.classList.remove('show')}
   async function drain(){if(playing)return;playing=true;stage.classList.add('active');await sleep(580);banner.classList.add('show');await sleep(430);while(true){while(queue.length){await playOne(queue.shift());await sleep(100)}await sleep(420);if(queue.length)continue;break}tier50Video.pause();tier50Video.currentTime=0;tier50Media.classList.remove('show');banner.classList.remove('show');await sleep(420);stage.classList.remove('active');await sleep(580);playing=false;if(queue.length)drain()}
   function enqueue(payload){const item=normalize(payload);if(item.count<MIN_GIFT)return{accepted:false,reason:'below-threshold'};queue.push(item);drain();return{accepted:true}}
   window.ZoeGiftMarquee={enqueue,getQueue:()=>queue.slice(),isPlaying:()=>playing};
