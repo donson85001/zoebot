@@ -31,9 +31,9 @@ html,body{margin:0;padding:0;width:630px;height:420px;overflow:hidden;background
 #text{position:absolute;left:100%;white-space:nowrap;font-size:60px;line-height:1.02;font-weight:900;letter-spacing:.2px;color:#fff;text-shadow:0 4px 10px rgba(60,0,30,.34);will-change:transform}
 #counterFrame{position:absolute;left:0;top:0;width:630px;height:420px;border:0;margin:0;padding:0;background:transparent;transform:translateY(0);transition:transform .55s cubic-bezier(.22,.78,.24,1);will-change:transform}
 #stage.active #counterFrame{transform:translateY(56px)}
-#tier50Media,#tier100Media{position:absolute;left:12px;top:154px;width:260px;height:260px;overflow:hidden;border-radius:18px;display:none;z-index:2;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.22)}
-#tier50Media.show,#tier100Media.show{display:block}
-#tier50Video,#tier100Video{width:100%;height:100%;object-fit:cover;transform:scale(1.12);transform-origin:center center;display:block}
+#tier50Media,#tier100Media,#tier150Media{position:absolute;left:12px;top:154px;width:260px;height:260px;overflow:hidden;border-radius:18px;display:none;z-index:2;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.22)}
+#tier50Media.show,#tier100Media.show,#tier150Media.show{display:block}
+#tier50Video,#tier100Video,#tier150Video{width:100%;height:100%;object-fit:cover;transform:scale(1.12);transform-origin:center center;display:block}
 #cropLine,#cropLabel{display:none}
 body.debug{height:476px;overflow:visible;background:#171a22}
 body.debug #stage{height:476px;overflow:visible;background:rgba(0,0,0,.06)}
@@ -53,7 +53,8 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   </div>
   <iframe id="counterFrame" src="obs-overlay.html" scrolling="no" title="現行累積豬叫與海豹拍"></iframe>
   <div id="tier50Media"><video id="tier50Video" src="3xwater-260.mp4?v=910414b99450" muted playsinline preload="auto"></video></div>
-  <div id="tier100Media"><video id="tier100Video" src="lemon-780.mp4?v=c51774af6d5f" muted playsinline preload="auto"></video></div>
+  <div id="tier100Media"><video id="tier100Video" src="egg-780.mp4?v=b7d56d800a11" muted playsinline preload="auto"></video></div>
+  <div id="tier150Media"><video id="tier150Video" src="lemon-780.mp4?v=c51774af6d5f" muted playsinline preload="auto"></video></div>
   <div id="cropLine"></div><div id="cropLabel">↓ 被裁掉 56px</div>
 </div>
 <script>
@@ -61,7 +62,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   const params=new URLSearchParams(location.search);
   if(params.get('debug')==='1')document.body.classList.add('debug');
   const MIN_GIFT=50;
-  const stage=document.getElementById('stage'),banner=document.getElementById('banner'),badgeIcon=document.getElementById('badgeIcon'),badgeCount=document.getElementById('badgeCount'),lane=document.getElementById('lane'),text=document.getElementById('text'),tier50Media=document.getElementById('tier50Media'),tier50Video=document.getElementById('tier50Video'),tier100Media=document.getElementById('tier100Media'),tier100Video=document.getElementById('tier100Video');
+  const stage=document.getElementById('stage'),banner=document.getElementById('banner'),badgeIcon=document.getElementById('badgeIcon'),badgeCount=document.getElementById('badgeCount'),lane=document.getElementById('lane'),text=document.getElementById('text'),tier50Media=document.getElementById('tier50Media'),tier50Video=document.getElementById('tier50Video'),tier100Media=document.getElementById('tier100Media'),tier100Video=document.getElementById('tier100Video'),tier150Media=document.getElementById('tier150Media'),tier150Video=document.getElementById('tier150Video');
   const queue=[];let playing=false;const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   function normalize(p){return{name:String(p?.name||p?.who||'匿名').trim()||'匿名',count:Math.max(0,Math.floor(Number(p?.count??p?.total??0)||0))}}
   function modeFor(count){if(count>=200)return'mode200';if(count>=150)return'mode150';if(count>=100)return'mode100';return'mode50'}
@@ -70,8 +71,8 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   function setLook(item){const mode=modeFor(item.count);banner.classList.remove('mode50','mode100','mode150','mode200','shine-now');banner.classList.add(mode);badgeIcon.textContent=iconFor(item.count);badgeCount.textContent=String(item.count);text.textContent=messageFor(item);void banner.offsetWidth;banner.classList.add('shine-now')}
   function stopMedia(media,video){video.pause();try{video.currentTime=0}catch(e){}media.classList.remove('show')}
   async function startMedia(media,video){video.pause();try{video.currentTime=0}catch(e){}media.classList.add('show');try{await video.play()}catch(e){console.error(e)}}
-  async function playOne(item){setLook(item);stopMedia(tier50Media,tier50Video);stopMedia(tier100Media,tier100Video);if(item.count>=50&&item.count<100)await startMedia(tier50Media,tier50Video);else if(item.count>=100&&item.count<150)await startMedia(tier100Media,tier100Video);text.style.transition='none';text.style.transform='translateX(0)';await sleep(70);const distance=lane.clientWidth+text.scrollWidth+54,pxPerSecond=item.count<100?188:172,duration=Math.max(item.count<100?6.8:7.2,distance/pxPerSecond);text.style.transition=`transform ${duration}s linear`;requestAnimationFrame(()=>requestAnimationFrame(()=>text.style.transform=`translateX(-${distance}px)`));await sleep(duration*1000);stopMedia(tier50Media,tier50Video);stopMedia(tier100Media,tier100Video)}
-  async function drain(){if(playing)return;playing=true;stage.classList.add('active');await sleep(580);banner.classList.add('show');await sleep(430);while(true){while(queue.length){await playOne(queue.shift());await sleep(100)}await sleep(420);if(queue.length)continue;break}stopMedia(tier50Media,tier50Video);stopMedia(tier100Media,tier100Video);banner.classList.remove('show');await sleep(420);stage.classList.remove('active');await sleep(580);playing=false;if(queue.length)drain()}
+  async function playOne(item){setLook(item);stopMedia(tier50Media,tier50Video);stopMedia(tier100Media,tier100Video);stopMedia(tier150Media,tier150Video);if(item.count>=50&&item.count<100)await startMedia(tier50Media,tier50Video);else if(item.count>=100&&item.count<150)await startMedia(tier100Media,tier100Video);else if(item.count>=150&&item.count<200)await startMedia(tier150Media,tier150Video);text.style.transition='none';text.style.transform='translateX(0)';await sleep(70);const distance=lane.clientWidth+text.scrollWidth+54,pxPerSecond=item.count<100?188:172,duration=Math.max(item.count<100?6.8:7.2,distance/pxPerSecond);text.style.transition=`transform ${duration}s linear`;requestAnimationFrame(()=>requestAnimationFrame(()=>text.style.transform=`translateX(-${distance}px)`));await sleep(duration*1000);stopMedia(tier50Media,tier50Video);stopMedia(tier100Media,tier100Video);stopMedia(tier150Media,tier150Video)}
+  async function drain(){if(playing)return;playing=true;stage.classList.add('active');await sleep(580);banner.classList.add('show');await sleep(430);while(true){while(queue.length){await playOne(queue.shift());await sleep(100)}await sleep(420);if(queue.length)continue;break}stopMedia(tier50Media,tier50Video);stopMedia(tier100Media,tier100Video);stopMedia(tier150Media,tier150Video);banner.classList.remove('show');await sleep(420);stage.classList.remove('active');await sleep(580);playing=false;if(queue.length)drain()}
   function enqueue(payload){const item=normalize(payload);if(item.count<MIN_GIFT)return{accepted:false,reason:'below-threshold'};queue.push(item);drain();return{accepted:true}}
   window.ZoeGiftMarquee={enqueue,getQueue:()=>queue.slice(),isPlaying:()=>playing};
   window.addEventListener('message',e=>{if(e?.data?.type==='zoebot-gift-marquee')enqueue(e.data)});
