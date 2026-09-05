@@ -34,8 +34,8 @@ html,body{margin:0;padding:0;width:630px;height:420px;overflow:hidden;background
 #badgeUnit{font-size:13px;line-height:1;font-weight:900;margin-bottom:2px;letter-spacing:.2px}
 #lane{position:absolute;left:132px;right:18px;top:0;height:100%;overflow:hidden;display:flex;align-items:center}
 #text{position:absolute;left:100%;white-space:nowrap;font-size:60px;line-height:1.02;font-weight:900;letter-spacing:.2px;color:#fff;text-shadow:0 4px 10px rgba(60,0,30,.34);will-change:transform}
-#tier50Media,#tier100Media,#tier150Media,#tier200Media{position:absolute;left:12px;top:154px;width:260px;height:260px;overflow:hidden;border-radius:18px;display:none;z-index:2;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.22)}
-#tier50Media.show,#tier100Media.show,#tier150Media.show,#tier200Media.show{display:block}
+#tier50Media,#tier100Media,#tier150Media,#tier200Media{position:absolute;left:12px;top:154px;width:260px;height:260px;overflow:hidden;border-radius:18px;display:block;opacity:0;z-index:2;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.22);transition:opacity .06s linear}
+#tier50Media.show,#tier100Media.show,#tier150Media.show,#tier200Media.show{opacity:1}
 #tier50Video,#tier100Video,#tier150Video,#tier200Video{width:100%;height:100%;object-fit:cover;transform:scale(1.12);transform-origin:center center;display:block}
 </style>
 </head>
@@ -63,7 +63,7 @@ html,body{margin:0;padding:0;width:630px;height:420px;overflow:hidden;background
 <script>
 (() => {
   'use strict';
-  const OBS_BUILD='20260905-1545-production-media-v11';
+  const OBS_BUILD='20260905-1740-production-media-v12';
   const UPDATE_CHECK_MS=10000;
   const MIN_GIFT=50;
   const IDLE_GRACE_MS=1100;
@@ -89,14 +89,23 @@ html,body{margin:0;padding:0;width:630px;height:420px;overflow:hidden;background
   let lastEnqueueAt=0;
   let pendingBuild='';
   let recoveryReloadPending=false;
+  let activeMedia=null;
+  let activeVideo=null;
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-  const mediaForCount=count=>count>=200?[tier200Media,tier200Video]:count>=150?[tier150Media,tier150Video]:count>=100?[tier100Media,tier100Video]:[tier50Media,tier50Video];
-  [tier50Video,tier100Video,tier150Video,tier200Video].forEach(video=>{video.preload='auto';try{video.load()}catch(e){}});
+  const mediaPairs=[[tier50Media,tier50Video],[tier100Media,tier100Video],[tier150Media,tier150Video],[tier200Media,tier200Video]];
+  const mediaForCount=count=>count>=200?mediaPairs[3]:count>=150?mediaPairs[2]:count>=100?mediaPairs[1]:mediaPairs[0];
+  mediaPairs.forEach(([,video])=>{video.preload='auto';try{video.load()}catch(e){}});
   function primeMediaForCount(count){const [,video]=mediaForCount(count);if(video.preload!=='auto'){video.preload='auto';video.load()}}
-  function waitUntilPlayable(video,timeout=1200){if(video.readyState>=3)return Promise.resolve();return new Promise(resolve=>{let done=false;const finish=()=>{if(done)return;done=true;video.removeEventListener('canplay',finish);clearTimeout(timer);resolve()};const timer=setTimeout(finish,timeout);video.addEventListener('canplay',finish,{once:true})})}
-  function stopMedia(media,video){video.pause();try{video.currentTime=0}catch(e){}media.classList.remove('show')}
-  async function startMedia(media,video){await waitUntilPlayable(video);video.pause();try{video.currentTime=0}catch(e){}media.classList.add('show');try{await video.play()}catch(e){console.error(e)}}
-  function stopAllMedia(){stopMedia(tier50Media,tier50Video);stopMedia(tier100Media,tier100Video);stopMedia(tier150Media,tier150Video);stopMedia(tier200Media,tier200Video)}
+  function waitUntilPlayable(video,timeout=700){if(video.readyState>=3)return Promise.resolve();return new Promise(resolve=>{let done=false;const finish=()=>{if(done)return;done=true;video.removeEventListener('canplay',finish);clearTimeout(timer);resolve()};const timer=setTimeout(finish,timeout);video.addEventListener('canplay',finish,{once:true})})}
+  function waitForRenderedFrame(video,timeout=450){if(typeof video.requestVideoFrameCallback==='function')return new Promise(resolve=>{let done=false;const finish=()=>{if(done)return;done=true;clearTimeout(timer);resolve()};const timer=setTimeout(finish,timeout);video.requestVideoFrameCallback(finish)});return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))}
+  function resetVideo(video){video.pause();try{video.currentTime=0}catch(e){}}
+  async function switchMedia(media,video){
+    if(activeVideo===video){resetVideo(video);try{await video.play()}catch(e){console.error(e)}await waitForRenderedFrame(video);return}
+    await waitUntilPlayable(video);resetVideo(video);try{await video.play()}catch(e){console.error(e)}await waitForRenderedFrame(video);
+    const oldMedia=activeMedia,oldVideo=activeVideo;media.classList.add('show');activeMedia=media;activeVideo=video;
+    if(oldMedia&&oldMedia!==media){oldMedia.classList.remove('show');resetVideo(oldVideo)}
+  }
+  function hideActive(){if(activeMedia)activeMedia.classList.remove('show');if(activeVideo)resetVideo(activeVideo);activeMedia=null;activeVideo=null}
   function reloadToBuild(build){
     const next=new URL(location.href);
     next.searchParams.set('__obs_build',build||OBS_BUILD);
@@ -154,9 +163,17 @@ html,body{margin:0;padding:0;width:630px;height:420px;overflow:hidden;background
   try{const saved=JSON.parse(localStorage.getItem(SHEET_PENDING_KEY)||'[]');if(Array.isArray(saved))saved.slice(-100).forEach(x=>{const item=normalize(x);if(item.eventId&&item.count>=MIN_GIFT)sheetPending.set(item.eventId,item)})}catch(_){}
   function saveSheetState(){try{localStorage.setItem(SHEET_SEEN_KEY,JSON.stringify([...sheetSeen].slice(-500)));localStorage.setItem(SHEET_PENDING_KEY,JSON.stringify([...sheetPending.values()].slice(-100)));localStorage.setItem(SHEET_INIT_KEY,'1')}catch(_){}}
   function markEventComplete(item){if(!item?.eventId)return;sheetPending.delete(item.eventId);sheetSeen.add(item.eventId);if(sheetSeen.size>500)sheetSeen.delete(sheetSeen.values().next().value);saveSheetState()}
-  async function playOne(item){setLook(item);stopAllMedia();const [media,video]=mediaForCount(item.count);await startMedia(media,video);text.style.transition='none';text.style.transform='translateX(0)';await sleep(70);const distance=lane.clientWidth+text.scrollWidth+54,pxPerSecond=item.count<100?188:172,duration=Math.max(item.count<100?6.8:7.2,distance/pxPerSecond);text.style.transition=`transform ${duration}s linear`;requestAnimationFrame(()=>requestAnimationFrame(()=>text.style.transform=`translateX(-${distance}px)`));await sleep(duration*1000);stopAllMedia();markEventComplete(item)}
+  async function playOne(item){
+    const [media,video]=mediaForCount(item.count);await switchMedia(media,video);setLook(item);
+    text.style.transition='none';text.style.transform='translateX(0)';await sleep(70);
+    const distance=lane.clientWidth+text.scrollWidth+54,pxPerSecond=item.count<100?188:172,duration=Math.max(item.count<100?6.8:7.2,distance/pxPerSecond);
+    text.style.transition=`transform ${duration}s linear`;requestAnimationFrame(()=>requestAnimationFrame(()=>text.style.transform=`translateX(-${distance}px)`));
+    await sleep(duration*1000);
+    markEventComplete(item);
+    if(!queue.length)hideActive();
+  }
   async function waitForTrueIdle(){while(true){if(queue.length)return false;const left=IDLE_GRACE_MS-(Date.now()-lastEnqueueAt);if(left<=0)return true;await sleep(Math.min(120,left))}}
-  async function drain(){if(playing)return;playing=true;stage.classList.add('active');await sleep(580);banner.classList.add('show');await sleep(430);while(true){while(queue.length){await playOne(queue.shift());await sleep(100)}if(!(await waitForTrueIdle()))continue;stopAllMedia();banner.classList.remove('show');await sleep(420);if(queue.length){banner.classList.add('show');await sleep(430);continue}stage.classList.remove('active');await sleep(580);if(queue.length){stage.classList.add('active');await sleep(580);banner.classList.add('show');await sleep(430);continue}break}playing=false;if(pendingBuild){const build=pendingBuild;pendingBuild='';reloadToBuild(build);return}if(recoveryReloadPending){recoveryReloadPending=false;reloadToBuild(OBS_BUILD);return}if(queue.length)drain()}
+  async function drain(){if(playing)return;playing=true;stage.classList.add('active');await sleep(580);if(queue.length)setLook(queue[0]);banner.classList.add('show');await sleep(430);while(true){while(queue.length){await playOne(queue.shift());await sleep(100)}if(!(await waitForTrueIdle()))continue;hideActive();banner.classList.remove('show');await sleep(420);if(queue.length){if(queue.length)setLook(queue[0]);banner.classList.add('show');await sleep(430);continue}stage.classList.remove('active');await sleep(580);if(queue.length){stage.classList.add('active');await sleep(580);if(queue.length)setLook(queue[0]);banner.classList.add('show');await sleep(430);continue}break}playing=false;if(pendingBuild){const build=pendingBuild;pendingBuild='';reloadToBuild(build);return}if(recoveryReloadPending){recoveryReloadPending=false;reloadToBuild(OBS_BUILD);return}if(queue.length)drain()}
   function enqueue(payload){const item=normalize(payload);if(item.count<MIN_GIFT)return{accepted:false,reason:'below-threshold'};primeMediaForCount(item.count);if(item.eventId){if(seenEventIds.has(item.eventId))return{accepted:false,reason:'duplicate'};seenEventIds.add(item.eventId);if(seenEventIds.size>500)seenEventIds.delete(seenEventIds.values().next().value)}lastEnqueueAt=Date.now();queue.push(item);drain();return{accepted:true}}
   window.ZoeGiftMarquee={enqueue,getQueue:()=>queue.slice(),isPlaying:()=>playing,messageFor};
   window.addEventListener('message',e=>{if(e?.data?.type==='zoebot-gift-marquee')enqueue(e.data)});
