@@ -1,0 +1,93 @@
+name: Patch lemon marquee once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-lemon-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch formal and test marquee
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace(path, old, new):
+              p = Path(path)
+              s = p.read_text(encoding='utf-8')
+              if old in s:
+                  s = s.replace(old, new)
+                  p.write_text(s, encoding='utf-8')
+                  print('patched', path)
+              elif new in s:
+                  print('already patched', path)
+              else:
+                  raise SystemExit(f'Expected text not found in {path}: {old[:100]}')
+
+          lemon = 'lemon-780.mp4?v=c51774af6d5f'
+          cel = 'cel-780.mp4?v=07f9f2a1be14'
+          old_msg = "if(count>=200)return`${name} 跟肉乙去區公所領了 ${count}顆花生！台中0859457！海豹拍肚 +${pats}！`;"
+          new_msg = "if(count>=200)return`肉乙把 ${name} 丟地板了 ${count}次！我就把你布置好的東西全部弄掉！海豹拍肚 +${pats}！`;"
+
+          for f in ['obs-overlay-core-v16.html', 'gift-marquee-obs-test.html']:
+              replace(f, cel, lemon)
+              replace(f, old_msg, new_msg)
+
+          replace('obs-overlay-core-v16.html',
+                  "const OBS_BUILD='20260907-1933-production-150-v16'",
+                  "const OBS_BUILD='20260908-0440-production-lemon-v18'")
+          replace('obs-overlay.html',
+                  "const OBS_BUILD='20260908-0120-sheet-variant-bootstrap-v17';",
+                  "const OBS_BUILD='20260908-0440-sheet-variant-lemon-v18';")
+          replace('obs-overlay.html',
+                  "const CORE_URL='obs-overlay-core-v16.html?v=20260908-0120';",
+                  "const CORE_URL='obs-overlay-core-v16.html?v=20260908-0440-lemon';")
+          replace('gift-marquee-test.html',
+                  '<button data-count="200" data-variant="1" data-label="cel">1 cel</button>',
+                  '<button data-count="200" data-variant="1" data-label="lemon">1 lemon</button>')
+          PY
+
+          echo '--- patched references ---'
+          grep -n "lemon-780.mp4\|肉乙把 .*丟地板了\|1 lemon\|OBS_BUILD=.*lemon\|CORE_URL=.*lemon" obs-overlay-core-v16.html obs-overlay.html gift-marquee-obs-test.html gift-marquee-test.html
+
+      - name: Check lemon duration
+        shell: bash
+        run: |
+          if ! command -v ffprobe >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq ffmpeg
+          fi
+          DURATION=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 lemon-780.mp4)
+          echo "LEMON_DURATION_SECONDS=$DURATION"
+          python3 - "$DURATION" <<'PY'
+          import sys
+          d=float(sys.argv[1])
+          if 4.5 <= d <= 30:
+              print(f'MARQUEE_DURATION_SECONDS={max(4.5,d-0.15):.3f}')
+              print('MATCH_MODE=video-duration-minus-0.15s')
+          else:
+              print('MATCH_MODE=natural-text-speed-fallback')
+          PY
+
+      - name: Commit patch and remove one-shot workflow
+        shell: bash
+        run: |
+          rm -f .github/workflows/patch-lemon-once.yml
+          git config user.name "donson85001"
+          git config user.email "donson85001@gmail.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git commit -m "Use lemon for 200-1 marquee"
+          git push
