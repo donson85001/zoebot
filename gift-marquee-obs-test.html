@@ -56,7 +56,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
     </div>
   </div>
 
-  <div class="tierMedia" data-tier="50" data-variant="1" data-muted="1"><video src="3xwater-260.mp4?v=0e4aa2ce4bfd" muted playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="50" data-variant="1" data-muted="1"><video src="3xwater-260.mp4?v=3e46292d149c" muted playsinline preload="none"></video></div>
   <div class="tierMedia" data-tier="50" data-variant="2"><video src="Conan-520.mp4?v=32ffb0869107" playsinline preload="none"></video></div>
   <div class="tierMedia" data-tier="50" data-variant="3"><video src="shark-520.mp4?v=1ec76444f5b3" playsinline preload="none"></video></div>
 
@@ -68,7 +68,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   <div class="tierMedia" data-tier="150" data-variant="2"><video src="02-520.mp4?v=35cd2feddb1a" playsinline preload="none"></video></div>
   <div class="tierMedia" data-tier="150" data-variant="3"><video src="facechange-520.mp4?v=c741fa297cc7" playsinline preload="none"></video></div>
 
-  <div class="tierMedia" data-tier="200" data-variant="1" data-muted="1"><video src="cel-780.mp4?v=abdf71ca8ebb" muted playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="200" data-variant="1" data-muted="1"><video src="cel-780.mp4?v=07f9f2a1be14" muted playsinline preload="none"></video></div>
   <div class="tierMedia" data-tier="200" data-variant="2"><video src="up-520.mp4?v=a6da404f2f61" playsinline preload="none"></video></div>
   <div class="tierMedia" data-tier="200" data-variant="3"><video src="necklace-520.mp4?v=c23699f1b7d9" playsinline preload="none"></video></div>
 
@@ -148,7 +148,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   function chooseVariant(item){if(item.variant>=1&&item.variant<=3)return item.variant;const tier=tierForCount(item.count),v=nextVariant[tier];nextVariant[tier]=v>=3?1:v+1;return v}
   function durationFor(item,entry,distance){
     const pxPerSecond=item.count<100?188:172,natural=Math.max(item.count<100?6.8:7.2,distance/pxPerSecond),clip=Number(entry.video.duration);
-    if(item.variant>=2&&Number.isFinite(clip)&&clip>=4.5&&clip<=30)return Math.max(4.5,clip-.15);
+    if(Number.isFinite(clip)&&clip>=4.5&&clip<=30)return Math.max(4.5,clip-.15);
     return natural;
   }
   async function playOne(item){
