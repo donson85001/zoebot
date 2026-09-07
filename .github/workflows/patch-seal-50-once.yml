@@ -21,8 +21,8 @@ jobs:
           import re
 
           media_repl='<div class="tierMedia" data-tier="50" data-variant="1"><video src="seal.mp4?v=fa7babdabdcd" playsinline preload="none"></video></div>'
-          old_msg='return`肉乙被 ${name} 逼喝了 ${count}瓶水！電競媽祖保持微笑 :)！海豹拍肚 +${pats}！`;'
-          new_msg='return`感謝 ${name} 的 ${count}份贈訂！才藝表演卡祖笛：海豹拍！海豹拍肚 +${pats}！`;'
+          old_msg='return`肉乙被 ${name} 逼喝了 ${count}瓶水！電競媽祖保持微笑 :)！海豹拍肚 +${pats}！`'
+          new_msg='return`感謝 ${name} 的 ${count}份贈訂！才藝表演卡祖笛：海豹拍！海豹拍肚 +${pats}！`'
 
           for f in ['obs-overlay-core-v16.html','gift-marquee-obs-test.html']:
               p=Path(f)
