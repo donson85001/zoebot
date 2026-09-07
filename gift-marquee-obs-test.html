@@ -105,13 +105,36 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   function normalize(p){return{name:String(p?.name||p?.who||'匿名').trim()||'匿名',count:Math.max(0,Math.floor(Number(p?.count??p?.total??0)||0)),variant:Number(p?.variant)||0}}
   function modeFor(count){if(count>=200)return'mode200';if(count>=150)return'mode150';if(count>=100)return'mode100';return'mode50'}
   function iconFor(count){if(count>=200)return'🔥';if(count>=150)return'👑';if(count>=100)return'⭐';return'🎁'}
-  function messageFor({name,count}){const pats=Math.floor(count/5);if(count>=200)return`${name} 跟肉乙去區公所領了 ${count}顆花生！台中0859457！海豹拍肚 +${pats}！`;if(count>=150)return`肉乙爆氣把 ${name} 丟地板了 ${count}次！cheer10000 我只是剛好看到列車 大家安安！海豹拍肚 +${pats}！`;if(count>=100)return`肉乙塞給 ${name} ${count}個蛋塔！香港13太飽猴！海豹拍肚 +${pats}！`;return`肉乙被 ${name} 逼喝了 ${count}瓶水！電競媽祖保持微笑 :)！海豹拍肚 +${pats}！`}
+  function messageFor({name,count,variant}){
+    const pats=Math.floor(count/5),tier=tierForCount(count);
+    if(variant===2){
+      if(tier===50)return`感謝 ${name} 的 ${count}份贈訂！才藝表演卡祖笛：名偵探柯南！海豹拍肚 +${pats}！`;
+      if(tier===100)return`感謝 ${name} 的 ${count}份贈訂！才藝表演卡祖笛：灌籃高手！海豹拍肚 +${pats}！`;
+      if(tier===150)return`感謝 ${name} 的 ${count}份贈訂！才藝表演跳舞：02搖！海豹拍肚 +${pats}！`;
+      return`感謝 ${name} 的 ${count}份贈訂！才藝表演跳舞：UP！跟著一起跳起來！海豹拍肚 +${pats}！`;
+    }
+    if(variant===3){
+      if(tier===50)return`${name} 逼肉乙去鏟 ${count}包薯條！我鏟不鏟薯條到底關你屁事啊！海豹拍肚 +${pats}！`;
+      if(tier===100)return`${name}同學被肉乙甩棒 ${count}次！發瘋啦！嚴厲斥責！海豹拍肚 +${pats}！`;
+      if(tier===150)return`${name} 聽不懂肉乙講話 ${count}次！MD欠扁484啊！海豹拍肚 +${pats}！`;
+      return`${name} 想看肉乙的項鍊 ${count}次！項鍊請問是什麼顏色？海豹拍肚 +${pats}！`;
+    }
+    if(count>=200)return`${name} 跟肉乙去區公所領了 ${count}顆花生！台中0859457！海豹拍肚 +${pats}！`;
+    if(count>=150)return`肉乙爆氣把 ${name} 丟地板了 ${count}次！cheer10000 我只是剛好看到列車 大家安安！海豹拍肚 +${pats}！`;
+    if(count>=100)return`肉乙塞給 ${name} ${count}個蛋塔！香港13太飽猴！海豹拍肚 +${pats}！`;
+    return`肉乙被 ${name} 逼喝了 ${count}瓶水！電競媽祖保持微笑 :)！海豹拍肚 +${pats}！`;
+  }
   function setLook(item){const mode=modeFor(item.count);banner.classList.remove('mode50','mode100','mode150','mode200','shine-now');banner.classList.add(mode);badgeIcon.textContent=iconFor(item.count);badgeCount.textContent=String(item.count);text.textContent=messageFor(item);void banner.offsetWidth;banner.classList.add('shine-now')}
   function chooseVariant(item){if(item.variant>=1&&item.variant<=3)return item.variant;const tier=tierForCount(item.count),v=nextVariant[tier];nextVariant[tier]=v>=3?1:v+1;return v}
+  function durationFor(item,entry,distance){
+    const pxPerSecond=item.count<100?188:172,natural=Math.max(item.count<100?6.8:7.2,distance/pxPerSecond),clip=Number(entry.video.duration);
+    if(item.variant>=2&&Number.isFinite(clip)&&clip>=4.5&&clip<=30)return Math.max(4.5,clip-.15);
+    return natural;
+  }
   async function playOne(item){
     const entry=entryFor(item.count,item.variant);await switchMedia(entry);setLook(item);
     text.style.transition='none';text.style.transform='translateX(0)';await sleep(70);
-    const distance=lane.clientWidth+text.scrollWidth+54,pxPerSecond=item.count<100?188:172,duration=Math.max(item.count<100?6.8:7.2,distance/pxPerSecond);
+    const distance=lane.clientWidth+text.scrollWidth+54,duration=durationFor(item,entry,distance);
     text.style.transition=`transform ${duration}s linear`;requestAnimationFrame(()=>requestAnimationFrame(()=>text.style.transform=`translateX(-${distance}px)`));
     await sleep(duration*1000);
     if(!queue.length)hideActive();
