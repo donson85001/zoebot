@@ -41,14 +41,14 @@ html,body{margin:0;padding:0;width:630px;height:420px;overflow:hidden;background
   <div class="tierMedia" data-tier="150" data-variant="1"><video src="0859457.mp4?v=1d53ab12fe18" playsinline preload="none"></video></div>
   <div class="tierMedia" data-tier="150" data-variant="2"><video src="02-520.mp4?v=35cd2feddb1a" playsinline preload="none"></video></div>
   <div class="tierMedia" data-tier="150" data-variant="3"><video src="facechange-520.mp4?v=c741fa297cc7" playsinline preload="none"></video></div>
-  <div class="tierMedia" data-tier="200" data-variant="1" data-muted="1"><video src="lemon-780.mp4?v=c51774af6d5f" muted playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="200" data-variant="1"><video src="lemon.mp4?v=fb61ff496cff" playsinline preload="none"></video></div>
   <div class="tierMedia" data-tier="200" data-variant="2"><video src="up-520.mp4?v=a6da404f2f61" playsinline preload="none"></video></div>
   <div class="tierMedia" data-tier="200" data-variant="3"><video src="necklace-520.mp4?v=c23699f1b7d9" playsinline preload="none"></video></div>
 </div>
 <script>
 (()=>{
 'use strict';
-const OBS_BUILD='20260908-0440-production-lemon-v18',UPDATE_CHECK_MS=10000,MIN_GIFT=50,IDLE_GRACE_MS=1100,VARIANT_STATE_KEY='zoebot-marquee-next-variant-v2';
+const OBS_BUILD='20260908-0604-production-lemon-audio-v19',UPDATE_CHECK_MS=10000,MIN_GIFT=50,IDLE_GRACE_MS=1100,VARIANT_STATE_KEY='zoebot-marquee-next-variant-v2';
 const stage=document.getElementById('stage'),banner=document.getElementById('banner'),badgeIcon=document.getElementById('badgeIcon'),badgeCount=document.getElementById('badgeCount'),lane=document.getElementById('lane'),text=document.getElementById('text'),months=document.getElementById('months'),gifts=document.getElementById('gifts');
 const queue=[],seenEventIds=new Set();let playing=false,lastEnqueueAt=0,pendingBuild='',recoveryReloadPending=false,activeEntry=null;const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const nextVariant={50:1,100:1,150:1,200:1};try{const saved=JSON.parse(localStorage.getItem(VARIANT_STATE_KEY)||'{}');[50,100,150,200].forEach(t=>{const v=Number(saved?.[t]);if(v>=1&&v<=3)nextVariant[t]=v})}catch(_){}function saveVariantState(){try{localStorage.setItem(VARIANT_STATE_KEY,JSON.stringify(nextVariant))}catch(_){}}const tierForCount=count=>count>=200?200:count>=150?150:count>=100?100:50;function chooseVariant(item){if(item.variant>=1&&item.variant<=3)return item.variant;const tier=tierForCount(item.count),v=nextVariant[tier];nextVariant[tier]=v>=3?1:v+1;saveVariantState();return v}
