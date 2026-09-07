@@ -56,21 +56,21 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
     </div>
   </div>
 
-  <div class="tierMedia" data-tier="50" data-variant="1" data-muted="1"><video src="3xwater-260.mp4?v=910414b99450" muted playsinline preload="auto"></video></div>
-  <div class="tierMedia" data-tier="50" data-variant="2"><video src="Conan-520.mp4?v=32ffb0869107" playsinline preload="auto"></video></div>
-  <div class="tierMedia" data-tier="50" data-variant="3"><video src="shark-520.mp4?v=1ec76444f5b3" playsinline preload="auto"></video></div>
+  <div class="tierMedia" data-tier="50" data-variant="1" data-muted="1"><video src="3xwater-260.mp4?v=0e4aa2ce4bfd" muted playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="50" data-variant="2"><video src="Conan-520.mp4?v=32ffb0869107" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="50" data-variant="3"><video src="shark-520.mp4?v=1ec76444f5b3" playsinline preload="none"></video></div>
 
-  <div class="tierMedia" data-tier="100" data-variant="1" data-muted="1"><video src="egg-780.mp4?v=b7d56d800a11" muted playsinline preload="auto"></video></div>
-  <div class="tierMedia" data-tier="100" data-variant="2"><video src="SLAM-DUNK-520.mp4?v=9b1ab08a5c23" playsinline preload="auto"></video></div>
-  <div class="tierMedia" data-tier="100" data-variant="3"><video src="baseball-520.mp4?v=833e68c70c39" playsinline preload="auto"></video></div>
+  <div class="tierMedia" data-tier="100" data-variant="1" data-muted="1"><video src="egg-780.mp4?v=b7d56d800a11" muted playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="100" data-variant="2"><video src="SLAM-DUNK-520.mp4?v=9b1ab08a5c23" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="100" data-variant="3"><video src="baseball-520.mp4?v=833e68c70c39" playsinline preload="none"></video></div>
 
-  <div class="tierMedia" data-tier="150" data-variant="1" data-muted="1"><video src="lemon-780.mp4?v=c51774af6d5f" muted playsinline preload="auto"></video></div>
-  <div class="tierMedia" data-tier="150" data-variant="2"><video src="02-520.mp4?v=35cd2feddb1a" playsinline preload="auto"></video></div>
-  <div class="tierMedia" data-tier="150" data-variant="3"><video src="facechange-520.mp4?v=c741fa297cc7" playsinline preload="auto"></video></div>
+  <div class="tierMedia" data-tier="150" data-variant="1" data-muted="1"><video src="lemon-780.mp4?v=c51774af6d5f" muted playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="150" data-variant="2"><video src="02-520.mp4?v=35cd2feddb1a" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="150" data-variant="3"><video src="facechange-520.mp4?v=c741fa297cc7" playsinline preload="none"></video></div>
 
-  <div class="tierMedia" data-tier="200" data-variant="1" data-muted="1"><video src="cel-780.mp4?v=e7dcd42873ad" muted playsinline preload="auto"></video></div>
-  <div class="tierMedia" data-tier="200" data-variant="2"><video src="up-520.mp4?v=a6da404f2f61" playsinline preload="auto"></video></div>
-  <div class="tierMedia" data-tier="200" data-variant="3"><video src="necklace-520.mp4?v=c23699f1b7d9" playsinline preload="auto"></video></div>
+  <div class="tierMedia" data-tier="200" data-variant="1" data-muted="1"><video src="cel-780.mp4?v=abdf71ca8ebb" muted playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="200" data-variant="2"><video src="up-520.mp4?v=a6da404f2f61" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="200" data-variant="3"><video src="necklace-520.mp4?v=c23699f1b7d9" playsinline preload="none"></video></div>
 
   <div id="cropLine"></div><div id="cropLabel">↓ 被裁掉 56px</div>
 </div>
@@ -86,17 +86,36 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   const entryMap=new Map(entries.map(e=>[`${e.tier}:${e.variant}`,e]));
   const tierForCount=count=>count>=200?200:count>=150?150:count>=100?100:50;
   const entryFor=(count,variant)=>entryMap.get(`${tierForCount(count)}:${variant}`)||entryMap.get(`${tierForCount(count)}:1`);
-  entries.forEach(e=>{e.video.preload='auto';e.video.volume=1;try{e.video.load()}catch(_){}});
+  const criticalKeys=new Set(['50:1','200:1']);
+  const keyOf=e=>`${e.tier}:${e.variant}`;
+  function preloadEntries(list){list.forEach(e=>{e.video.preload='auto';e.video.volume=1;try{e.video.load()}catch(_){}})}
+  preloadEntries(entries.filter(e=>criticalKeys.has(keyOf(e))));
+  setTimeout(()=>preloadEntries(entries.filter(e=>e.variant===1&&!criticalKeys.has(keyOf(e)))),450);
+  setTimeout(()=>preloadEntries(entries.filter(e=>e.variant===2)),1200);
+  setTimeout(()=>preloadEntries(entries.filter(e=>e.variant===3)),2200);
   const COUNTER_API='https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec?action=stats';
   async function updateCounters(){try{const r=await fetch(COUNTER_API+'&_='+Date.now(),{cache:'no-store'}),d=await r.json();if(d&&d.ok!==false){const m=Number(d.subscriptionMonths),g=Number(d.giftSubCount);if(Number.isFinite(m))months.textContent=String(Math.trunc(m));if(Number.isFinite(g))gifts.textContent=String(Math.trunc(g))}}catch(e){console.error(e)}}
   updateCounters();setInterval(updateCounters,5000);
-  function waitUntilPlayable(video,timeout=900){if(video.readyState>=3)return Promise.resolve();return new Promise(resolve=>{let done=false;const finish=()=>{if(done)return;done=true;video.removeEventListener('canplay',finish);clearTimeout(timer);resolve()};const timer=setTimeout(finish,timeout);video.addEventListener('canplay',finish,{once:true})})}
+  function waitUntilPlayable(video,timeout=1200){if(video.readyState>=3)return Promise.resolve();return new Promise(resolve=>{let done=false;const finish=()=>{if(done)return;done=true;video.removeEventListener('canplay',finish);clearTimeout(timer);resolve()};const timer=setTimeout(finish,timeout);video.addEventListener('canplay',finish,{once:true})})}
+  function fullyBuffered(video){
+    const d=Number(video.duration);if(!Number.isFinite(d)||d<=0||!video.buffered?.length)return false;
+    for(let i=0;i<video.buffered.length;i++){if(video.buffered.start(i)<=.15&&video.buffered.end(i)>=d-.25)return true}
+    return false;
+  }
+  function waitUntilSafe(entry,timeout=8000){
+    const video=entry.video;
+    if(!criticalKeys.has(keyOf(entry)))return waitUntilPlayable(video);
+    if(fullyBuffered(video))return Promise.resolve();
+    return new Promise(resolve=>{let done=false;const events=['progress','canplaythrough','durationchange','loadeddata'];const finish=()=>{if(done)return;if(!fullyBuffered(video)&&performance.now()<deadline)return;done=true;events.forEach(x=>video.removeEventListener(x,check));clearInterval(poll);clearTimeout(timer);resolve()};const check=()=>{if(fullyBuffered(video))finish()};const deadline=performance.now()+timeout;events.forEach(x=>video.addEventListener(x,check));const poll=setInterval(check,120);const timer=setTimeout(()=>{done=true;events.forEach(x=>video.removeEventListener(x,check));clearInterval(poll);resolve()},timeout)})
+  }
   function waitForRenderedFrame(video,timeout=450){if(typeof video.requestVideoFrameCallback==='function')return new Promise(resolve=>{let done=false;const finish=()=>{if(done)return;done=true;clearTimeout(timer);resolve()};const timer=setTimeout(finish,timeout);video.requestVideoFrameCallback(finish)});return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))}
   function resetVideo(video){video.pause();video.muted=true;try{video.currentTime=0}catch(_){}}
   async function switchMedia(entry){
     const {media,video,muted}=entry;
+    video.preload='auto';try{video.load()}catch(_){}
+    await waitUntilSafe(entry);
     if(activeEntry===entry){resetVideo(video);try{await video.play()}catch(e){console.error(e)}await waitForRenderedFrame(video);video.muted=muted;return}
-    await waitUntilPlayable(video);resetVideo(video);try{await video.play()}catch(e){console.error(e)}await waitForRenderedFrame(video);
+    resetVideo(video);try{await video.play()}catch(e){console.error(e)}await waitForRenderedFrame(video);
     const old=activeEntry;media.classList.add('show');activeEntry=entry;
     if(old&&old!==entry){old.media.classList.remove('show');resetVideo(old.video)}
     video.muted=muted;
