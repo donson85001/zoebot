@@ -102,17 +102,18 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
     for(let i=0;i<video.buffered.length;i++){if(video.buffered.start(i)<=.15&&video.buffered.end(i)>=d-.25)return true}
     return false;
   }
+  const safelyBuffered=video=>video.readyState>=4||fullyBuffered(video);
   function waitUntilSafe(entry,timeout=8000){
     const video=entry.video;
     if(!criticalKeys.has(keyOf(entry)))return waitUntilPlayable(video);
-    if(fullyBuffered(video))return Promise.resolve();
-    return new Promise(resolve=>{let done=false;const events=['progress','canplaythrough','durationchange','loadeddata'];const finish=()=>{if(done)return;if(!fullyBuffered(video)&&performance.now()<deadline)return;done=true;events.forEach(x=>video.removeEventListener(x,check));clearInterval(poll);clearTimeout(timer);resolve()};const check=()=>{if(fullyBuffered(video))finish()};const deadline=performance.now()+timeout;events.forEach(x=>video.addEventListener(x,check));const poll=setInterval(check,120);const timer=setTimeout(()=>{done=true;events.forEach(x=>video.removeEventListener(x,check));clearInterval(poll);resolve()},timeout)})
+    if(safelyBuffered(video))return Promise.resolve();
+    return new Promise(resolve=>{let done=false;const events=['progress','canplaythrough','durationchange','loadeddata'];const cleanup=()=>{events.forEach(x=>video.removeEventListener(x,check));clearInterval(poll);clearTimeout(timer)};const finish=()=>{if(done)return;done=true;cleanup();resolve()};const check=()=>{if(safelyBuffered(video))finish()};events.forEach(x=>video.addEventListener(x,check));const poll=setInterval(check,120);const timer=setTimeout(finish,timeout)})
   }
   function waitForRenderedFrame(video,timeout=450){if(typeof video.requestVideoFrameCallback==='function')return new Promise(resolve=>{let done=false;const finish=()=>{if(done)return;done=true;clearTimeout(timer);resolve()};const timer=setTimeout(finish,timeout);video.requestVideoFrameCallback(finish)});return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))}
   function resetVideo(video){video.pause();video.muted=true;try{video.currentTime=0}catch(_){}}
   async function switchMedia(entry){
     const {media,video,muted}=entry;
-    video.preload='auto';try{video.load()}catch(_){}
+    video.preload='auto';if(video.readyState===0){try{video.load()}catch(_){}}
     await waitUntilSafe(entry);
     if(activeEntry===entry){resetVideo(video);try{await video.play()}catch(e){console.error(e)}await waitForRenderedFrame(video);video.muted=muted;return}
     resetVideo(video);try{await video.play()}catch(e){console.error(e)}await waitForRenderedFrame(video);
