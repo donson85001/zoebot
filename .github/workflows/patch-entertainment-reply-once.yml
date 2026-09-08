@@ -1,0 +1,46 @@
+name: Patch entertainment reply once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-entertainment-reply-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch reply and cache buster
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          app = Path('app.js')
+          s = app.read_text(encoding='utf-8')
+          old = "await sendChatMessage(`@${who} 目前累積豬叫聲${m}次，累積海豹拍${g}次。【續訂月數=豬叫】【贈訂5份=1海豹拍肚】累積到 WirForce 期間表演`);"
+          new = "await sendChatMessage(`@${who} 目前累積豬叫聲${m}次，累積海豹拍${g}次。【續訂月數=豬叫】【贈訂5份=1海豹拍肚】累積到 WirForce 期間表演。現在贈訂50/100/150/200都有各三種專屬影片播放。`);"
+          if s.count(old) != 1:
+              raise SystemExit(f'app.js target count={s.count(old)}')
+          app.write_text(s.replace(old, new), encoding='utf-8')
+
+          idx = Path('index.html')
+          h = idx.read_text(encoding='utf-8')
+          old_idx = '<script src="app.js?v=20260827-new-gas-1"></script>'
+          new_idx = '<script src="app.js?v=20260908-entertainment-2"></script>'
+          if h.count(old_idx) != 1:
+              raise SystemExit(f'index cache target count={h.count(old_idx)}')
+          idx.write_text(h.replace(old_idx, new_idx), encoding='utf-8')
+          PY
+      - name: Commit patch and remove one-shot workflow
+        run: |
+          rm -f .github/workflows/patch-entertainment-reply-once.yml
+          git config user.name "donson85001"
+          git config user.email "donson85001@gmail.com"
+          git add -A
+          git commit -m "Update entertainment command reply"
+          git push
