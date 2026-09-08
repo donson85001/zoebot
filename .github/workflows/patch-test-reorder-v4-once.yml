@@ -1,0 +1,25 @@
+name: Patch test reorder v4 once
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-test-reorder-v4-once.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply patch
+        run: python3 .github/scripts/patch-test-reorder-v4.py
+      - name: Verify
+        run: |
+          grep -n "50.*variant=\"4\"\|100.*variant=\"4\"\|150.*variant=\"4\"\|200.*variant=\"4\"\|3 空\|4 戀愛粉\|4 shark\|4 kokain\|02搖\|Trouble Maker" gift-marquee-obs-test.html gift-marquee-test.html
+      - name: Commit
+        run: |
+          rm -f .github/scripts/patch-test-reorder-v4.py .github/workflows/patch-test-reorder-v4-once.yml
+          git config user.name donson85001
+          git config user.email donson85001@gmail.com
+          git add -A
+          git commit -m "Reorder test marquee slots"
+          git push
