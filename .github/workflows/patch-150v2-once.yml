@@ -1,0 +1,29 @@
+name: Patch 150-2 rotation once
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-150v2-once.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply patch
+        run: python3 .github/scripts/patch-150v2.py
+      - name: Verify media
+        run: |
+          grep -n "kokain.mp4\|next150v2\|0942" obs-overlay-core-v16.html gift-marquee-obs-test.html gift-marquee-test.html obs-overlay.html
+          if command -v ffprobe >/dev/null 2>&1; then
+            ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 kokain.mp4
+            ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of default=nw=1:nk=1 kokain.mp4 | head -n1
+          fi
+      - name: Commit
+        run: |
+          rm -f .github/scripts/patch-150v2.py .github/workflows/patch-150v2-once.yml
+          git config user.name donson85001
+          git config user.email donson85001@gmail.com
+          git add -A
+          git commit -m "Alternate 150-2 between 02 and Kokain"
+          git push
