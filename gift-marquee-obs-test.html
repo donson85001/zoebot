@@ -73,6 +73,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
 
   <div class="tierMedia" data-tier="200" data-variant="1"><video src="lemon.mp4?v=fb61ff496cff" playsinline preload="none"></video></div>
   <div class="tierMedia" data-tier="200" data-variant="2"><video src="up-520.mp4?v=a6da404f2f61" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="200" data-variant="3"><video src="ni.mp4?v=c6b4e1d69667" playsinline preload="none"></video></div>
   <div class="tierMedia" data-tier="200" data-variant="4"><video src="kokain.mp4?v=307b80fe072f" playsinline preload="none"></video></div>
 
   <div id="cropLine"></div><div id="cropLabel">↓ 被裁掉 56px</div>
@@ -176,6 +177,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
       if(tier===50)return`感謝 ${name} 的 ${count}份贈訂！發瘋喇！完全惡意剪輯！海豹拍肚 +${pats}！`;
       if(tier===100)return`${name}同學被肉乙甩棒 ${count}次！發瘋啦！嚴厲斥責！海豹拍肚 +${pats}！`;
       if(tier===150)return`${name} 聽不懂肉乙講話 ${count}次！MD欠扁484啊！海豹拍肚 +${pats}！`;
+      if(tier===200)return`感謝 ${name} 的 ${count}份贈訂！才藝表演唱歌：關於cmonBruh的歌！海豹拍肚 +${pats}！`;
     }
     if(count>=200)return`肉乙把 ${name} 丟地板了 ${count}次！我就把你布置好的東西全部弄掉！海豹拍肚 +${pats}！`;
     if(count>=150)return`肉乙從不畏懼 ${name} 的 ${count}訂閱！狗叫什麼啊破皮的屁孩！海豹拍肚 +${pats}！`;
@@ -183,7 +185,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
     return`感謝 ${name} 的 ${count}份贈訂！才藝表演：海豹拍！海豹拍肚 +${pats}！`;
   }
   function setLook(item){const mode=modeFor(item.count);banner.classList.remove('mode50','mode100','mode150','mode200','shine-now');banner.classList.add(mode);badgeIcon.textContent=iconFor(item.count);badgeCount.textContent=String(item.count);text.textContent=messageFor(item);void banner.offsetWidth;banner.classList.add('shine-now')}
-  const variantOrder={50:[1,2,3,4],100:[1,2,3,4],150:[1,2,3,4],200:[1,2,4]};function chooseVariant(item){if(item.variant>=1&&item.variant<=4)return item.variant;const tier=tierForCount(item.count),order=variantOrder[tier],v=nextVariant[tier],i=Math.max(0,order.indexOf(v));nextVariant[tier]=order[(i+1)%order.length];return v}
+  const variantOrder={50:[1,2,3,4],100:[1,2,3,4],150:[1,2,3,4],200:[1,2,3,4]};function chooseVariant(item){if(item.variant>=1&&item.variant<=4)return item.variant;const tier=tierForCount(item.count),order=variantOrder[tier],v=nextVariant[tier],i=Math.max(0,order.indexOf(v));nextVariant[tier]=order[(i+1)%order.length];return v}
   function durationFor(item,entry,distance){
     const pxPerSecond=item.count<100?188:172,natural=Math.max(item.count<100?6.8:7.2,distance/pxPerSecond),clip=Number(entry.video.duration);
     if(Number.isFinite(clip)&&clip>=4.5&&clip<=30)return Math.max(4.5,clip-.15);

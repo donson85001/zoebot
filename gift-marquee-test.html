@@ -12,8 +12,8 @@ body{margin:0;min-height:100vh;background:#151821;color:#fff;font-family:Arial,'
 h1{font-size:23px;margin:0 0 8px}.note{font-size:13px;color:#aeb4c2;line-height:1.55;margin-bottom:14px}
 label{display:block;margin:12px 0 6px;color:#cdd2dc;font-size:14px}
 input{width:100%;height:42px;border-radius:9px;border:1px solid #454c5e;background:#11141c;color:white;padding:0 11px;font-size:17px}
-.tier{margin-top:13px;padding:12px;border:1px solid #3a4050;border-radius:12px;background:#191d26}.tier-title{font-weight:900;margin-bottom:8px}.buttons{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.buttons.five{grid-template-columns:repeat(5,1fr)}
-button{min-height:42px;border:0;border-radius:9px;background:#ef629a;color:#fff;font-weight:800;cursor:pointer;padding:6px 7px;line-height:1.2}button.v2{background:#8c57dc}button.v3{background:#4e7fc9}button.auto{background:#a97816}button.wide{width:100%;margin-top:10px;background:#485063}
+.tier{margin-top:13px;padding:12px;border:1px solid #3a4050;border-radius:12px;background:#191d26}.tier-title{font-weight:900;margin-bottom:8px}.buttons{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}.buttons.five{grid-template-columns:repeat(5,minmax(0,1fr))}
+button{height:48px;min-height:48px;border:0;border-radius:9px;background:#ef629a;color:#fff;font-weight:800;cursor:pointer;padding:5px 6px;line-height:1.1;overflow:hidden}button.v2{background:#8c57dc}button.v3{background:#4e7fc9}button.auto{background:#a97816}button.wide{width:100%;margin-top:10px;background:#485063}
 #status{margin-top:14px;font-size:14px;color:#ffd5e5;line-height:1.5;min-height:22px}
 .preview-area{display:flex;flex-direction:column;gap:8px}.preview-title{font-size:14px;color:#c4c9d4;max-width:630px;line-height:1.5}
 .preview-box{width:630px;height:476px;position:relative;background:#171a22;overflow:visible;border:1px dashed #545b6d}
@@ -26,7 +26,7 @@ button{min-height:42px;border:0;border-radius:9px;background:#ef629a;color:#fff;
 <div class="page">
   <section class="controls">
     <h1>跑馬燈測試</h1>
-    <div class="note">目前測試版已排成四格；標示「空」的格子沒有影片，自動測試會跳過空格。</div>
+    <div class="note">目前測試版四個檔位皆為 1→2→3→4；所有按鈕已統一尺寸。</div>
     <label for="name">贈訂者名稱</label><input id="name" value="調皮0123">
 
     <div class="tier">
@@ -67,7 +67,7 @@ button{min-height:42px;border:0;border-radius:9px;background:#ef629a;color:#fff;
       <div class="buttons">
         <button data-count="200" data-variant="1" data-label="lemon">1 lemon</button>
         <button class="v2" data-count="200" data-variant="2" data-label="up">2 up</button>
-        <button disabled data-label="空">3 空</button>
+        <button class="v3" data-count="200" data-variant="3" data-label="cmonBruh">3 cmonBruh</button>
         <button data-count="200" data-variant="4" data-label="kokain">4 kokain</button>
         <button class="auto" data-count="200" data-label="自動下一個">自動下一個</button>
       </div>
@@ -78,7 +78,7 @@ button{min-height:42px;border:0;border-radius:9px;background:#ef629a;color:#fff;
   </section>
 
   <section class="preview-area">
-    <div class="preview-title"><b>紅色虛線就是實際 630×420 的底線。</b> 測試版目前共 15 支影片；200-3 為空格，自動測試會跳過空格。</div>
+    <div class="preview-title"><b>紅色虛線就是實際 630×420 的底線。</b> 測試版目前共 16 支影片；四個檔位皆完整 1→2→3→4。</div>
     <div class="preview-box"><iframe id="preview" scrolling="no" allow="autoplay" title="固定 630x420 裁切檢視"></iframe></div>
     <div class="legend">正式使用時紅線以下完全看不到；目前這次只改測試版，正式版尚未套用這批搬位。</div>
   </section>
