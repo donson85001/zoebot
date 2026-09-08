@@ -1,0 +1,25 @@
+name: Patch test 50-4 Now once
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-test-50v4-now-once.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply patch
+        run: python3 .github/scripts/patch-test-50v4-now.py
+      - name: Verify
+        run: |
+          grep -n "0725.mp4\|내일은 없어\|4 Now\|variant===4" gift-marquee-obs-test.html gift-marquee-test.html
+      - name: Commit
+        run: |
+          rm -f .github/scripts/patch-test-50v4-now.py .github/workflows/patch-test-50v4-now-once.yml
+          git config user.name donson85001
+          git config user.email donson85001@gmail.com
+          git add -A
+          git commit -m "Add test-only 50-4 Now"
+          git push
