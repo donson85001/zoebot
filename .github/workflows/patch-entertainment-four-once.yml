@@ -1,0 +1,42 @@
+name: Patch entertainment four once
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-entertainment-four-once.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply patch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app.js')
+          s=p.read_text(encoding='utf-8')
+          old='現在贈訂50/100/150/200都有各三種專屬影片播放。'
+          new='現在贈訂50/100/150/200都有各四種專屬影片播放。'
+          assert old in s, 'old entertainment text not found'
+          s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          old='app.js?v=20260908-entertainment-2'
+          new='app.js?v=20260909-entertainment-3'
+          assert old in s, 'old app cache version not found'
+          s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify
+        run: grep -n "各四種專屬影片播放\|app.js?v=20260909-entertainment-3" app.js index.html
+      - name: Commit
+        run: |
+          rm -f .github/workflows/patch-entertainment-four-once.yml
+          git config user.name donson85001
+          git config user.email donson85001@gmail.com
+          git add -A
+          git commit -m "Update entertainment command to four videos"
+          git push
