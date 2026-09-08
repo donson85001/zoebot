@@ -70,7 +70,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
 
   <div class="tierMedia" data-tier="200" data-variant="1"><video src="lemon.mp4?v=fb61ff496cff" playsinline preload="none"></video></div>
   <div class="tierMedia" data-tier="200" data-variant="2"><video src="up-520.mp4?v=a6da404f2f61" playsinline preload="none"></video></div>
-  <div class="tierMedia" data-tier="200" data-variant="3"><video src="necklace-520.mp4?v=c23699f1b7d9" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="200" data-variant="3"><video src="love.mp4?v=2522c09e7b36" playsinline preload="none"></video></div>
 
   <div id="cropLine"></div><div id="cropLabel">↓ 被裁掉 56px</div>
 </div>
@@ -165,12 +165,12 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
       if(tier===50)return`${name} 逼肉乙去鏟 ${count}包薯條！我鏟不鏟薯條到底關你屁事啊！海豹拍肚 +${pats}！`;
       if(tier===100)return`${name}同學被肉乙甩棒 ${count}次！發瘋啦！嚴厲斥責！海豹拍肚 +${pats}！`;
       if(tier===150)return`${name} 聽不懂肉乙講話 ${count}次！MD欠扁484啊！海豹拍肚 +${pats}！`;
-      return`${name} 想看肉乙的項鍊 ${count}次！項鍊請問是什麼顏色？海豹拍肚 +${pats}！`;
+      return`肉乙好想知道${name}的${count}份會給怎樣的人！從不養戀愛粉恩罵~!海豹拍肚 +${pats}！`;
     }
     if(count>=200)return`肉乙把 ${name} 丟地板了 ${count}次！我就把你布置好的東西全部弄掉！海豹拍肚 +${pats}！`;
     if(count>=150)return`肉乙從不畏懼 ${name} 的 ${count}訂閱！狗叫什麼啊破皮的屁孩！海豹拍肚 +${pats}！`;
     if(count>=100)return`肉乙跟 ${name} 一起泡泡浴了 ${count}次！果然只有男人最懂男人！海豹拍肚 +${pats}！`;
-    return`感謝 ${name} 的 ${count}份贈訂！才藝表演卡祖笛：海豹拍！海豹拍肚 +${pats}！`;
+    return`感謝 ${name} 的 ${count}份贈訂！才藝表演：海豹拍！海豹拍肚 +${pats}！`;
   }
   function setLook(item){const mode=modeFor(item.count);banner.classList.remove('mode50','mode100','mode150','mode200','shine-now');banner.classList.add(mode);badgeIcon.textContent=iconFor(item.count);badgeCount.textContent=String(item.count);text.textContent=messageFor(item);void banner.offsetWidth;banner.classList.add('shine-now')}
   function chooseVariant(item){if(item.variant>=1&&item.variant<=3)return item.variant;const tier=tierForCount(item.count),v=nextVariant[tier];nextVariant[tier]=v>=3?1:v+1;return v}
