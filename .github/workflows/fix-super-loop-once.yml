@@ -14,14 +14,10 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-
           p=Path('gift-marquee-obs-test.html')
           s=p.read_text(encoding='utf-8')
           old="  const nextVariant={50:1,100:1,150:1,200:1};"
-          new="""  const nextVariant={50:1,100:1,150:1,200:1};
-  const superSequence=[];[50,100,150,200].forEach(count=>{for(let variant=1;variant<=4;variant++)superSequence.push({count,variant})});
-  let superLoopActive=false,superLoopIndex=0,superLoopName='匿名';
-  function queueSuperNext(){if(!superLoopActive)return;const item=superSequence[superLoopIndex];superLoopIndex=(superLoopIndex+1)%superSequence.length;queue.push({name:superLoopName,count:item.count,variant:item.variant,eventId:'',mediaAlt:''})}"""
+          new="  const nextVariant={50:1,100:1,150:1,200:1};\n  const superSequence=[];[50,100,150,200].forEach(count=>{for(let variant=1;variant<=4;variant++)superSequence.push({count,variant})});\n  let superLoopActive=false,superLoopIndex=0,superLoopName='匿名';\n  function queueSuperNext(){if(!superLoopActive)return;const item=superSequence[superLoopIndex];superLoopIndex=(superLoopIndex+1)%superSequence.length;queue.push({name:superLoopName,count:item.count,variant:item.variant,eventId:'',mediaAlt:''})}"
           assert old in s
           s=s.replace(old,new,1)
           old="  async function drain(){if(playing)return;playing=true;stage.classList.add('active');await sleep(580);if(queue.length)setLook(queue[0]);banner.classList.add('show');await sleep(430);while(true){while(queue.length){await playOne(queue.shift());await sleep(100)}await sleep(420);if(queue.length)continue;break}hideActive();banner.classList.remove('show');await sleep(420);stage.classList.remove('active');await sleep(580);playing=false;if(queue.length)drain()}"
@@ -29,18 +25,14 @@ jobs:
           assert old in s
           s=s.replace(old,new,1)
           old="  function resetVariants(){nextVariant[50]=1;nextVariant[100]=1;nextVariant[150]=1;nextVariant[200]=1;return{...nextVariant}}"
-          new="""  function resetVariants(){nextVariant[50]=1;nextVariant[100]=1;nextVariant[150]=1;nextVariant[200]=1;superLoopIndex=0;return{...nextVariant}}
-  function startSuperLoop(payload={}){superLoopName=String(payload.name||'匿名').trim()||'匿名';superLoopActive=true;superLoopIndex=0;queue.length=0;queueSuperNext();drain();return{active:true}}
-  function stopSuperLoop(){superLoopActive=false;queue.length=0;return{active:false}}"""
+          new="  function resetVariants(){nextVariant[50]=1;nextVariant[100]=1;nextVariant[150]=1;nextVariant[200]=1;superLoopIndex=0;return{...nextVariant}}\n  function startSuperLoop(payload={}){superLoopName=String(payload.name||'匿名').trim()||'匿名';superLoopActive=true;superLoopIndex=0;queue.length=0;queueSuperNext();drain();return{active:true}}\n  function stopSuperLoop(){superLoopActive=false;queue.length=0;return{active:false}}"
           assert old in s
           s=s.replace(old,new,1)
           old="  window.ZoeGiftMarquee={enqueue,getQueue:()=>queue.slice(),isPlaying:()=>playing,resetVariants,getNextVariants:()=>({...nextVariant})};\n  window.addEventListener('message',e=>{if(e?.data?.type==='zoebot-gift-marquee')enqueue(e.data);else if(e?.data?.type==='zoebot-gift-marquee-reset')resetVariants()});"
-          new="""  window.ZoeGiftMarquee={enqueue,getQueue:()=>queue.slice(),isPlaying:()=>playing,resetVariants,getNextVariants:()=>({...nextVariant}),startSuperLoop,stopSuperLoop};
-  window.addEventListener('message',e=>{if(e?.data?.type==='zoebot-gift-marquee')enqueue(e.data);else if(e?.data?.type==='zoebot-gift-marquee-reset'){superLoopActive=false;queue.length=0;resetVariants()}else if(e?.data?.type==='zoebot-super-loop-start')startSuperLoop(e.data);else if(e?.data?.type==='zoebot-super-loop-stop')stopSuperLoop()});"""
+          new="  window.ZoeGiftMarquee={enqueue,getQueue:()=>queue.slice(),isPlaying:()=>playing,resetVariants,getNextVariants:()=>({...nextVariant}),startSuperLoop,stopSuperLoop};\n  window.addEventListener('message',e=>{if(e?.data?.type==='zoebot-gift-marquee')enqueue(e.data);else if(e?.data?.type==='zoebot-gift-marquee-reset'){superLoopActive=false;queue.length=0;resetVariants()}else if(e?.data?.type==='zoebot-super-loop-start')startSuperLoop(e.data);else if(e?.data?.type==='zoebot-super-loop-stop')stopSuperLoop()});"
           assert old in s
           s=s.replace(old,new,1)
           p.write_text(s,encoding='utf-8')
-
           p=Path('gift-marquee-test.html')
           s=p.read_text(encoding='utf-8')
           s=s.replace('「超級循環」會從 50-1 一路跑到 200-4，再回到 50-1。','「超級循環」按一次就會自動從 50-1 一路連續播放到 200-4，再回 50-1 無限循環；再按一次停止。',1)
@@ -52,30 +44,14 @@ jobs:
           new="  preview.addEventListener('load',()=>{previewReady=true;flush();status.textContent='待命中；按「超級循環」會從 50-1 開始一路自動播放'});"
           assert old in s
           s=s.replace(old,new,1)
-          old="""  function sendSuperLoop(){
-    const item=superSequence[superIndex],who=name.value.trim()||'匿名';
-    post({type:'zoebot-gift-marquee',name:who,count:item.count,variant:item.variant});
-    superIndex=(superIndex+1)%superSequence.length;
-    const next=superSequence[superIndex];
-    status.textContent=`超級循環已送出：${item.count} / 編號 ${item.variant}；下一個：${next.count} / 編號 ${next.variant}`;
-  }"""
-          new="""  function toggleSuperLoop(){
-    const btn=document.getElementById('superLoop');
-    if(!superLoopRunning){
-      superLoopRunning=true;
-      post({type:'zoebot-super-loop-start',name:name.value.trim()||'匿名'});
-      btn.textContent='停止超級循環';
-      status.textContent='超級循環播放中：50-1 → 50-2 → … → 200-4 → 50-1，會持續循環';
-    }else{
-      superLoopRunning=false;
-      post({type:'zoebot-super-loop-stop'});
-      btn.textContent='超級循環';
-      status.textContent='超級循環已停止';
-    }
-  }"""
+          old="  function sendSuperLoop(){\n    const item=superSequence[superIndex],who=name.value.trim()||'匿名';\n    post({type:'zoebot-gift-marquee',name:who,count:item.count,variant:item.variant});\n    superIndex=(superIndex+1)%superSequence.length;\n    const next=superSequence[superIndex];\n    status.textContent=`超級循環已送出：${item.count} / 編號 ${item.variant}；下一個：${next.count} / 編號 ${next.variant}`;\n  }"
+          new="  function toggleSuperLoop(){\n    const btn=document.getElementById('superLoop');\n    if(!superLoopRunning){\n      superLoopRunning=true;\n      post({type:'zoebot-super-loop-start',name:name.value.trim()||'匿名'});\n      btn.textContent='停止超級循環';\n      status.textContent='超級循環播放中：50-1 → 50-2 → … → 200-4 → 50-1，會持續循環';\n    }else{\n      superLoopRunning=false;\n      post({type:'zoebot-super-loop-stop'});\n      btn.textContent='超級循環';\n      status.textContent='超級循環已停止';\n    }\n  }"
           assert old in s
           s=s.replace(old,new,1)
-          s=s.replace("  document.getElementById('superLoop').addEventListener('click',sendSuperLoop);","  document.getElementById('superLoop').addEventListener('click',toggleSuperLoop);",1)
+          old="  document.getElementById('superLoop').addEventListener('click',sendSuperLoop);"
+          new="  document.getElementById('superLoop').addEventListener('click',toggleSuperLoop);"
+          assert old in s
+          s=s.replace(old,new,1)
           old="  document.getElementById('reset').addEventListener('click',()=>{post({type:'zoebot-gift-marquee-reset'});superIndex=0;status.textContent='已重置：四個檔位自動順序與超級循環都回到 50 / 編號 1'});"
           new="  document.getElementById('reset').addEventListener('click',()=>{post({type:'zoebot-gift-marquee-reset'});superLoopRunning=false;document.getElementById('superLoop').textContent='超級循環';status.textContent='已重置：四個檔位自動順序與超級循環都回到 50 / 編號 1'});"
           assert old in s
