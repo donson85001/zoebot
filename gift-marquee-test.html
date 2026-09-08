@@ -26,7 +26,7 @@ button{min-height:42px;border:0;border-radius:9px;background:#ef629a;color:#fff;
 <div class="page">
   <section class="controls">
     <h1>跑馬燈測試</h1>
-    <div class="note">每個訂閱檔位目前自動仍依 1 → 2 → 3 輪替；50 檔另外加入可手動測試的第 4 格 Now。</div>
+    <div class="note">目前測試版已排成四格；標示「空」的格子沒有影片，自動測試會跳過空格。</div>
     <label for="name">贈訂者名稱</label><input id="name" value="調皮0123">
 
     <div class="tier">
@@ -34,7 +34,7 @@ button{min-height:42px;border:0;border-radius:9px;background:#ef629a;color:#fff;
       <div class="buttons five">
         <button data-count="50" data-variant="1" data-label="海豹拍">1 海豹拍</button>
         <button class="v2" data-count="50" data-variant="2" data-label="Conan">2 Conan</button>
-        <button class="v3" data-count="50" data-variant="3" data-label="shark">3 shark</button>
+        <button disabled data-label="空">3 空</button>
         <button data-count="50" data-variant="4" data-label="Now">4 Now</button>
         <button class="auto" data-count="50" data-label="自動下一個">自動下一個</button>
       </div>
@@ -46,6 +46,7 @@ button{min-height:42px;border:0;border-radius:9px;background:#ef629a;color:#fff;
         <button data-count="100" data-variant="1" data-label="boy">1 boy</button>
         <button class="v2" data-count="100" data-variant="2" data-label="SLAM-DUNK">2 SLAM</button>
         <button class="v3" data-count="100" data-variant="3" data-label="baseball">3 baseball</button>
+        <button data-count="100" data-variant="4" data-label="戀愛粉">4 戀愛粉</button>
         <button class="auto" data-count="100" data-label="自動下一個">自動下一個</button>
       </div>
     </div>
@@ -54,8 +55,9 @@ button{min-height:42px;border:0;border-radius:9px;background:#ef629a;color:#fff;
       <div class="tier-title">150 訂閱</div>
       <div class="buttons">
         <button data-count="150" data-variant="1" data-label="0859457">1 調皮</button>
-        <button class="v2" data-count="150" data-variant="2" data-label="02 / kokain">2 02 ↔ kokain</button>
+        <button class="v2" data-count="150" data-variant="2" data-label="02">2 02</button>
         <button class="v3" data-count="150" data-variant="3" data-label="facechange">3 facechange</button>
+        <button data-count="150" data-variant="4" data-label="shark">4 shark</button>
         <button class="auto" data-count="150" data-label="自動下一個">自動下一個</button>
       </div>
     </div>
@@ -65,7 +67,8 @@ button{min-height:42px;border:0;border-radius:9px;background:#ef629a;color:#fff;
       <div class="buttons">
         <button data-count="200" data-variant="1" data-label="lemon">1 lemon</button>
         <button class="v2" data-count="200" data-variant="2" data-label="up">2 up</button>
-        <button class="v3" data-count="200" data-variant="3" data-label="戀愛粉">3 戀愛粉</button>
+        <button disabled data-label="空">3 空</button>
+        <button data-count="200" data-variant="4" data-label="kokain">4 kokain</button>
         <button class="auto" data-count="200" data-label="自動下一個">自動下一個</button>
       </div>
     </div>
@@ -75,9 +78,9 @@ button{min-height:42px;border:0;border-radius:9px;background:#ef629a;color:#fff;
   </section>
 
   <section class="preview-area">
-    <div class="preview-title"><b>紅色虛線就是實際 630×420 的底線。</b> 測試版會預載全部 14 支影片；50-4 是 0725 / Now，150-2 會在 02 / kokain 之間輪替。</div>
+    <div class="preview-title"><b>紅色虛線就是實際 630×420 的底線。</b> 測試版目前共 14 支影片；50-3、200-3 為空格，自動測試會跳過空格。</div>
     <div class="preview-box"><iframe id="preview" scrolling="no" allow="autoplay" title="固定 630x420 裁切檢視"></iframe></div>
-    <div class="legend">正式使用時紅線以下完全看不到；正式版與測試版使用相同影片配置。</div>
+    <div class="legend">正式使用時紅線以下完全看不到；目前這次只改測試版，正式版尚未套用這批搬位。</div>
   </section>
 </div>
 <script>
@@ -91,7 +94,7 @@ button{min-height:42px;border:0;border-radius:9px;background:#ef629a;color:#fff;
   function sendButton(btn){
     const count=Number(btn.dataset.count),variant=Number(btn.dataset.variant)||0,who=name.value.trim()||'匿名',label=btn.dataset.label||'';
     const payload={type:'zoebot-gift-marquee',name:who,count};if(variant)payload.variant=variant;post(payload);
-    status.textContent=variant?`已送出：${count} 訂閱 / 編號 ${variant} / ${label}`:`已送出：${count} 訂閱 / 自動下一個（此檔位依 1 → 2 → 3 輪替）`;
+    status.textContent=variant?`已送出：${count} 訂閱 / 編號 ${variant} / ${label}`:`已送出：${count} 訂閱 / 自動下一個（會依目前有影片的格子輪替）`;
   }
   document.querySelectorAll('[data-count]').forEach(btn=>btn.addEventListener('click',()=>sendButton(btn)));
   document.getElementById('reset').addEventListener('click',()=>{post({type:'zoebot-gift-marquee-reset'});status.textContent='已重置：50 / 100 / 150 / 200 下一次自動播放都從編號 1 開始'});
