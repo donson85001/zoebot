@@ -1,0 +1,25 @@
+name: Patch test ni once
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-test-ni-once.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply patch
+        run: python3 .github/patch-test-ni.py
+      - name: Verify
+        run: |
+          grep -n "ni.mp4\|關於cmonBruh的歌\|3 cmonBruh\|200:\[1,2,3,4\]\|repeat(5,minmax(0,1fr))" gift-marquee-obs-test.html gift-marquee-test.html
+      - name: Commit
+        run: |
+          rm -f .github/patch-test-ni.py .github/workflows/patch-test-ni-once.yml
+          git config user.name donson85001
+          git config user.email donson85001@gmail.com
+          git add -A
+          git commit -m "Add cmonBruh to test 200-3"
+          git push
