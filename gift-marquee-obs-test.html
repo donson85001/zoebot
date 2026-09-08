@@ -86,6 +86,9 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   const stage=document.getElementById('stage'),banner=document.getElementById('banner'),badgeIcon=document.getElementById('badgeIcon'),badgeCount=document.getElementById('badgeCount'),lane=document.getElementById('lane'),text=document.getElementById('text'),months=document.getElementById('months'),gifts=document.getElementById('gifts');
   const queue=[];let playing=false,activeEntry=null;const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   const nextVariant={50:1,100:1,150:1,200:1};
+  const superSequence=[];[50,100,150,200].forEach(count=>{for(let variant=1;variant<=4;variant++)superSequence.push({count,variant})});
+  let superLoopActive=false,superLoopIndex=0,superLoopName='匿名';
+  function queueSuperNext(){if(!superLoopActive)return;const item=superSequence[superLoopIndex];superLoopIndex=(superLoopIndex+1)%superSequence.length;queue.push({name:superLoopName,count:item.count,variant:item.variant,eventId:'',mediaAlt:''})}
   const entries=[...document.querySelectorAll('.tierMedia')].map(media=>({media,video:media.querySelector('video'),tier:Number(media.dataset.tier),variant:Number(media.dataset.variant),alt:String(media.dataset.alt||''),muted:media.dataset.muted==='1',blobPromise:null,blobUrl:null,sourceUrl:media.querySelector('video').getAttribute('src')}));
   const entryKey=e=>`${e.tier}:${e.variant}${e.alt?':'+e.alt:''}`;
   const entryMap=new Map(entries.map(e=>[entryKey(e),e]));
@@ -199,11 +202,13 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
     await sleep(duration*1000);
     if(!queue.length)hideActive();
   }
-  async function drain(){if(playing)return;playing=true;stage.classList.add('active');await sleep(580);if(queue.length)setLook(queue[0]);banner.classList.add('show');await sleep(430);while(true){while(queue.length){await playOne(queue.shift());await sleep(100)}await sleep(420);if(queue.length)continue;break}hideActive();banner.classList.remove('show');await sleep(420);stage.classList.remove('active');await sleep(580);playing=false;if(queue.length)drain()}
+  async function drain(){if(playing)return;playing=true;stage.classList.add('active');await sleep(580);if(queue.length)setLook(queue[0]);banner.classList.add('show');await sleep(430);while(true){while(queue.length){await playOne(queue.shift());await sleep(100);if(superLoopActive&&!queue.length)queueSuperNext()}await sleep(420);if(queue.length)continue;break}hideActive();banner.classList.remove('show');await sleep(420);stage.classList.remove('active');await sleep(580);playing=false;if(queue.length)drain()}
   function enqueue(payload){const item=normalize(payload);if(item.count<MIN_GIFT)return{accepted:false,reason:'below-threshold'};item.variant=chooseVariant(item);if(!entryFor(item.count,item.variant))return{accepted:false,reason:'empty-slot'};queue.push(item);drain();return{accepted:true,tier:tierForCount(item.count),variant:item.variant}}
-  function resetVariants(){nextVariant[50]=1;nextVariant[100]=1;nextVariant[150]=1;nextVariant[200]=1;return{...nextVariant}}
-  window.ZoeGiftMarquee={enqueue,getQueue:()=>queue.slice(),isPlaying:()=>playing,resetVariants,getNextVariants:()=>({...nextVariant})};
-  window.addEventListener('message',e=>{if(e?.data?.type==='zoebot-gift-marquee')enqueue(e.data);else if(e?.data?.type==='zoebot-gift-marquee-reset')resetVariants()});
+  function resetVariants(){nextVariant[50]=1;nextVariant[100]=1;nextVariant[150]=1;nextVariant[200]=1;superLoopIndex=0;return{...nextVariant}}
+  function startSuperLoop(payload={}){superLoopName=String(payload.name||'匿名').trim()||'匿名';superLoopActive=true;superLoopIndex=0;queue.length=0;queueSuperNext();drain();return{active:true}}
+  function stopSuperLoop(){superLoopActive=false;queue.length=0;return{active:false}}
+  window.ZoeGiftMarquee={enqueue,getQueue:()=>queue.slice(),isPlaying:()=>playing,resetVariants,getNextVariants:()=>({...nextVariant}),startSuperLoop,stopSuperLoop};
+  window.addEventListener('message',e=>{if(e?.data?.type==='zoebot-gift-marquee')enqueue(e.data);else if(e?.data?.type==='zoebot-gift-marquee-reset'){superLoopActive=false;queue.length=0;resetVariants()}else if(e?.data?.type==='zoebot-super-loop-start')startSuperLoop(e.data);else if(e?.data?.type==='zoebot-super-loop-stop')stopSuperLoop()});
   if(params.has('count'))setTimeout(()=>enqueue({name:params.get('name')||'測試觀眾',count:params.get('count'),variant:params.get('variant')}),450);
 })();
 </script>
