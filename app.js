@@ -278,7 +278,7 @@
     const m=Number(state.public.subscriptionMonths),g=Number(state.public.giftSubCount);
     if(!Number.isFinite(m)||!Number.isFinite(g)) throw new Error('目前累積數字無效');
     const who=ev.chatter_user_login||ev.chatter_user_name||'觀眾';
-    await sendChatMessage(`@${who} 目前累積豬叫聲${m}次，累積海豹拍${g}次。【續訂月數=豬叫】【贈訂5份=1海豹拍肚】累積到 WirForce 期間表演`);
+    await sendChatMessage(`@${who} 目前累積豬叫聲${m}次，累積海豹拍${g}次。【續訂月數=豬叫】【贈訂5份=1海豹拍肚】累積到 WirForce 期間表演。現在贈訂50/100/150/200都有各三種專屬影片播放。`);
   }
 
   async function sendCounterChat(){
