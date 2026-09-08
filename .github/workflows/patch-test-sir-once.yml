@@ -1,0 +1,25 @@
+name: Patch test sir once
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-test-sir-once.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply patch
+        run: python3 .github/patch-test-sir.py
+      - name: Verify
+        run: |
+          grep -n "sir.mp4\|完全惡意剪輯\|3 sir\|50:\[1,2,3,4\]" gift-marquee-obs-test.html gift-marquee-test.html
+      - name: Commit
+        run: |
+          rm -f .github/patch-test-sir.py .github/workflows/patch-test-sir-once.yml
+          git config user.name donson85001
+          git config user.email donson85001@gmail.com
+          git add -A
+          git commit -m "Add sir to test 50-3"
+          git push
