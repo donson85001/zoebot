@@ -13,7 +13,7 @@ h1{font-size:23px;margin:0 0 8px}.note{font-size:13px;color:#aeb4c2;line-height:
 label{display:block;margin:12px 0 6px;color:#cdd2dc;font-size:14px}
 input{width:100%;height:42px;border-radius:9px;border:1px solid #454c5e;background:#11141c;color:white;padding:0 11px;font-size:17px}
 .tier{margin-top:13px;padding:12px;border:1px solid #3a4050;border-radius:12px;background:#191d26}.tier-title{font-weight:900;margin-bottom:8px}.buttons{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}.buttons.five{grid-template-columns:repeat(5,minmax(0,1fr))}
-button{height:48px;min-height:48px;border:0;border-radius:9px;background:#ef629a;color:#fff;font-weight:800;cursor:pointer;padding:5px 6px;line-height:1.1;overflow:hidden}button.v2{background:#8c57dc}button.v3{background:#4e7fc9}button.auto{background:#a97816}button.wide{width:100%;margin-top:10px;background:#485063}
+button{height:48px;min-height:48px;border:0;border-radius:9px;background:#ef629a;color:#fff;font-weight:800;cursor:pointer;padding:5px 6px;line-height:1.1;overflow:hidden}button.v2{background:#8c57dc}button.v3{background:#4e7fc9}button.auto{background:#a97816}button.wide{width:100%;margin-top:10px;background:#485063}button.super{background:#b83f8f}
 #status{margin-top:14px;font-size:14px;color:#ffd5e5;line-height:1.5;min-height:22px}
 .preview-area{display:flex;flex-direction:column;gap:8px}.preview-title{font-size:14px;color:#c4c9d4;max-width:630px;line-height:1.5}
 .preview-box{width:630px;height:476px;position:relative;background:#171a22;overflow:visible;border:1px dashed #545b6d}
@@ -26,7 +26,7 @@ button{height:48px;min-height:48px;border:0;border-radius:9px;background:#ef629a
 <div class="page">
   <section class="controls">
     <h1>跑馬燈測試</h1>
-    <div class="note">目前測試版四個檔位皆為 1→2→3→4；所有按鈕已統一尺寸。</div>
+    <div class="note">目前測試版四個檔位皆為 1→2→3→4；「超級循環」會從 50-1 一路跑到 200-4，再回到 50-1。</div>
     <label for="name">贈訂者名稱</label><input id="name" value="調皮0123">
 
     <div class="tier">
@@ -74,30 +74,41 @@ button{height:48px;min-height:48px;border:0;border-radius:9px;background:#ef629a
     </div>
 
     <button id="reset" class="wide">重置四個檔位的順序，下一次都從 1 開始</button>
+    <button id="superLoop" class="wide super">超級循環</button>
     <div id="status">載入測試畫面中…</div>
   </section>
 
   <section class="preview-area">
     <div class="preview-title"><b>紅色虛線就是實際 630×420 的底線。</b> 測試版目前共 16 支影片；四個檔位皆完整 1→2→3→4。</div>
     <div class="preview-box"><iframe id="preview" scrolling="no" allow="autoplay" title="固定 630x420 裁切檢視"></iframe></div>
-    <div class="legend">正式使用時紅線以下完全看不到；目前這次只改測試版，正式版尚未套用這批搬位。</div>
+    <div class="legend">正式使用時紅線以下完全看不到；這裡是測試控制頁，不會改動正式播放順序。</div>
   </section>
 </div>
 <script>
 (() => {
   const preview=document.getElementById('preview'),name=document.getElementById('name'),status=document.getElementById('status');
   let previewReady=false;const pending=[];
+  const superSequence=[];[50,100,150,200].forEach(count=>{for(let variant=1;variant<=4;variant++)superSequence.push({count,variant})});
+  let superIndex=0;
   function post(payload){if(!previewReady){pending.push(payload);return}preview.contentWindow?.postMessage(payload,'*')}
   function flush(){while(pending.length)preview.contentWindow?.postMessage(pending.shift(),'*')}
-  preview.addEventListener('load',()=>{previewReady=true;flush();status.textContent='待命中；四個檔位的自動順序目前都是編號 1'});
+  preview.addEventListener('load',()=>{previewReady=true;flush();status.textContent='待命中；超級循環下一個是 50 / 編號 1'});
   preview.src='gift-marquee-obs-test.html?debug=1&_='+Date.now();
   function sendButton(btn){
     const count=Number(btn.dataset.count),variant=Number(btn.dataset.variant)||0,who=name.value.trim()||'匿名',label=btn.dataset.label||'';
     const payload={type:'zoebot-gift-marquee',name:who,count};if(variant)payload.variant=variant;post(payload);
     status.textContent=variant?`已送出：${count} 訂閱 / 編號 ${variant} / ${label}`:`已送出：${count} 訂閱 / 自動下一個（會依目前有影片的格子輪替）`;
   }
+  function sendSuperLoop(){
+    const item=superSequence[superIndex],who=name.value.trim()||'匿名';
+    post({type:'zoebot-gift-marquee',name:who,count:item.count,variant:item.variant});
+    superIndex=(superIndex+1)%superSequence.length;
+    const next=superSequence[superIndex];
+    status.textContent=`超級循環已送出：${item.count} / 編號 ${item.variant}；下一個：${next.count} / 編號 ${next.variant}`;
+  }
   document.querySelectorAll('[data-count]').forEach(btn=>btn.addEventListener('click',()=>sendButton(btn)));
-  document.getElementById('reset').addEventListener('click',()=>{post({type:'zoebot-gift-marquee-reset'});status.textContent='已重置：50 / 100 / 150 / 200 下一次自動播放都從編號 1 開始'});
+  document.getElementById('superLoop').addEventListener('click',sendSuperLoop);
+  document.getElementById('reset').addEventListener('click',()=>{post({type:'zoebot-gift-marquee-reset'});superIndex=0;status.textContent='已重置：四個檔位自動順序與超級循環都回到 50 / 編號 1'});
 })();
 </script>
 </body>
