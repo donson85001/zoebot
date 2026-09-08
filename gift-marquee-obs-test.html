@@ -59,6 +59,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   <div class="tierMedia" data-tier="50" data-variant="1"><video src="seal.mp4?v=fa7babdabdcd" playsinline preload="none"></video></div>
   <div class="tierMedia" data-tier="50" data-variant="2"><video src="Conan-520.mp4?v=32ffb0869107" playsinline preload="none"></video></div>
   <div class="tierMedia" data-tier="50" data-variant="3"><video src="shark-520.mp4?v=1ec76444f5b3" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="50" data-variant="4"><video src="0725.mp4?v=d56744c846f1" playsinline preload="none"></video></div>
 
   <div class="tierMedia" data-tier="100" data-variant="1"><video src="boy.mp4?v=2b043d08d737" playsinline preload="none"></video></div>
   <div class="tierMedia" data-tier="100" data-variant="2"><video src="SLAM-DUNK-520.mp4?v=9b1ab08a5c23" playsinline preload="none"></video></div>
@@ -122,6 +123,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   setTimeout(()=>preloadEntries(entries.filter(e=>e.variant===1&&!criticalKeys.has(keyOf(e)))),700);
   setTimeout(()=>preloadEntries(entries.filter(e=>e.variant===2)),1400);
   setTimeout(()=>preloadEntries(entries.filter(e=>e.variant===3)),2400);
+  setTimeout(()=>preloadEntries(entries.filter(e=>e.variant===4)),3200);
   const COUNTER_API='https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec?action=stats';
   async function updateCounters(){try{const r=await fetch(COUNTER_API+'&_='+Date.now(),{cache:'no-store'}),d=await r.json();if(d&&d.ok!==false){const m=Number(d.subscriptionMonths),g=Number(d.giftSubCount);if(Number.isFinite(m))months.textContent=String(Math.trunc(m));if(Number.isFinite(g))gifts.textContent=String(Math.trunc(g))}}catch(e){console.error(e)}}
   updateCounters();setInterval(updateCounters,5000);
@@ -157,6 +159,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   function iconFor(count){if(count>=200)return'🔥';if(count>=150)return'👑';if(count>=100)return'⭐';return'🎁'}
   function messageFor({name,count,variant,mediaAlt}){
     const pats=Math.floor(count/5),tier=tierForCount(count);
+    if(variant===4&&tier===50)return`感謝 ${name} 的 ${count}份贈訂！才藝表演跳舞：Trouble Maker - '내일은 없어 (Now)'！海豹拍肚 +${pats}！`;
     if(variant===2){
       if(tier===50)return`感謝 ${name} 的 ${count}份贈訂！才藝表演卡祖笛：名偵探柯南！海豹拍肚 +${pats}！`;
       if(tier===100)return`感謝 ${name} 的 ${count}份贈訂！才藝表演卡祖笛：灌籃高手！海豹拍肚 +${pats}！`;
@@ -175,7 +178,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
     return`感謝 ${name} 的 ${count}份贈訂！才藝表演：海豹拍！海豹拍肚 +${pats}！`;
   }
   function setLook(item){const mode=modeFor(item.count);banner.classList.remove('mode50','mode100','mode150','mode200','shine-now');banner.classList.add(mode);badgeIcon.textContent=iconFor(item.count);badgeCount.textContent=String(item.count);text.textContent=messageFor(item);void banner.offsetWidth;banner.classList.add('shine-now')}
-  function chooseVariant(item){if(item.variant>=1&&item.variant<=3)return item.variant;const tier=tierForCount(item.count),v=nextVariant[tier];nextVariant[tier]=v>=3?1:v+1;return v}function assign150v2(item){if(tierForCount(item.count)!==150||item.variant!==2)return;if(item.mediaAlt==='02'||item.mediaAlt==='kokain')return;item.mediaAlt=next150v2;next150v2=next150v2==='02'?'kokain':'02'}
+  function chooseVariant(item){if(item.variant>=1&&item.variant<=4)return item.variant;const tier=tierForCount(item.count),v=nextVariant[tier];nextVariant[tier]=v>=3?1:v+1;return v}function assign150v2(item){if(tierForCount(item.count)!==150||item.variant!==2)return;if(item.mediaAlt==='02'||item.mediaAlt==='kokain')return;item.mediaAlt=next150v2;next150v2=next150v2==='02'?'kokain':'02'}
   function durationFor(item,entry,distance){
     const pxPerSecond=item.count<100?188:172,natural=Math.max(item.count<100?6.8:7.2,distance/pxPerSecond),clip=Number(entry.video.duration);
     if(Number.isFinite(clip)&&clip>=4.5&&clip<=30)return Math.max(4.5,clip-.15);
