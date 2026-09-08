@@ -65,7 +65,8 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   <div class="tierMedia" data-tier="100" data-variant="3"><video src="baseball-520.mp4?v=833e68c70c39" playsinline preload="none"></video></div>
 
   <div class="tierMedia" data-tier="150" data-variant="1"><video src="0859457.mp4?v=1d53ab12fe18" playsinline preload="none"></video></div>
-  <div class="tierMedia" data-tier="150" data-variant="2"><video src="02-520.mp4?v=35cd2feddb1a" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="150" data-variant="2" data-alt="02"><video src="02-520.mp4?v=35cd2feddb1a" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="150" data-variant="2" data-alt="kokain"><video src="kokain.mp4?v=307b80fe072f" playsinline preload="none"></video></div>
   <div class="tierMedia" data-tier="150" data-variant="3"><video src="facechange-520.mp4?v=c741fa297cc7" playsinline preload="none"></video></div>
 
   <div class="tierMedia" data-tier="200" data-variant="1"><video src="lemon.mp4?v=fb61ff496cff" playsinline preload="none"></video></div>
@@ -81,13 +82,14 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   const MIN_GIFT=50;
   const stage=document.getElementById('stage'),banner=document.getElementById('banner'),badgeIcon=document.getElementById('badgeIcon'),badgeCount=document.getElementById('badgeCount'),lane=document.getElementById('lane'),text=document.getElementById('text'),months=document.getElementById('months'),gifts=document.getElementById('gifts');
   const queue=[];let playing=false,activeEntry=null;const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-  const nextVariant={50:1,100:1,150:1,200:1};
-  const entries=[...document.querySelectorAll('.tierMedia')].map(media=>({media,video:media.querySelector('video'),tier:Number(media.dataset.tier),variant:Number(media.dataset.variant),muted:media.dataset.muted==='1',blobPromise:null,blobUrl:null,sourceUrl:media.querySelector('video').getAttribute('src')}));
-  const entryMap=new Map(entries.map(e=>[`${e.tier}:${e.variant}`,e]));
+  const nextVariant={50:1,100:1,150:1,200:1};let next150v2='02';
+  const entries=[...document.querySelectorAll('.tierMedia')].map(media=>({media,video:media.querySelector('video'),tier:Number(media.dataset.tier),variant:Number(media.dataset.variant),alt:String(media.dataset.alt||''),muted:media.dataset.muted==='1',blobPromise:null,blobUrl:null,sourceUrl:media.querySelector('video').getAttribute('src')}));
+  const entryKey=e=>`${e.tier}:${e.variant}${e.alt?':'+e.alt:''}`;
+  const entryMap=new Map(entries.map(e=>[entryKey(e),e]));
   const tierForCount=count=>count>=200?200:count>=150?150:count>=100?100:50;
-  const entryFor=(count,variant)=>entryMap.get(`${tierForCount(count)}:${variant}`)||entryMap.get(`${tierForCount(count)}:1`);
+  const entryFor=(count,variant,alt='')=>{const tier=tierForCount(count);if(tier===150&&variant===2){const a=alt==='kokain'?'kokain':'02';return entryMap.get(`${tier}:${variant}:${a}`)||entryMap.get(`${tier}:${variant}:02`)}return entryMap.get(`${tier}:${variant}`)||entryMap.get(`${tier}:1`)};
   const criticalKeys=new Set(['50:1','200:1']);
-  const keyOf=e=>`${e.tier}:${e.variant}`;
+  const keyOf=entryKey;
   function preloadEntries(list){list.forEach(e=>{e.video.preload='auto';e.video.volume=1;try{e.video.load()}catch(_){}})}
   async function ensureCriticalBlob(entry){
     if(!criticalKeys.has(keyOf(entry)))return;
@@ -150,15 +152,15 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
     video.muted=muted;
   }
   function hideActive(){if(!activeEntry)return;activeEntry.media.classList.remove('show');resetVideo(activeEntry.video);activeEntry=null}
-  function normalize(p){return{name:String(p?.name||p?.who||'匿名').trim()||'匿名',count:Math.max(0,Math.floor(Number(p?.count??p?.total??0)||0)),variant:Number(p?.variant)||0}}
+  function normalize(p){return{name:String(p?.name||p?.who||'匿名').trim()||'匿名',count:Math.max(0,Math.floor(Number(p?.count??p?.total??0)||0)),variant:Number(p?.variant)||0,mediaAlt:String(p?.mediaAlt||'')}}
   function modeFor(count){if(count>=200)return'mode200';if(count>=150)return'mode150';if(count>=100)return'mode100';return'mode50'}
   function iconFor(count){if(count>=200)return'🔥';if(count>=150)return'👑';if(count>=100)return'⭐';return'🎁'}
-  function messageFor({name,count,variant}){
+  function messageFor({name,count,variant,mediaAlt}){
     const pats=Math.floor(count/5),tier=tierForCount(count);
     if(variant===2){
       if(tier===50)return`感謝 ${name} 的 ${count}份贈訂！才藝表演卡祖笛：名偵探柯南！海豹拍肚 +${pats}！`;
       if(tier===100)return`感謝 ${name} 的 ${count}份贈訂！才藝表演卡祖笛：灌籃高手！海豹拍肚 +${pats}！`;
-      if(tier===150)return`感謝 ${name} 的 ${count}份贈訂！才藝表演跳舞：02搖！海豹拍肚 +${pats}！`;
+      if(tier===150)return`感謝 ${name} 的 ${count}份贈訂！才藝表演跳舞：${mediaAlt==='kokain'?'kokain':'02搖'}！海豹拍肚 +${pats}！`;
       return`感謝 ${name} 的 ${count}份贈訂！才藝表演跳舞：UP！跟著一起跳起來！海豹拍肚 +${pats}！`;
     }
     if(variant===3){
@@ -173,14 +175,14 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
     return`感謝 ${name} 的 ${count}份贈訂！才藝表演：海豹拍！海豹拍肚 +${pats}！`;
   }
   function setLook(item){const mode=modeFor(item.count);banner.classList.remove('mode50','mode100','mode150','mode200','shine-now');banner.classList.add(mode);badgeIcon.textContent=iconFor(item.count);badgeCount.textContent=String(item.count);text.textContent=messageFor(item);void banner.offsetWidth;banner.classList.add('shine-now')}
-  function chooseVariant(item){if(item.variant>=1&&item.variant<=3)return item.variant;const tier=tierForCount(item.count),v=nextVariant[tier];nextVariant[tier]=v>=3?1:v+1;return v}
+  function chooseVariant(item){if(item.variant>=1&&item.variant<=3)return item.variant;const tier=tierForCount(item.count),v=nextVariant[tier];nextVariant[tier]=v>=3?1:v+1;return v}function assign150v2(item){if(tierForCount(item.count)!==150||item.variant!==2)return;if(item.mediaAlt==='02'||item.mediaAlt==='kokain')return;item.mediaAlt=next150v2;next150v2=next150v2==='02'?'kokain':'02'}
   function durationFor(item,entry,distance){
     const pxPerSecond=item.count<100?188:172,natural=Math.max(item.count<100?6.8:7.2,distance/pxPerSecond),clip=Number(entry.video.duration);
     if(Number.isFinite(clip)&&clip>=4.5&&clip<=30)return Math.max(4.5,clip-.15);
     return natural;
   }
   async function playOne(item){
-    const entry=entryFor(item.count,item.variant);await switchMedia(entry);setLook(item);
+    const entry=entryFor(item.count,item.variant,item.mediaAlt);await switchMedia(entry);setLook(item);
     text.style.transition='none';text.style.transform='translateX(0)';await sleep(70);
     const distance=lane.clientWidth+text.scrollWidth+54,duration=durationFor(item,entry,distance);
     text.style.transition=`transform ${duration}s linear`;requestAnimationFrame(()=>requestAnimationFrame(()=>text.style.transform=`translateX(-${distance}px)`));
@@ -188,8 +190,8 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
     if(!queue.length)hideActive();
   }
   async function drain(){if(playing)return;playing=true;stage.classList.add('active');await sleep(580);if(queue.length)setLook(queue[0]);banner.classList.add('show');await sleep(430);while(true){while(queue.length){await playOne(queue.shift());await sleep(100)}await sleep(420);if(queue.length)continue;break}hideActive();banner.classList.remove('show');await sleep(420);stage.classList.remove('active');await sleep(580);playing=false;if(queue.length)drain()}
-  function enqueue(payload){const item=normalize(payload);if(item.count<MIN_GIFT)return{accepted:false,reason:'below-threshold'};item.variant=chooseVariant(item);queue.push(item);drain();return{accepted:true,tier:tierForCount(item.count),variant:item.variant}}
-  function resetVariants(){nextVariant[50]=1;nextVariant[100]=1;nextVariant[150]=1;nextVariant[200]=1;return{...nextVariant}}
+  function enqueue(payload){const item=normalize(payload);if(item.count<MIN_GIFT)return{accepted:false,reason:'below-threshold'};item.variant=chooseVariant(item);assign150v2(item);queue.push(item);drain();return{accepted:true,tier:tierForCount(item.count),variant:item.variant}}
+  function resetVariants(){nextVariant[50]=1;nextVariant[100]=1;nextVariant[150]=1;nextVariant[200]=1;next150v2='02';return{...nextVariant}}
   window.ZoeGiftMarquee={enqueue,getQueue:()=>queue.slice(),isPlaying:()=>playing,resetVariants,getNextVariants:()=>({...nextVariant})};
   window.addEventListener('message',e=>{if(e?.data?.type==='zoebot-gift-marquee')enqueue(e.data);else if(e?.data?.type==='zoebot-gift-marquee-reset')resetVariants()});
   if(params.has('count'))setTimeout(()=>enqueue({name:params.get('name')||'測試觀眾',count:params.get('count'),variant:params.get('variant')}),450);
