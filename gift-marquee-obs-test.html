@@ -58,8 +58,8 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
 
   <div class="tierMedia" data-tier="50" data-variant="1"><video src="seal.mp4?v=fa7babdabdcd" playsinline preload="none"></video></div>
   <div class="tierMedia" data-tier="50" data-variant="2"><video src="Conan-520.mp4?v=32ffb0869107" playsinline preload="none"></video></div>
-  <div class="tierMedia" data-tier="50" data-variant="3"><video src="sir.mp4?v=15117f1e278b" playsinline preload="none"></video></div>
-  <div class="tierMedia" data-tier="50" data-variant="4"><video src="0725.mp4?v=d56744c846f1" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="50" data-variant="3"><video src="sir.mp4?v=c973d0301c79" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="50" data-variant="4"><video src="0725.mp4?v=72fb7c5cc455" playsinline preload="none"></video></div>
 
   <div class="tierMedia" data-tier="100" data-variant="1"><video src="boy.mp4?v=2b043d08d737" playsinline preload="none"></video></div>
   <div class="tierMedia" data-tier="100" data-variant="2"><video src="SLAM-DUNK-520.mp4?v=9b1ab08a5c23" playsinline preload="none"></video></div>
@@ -67,11 +67,11 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   <div class="tierMedia" data-tier="100" data-variant="4"><video src="love.mp4?v=2522c09e7b36" playsinline preload="none"></video></div>
 
   <div class="tierMedia" data-tier="150" data-variant="1"><video src="0859457.mp4?v=1d53ab12fe18" playsinline preload="none"></video></div>
-  <div class="tierMedia" data-tier="150" data-variant="2"><video src="02-520.mp4?v=35cd2feddb1a" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="150" data-variant="2"><video src="02-520.mp4?v=93fcd7ca1b74" playsinline preload="none"></video></div>
   <div class="tierMedia" data-tier="150" data-variant="3"><video src="facechange-520.mp4?v=c741fa297cc7" playsinline preload="none"></video></div>
-  <div class="tierMedia" data-tier="150" data-variant="4"><video src="shark-520.mp4?v=1ec76444f5b3" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="150" data-variant="4"><video src="shark-520.mp4?v=21b272496d21" playsinline preload="none"></video></div>
 
-  <div class="tierMedia" data-tier="200" data-variant="1"><video src="lemon.mp4?v=fb61ff496cff" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="200" data-variant="1"><video src="lemon.mp4?v=3fde48d7f5a7" playsinline preload="none"></video></div>
   <div class="tierMedia" data-tier="200" data-variant="2"><video src="up-520.mp4?v=a6da404f2f61" playsinline preload="none"></video></div>
   <div class="tierMedia" data-tier="200" data-variant="3"><video src="ni.mp4?v=c6b4e1d69667" playsinline preload="none"></video></div>
   <div class="tierMedia" data-tier="200" data-variant="4"><video src="kokain.mp4?v=307b80fe072f" playsinline preload="none"></video></div>
@@ -190,16 +190,26 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   function setLook(item){const mode=modeFor(item.count);banner.classList.remove('mode50','mode100','mode150','mode200','shine-now');banner.classList.add(mode);badgeIcon.textContent=iconFor(item.count);badgeCount.textContent=String(item.count);text.textContent=messageFor(item);void banner.offsetWidth;banner.classList.add('shine-now')}
   const variantOrder={50:[1,2,3,4],100:[1,2,3,4],150:[1,2,3,4],200:[1,2,3,4]};function chooseVariant(item){if(item.variant>=1&&item.variant<=4)return item.variant;const tier=tierForCount(item.count),order=variantOrder[tier],v=nextVariant[tier],i=Math.max(0,order.indexOf(v));nextVariant[tier]=order[(i+1)%order.length];return v}
   function durationFor(item,entry,distance){
-    const pxPerSecond=item.count<100?188:172,natural=Math.max(item.count<100?6.8:7.2,distance/pxPerSecond),clip=Number(entry.video.duration);
-    if(Number.isFinite(clip)&&clip>=4.5&&clip<=30)return Math.max(4.5,clip-.15);
-    return natural;
+    const pxPerSecond=item.count<100?188:172,natural=Math.max(item.count<100?6.8:7.2,distance/pxPerSecond),video=entry.video,clip=Number(video.duration),current=Math.max(0,Number(video.currentTime)||0),remaining=Number.isFinite(clip)&&clip>0?Math.max(0,clip-current):0;
+    return Math.max(natural,remaining+.2);
+  }
+  function waitForVideoFinish(video){
+    if(!video||video.ended)return Promise.resolve();
+    return new Promise(resolve=>{
+      let done=false,poll=0,timer=0;
+      const cleanup=()=>{video.removeEventListener('ended',finish);video.removeEventListener('error',finish);clearInterval(poll);clearTimeout(timer)};
+      const finish=()=>{if(done)return;done=true;cleanup();resolve()};
+      const check=()=>{const d=Number(video.duration),t=Number(video.currentTime);if(video.ended||(Number.isFinite(d)&&d>0&&Number.isFinite(t)&&t>=d-.04))finish()};
+      video.addEventListener('ended',finish,{once:true});video.addEventListener('error',finish,{once:true});
+      poll=setInterval(check,100);const d=Number(video.duration);timer=setTimeout(finish,Number.isFinite(d)&&d>0?Math.min(90000,Math.max(10000,(d+15)*1000)):45000);check();
+    });
   }
   async function playOne(item){
     const entry=entryFor(item.count,item.variant);if(!entry)return;await switchMedia(entry);setLook(item);
     text.style.transition='none';text.style.transform='translateX(0)';await sleep(70);
-    const distance=lane.clientWidth+text.scrollWidth+54,duration=durationFor(item,entry,distance);
+    const distance=lane.clientWidth+text.scrollWidth+54,duration=durationFor(item,entry,distance),videoDone=waitForVideoFinish(entry.video);
     text.style.transition=`transform ${duration}s linear`;requestAnimationFrame(()=>requestAnimationFrame(()=>text.style.transform=`translateX(-${distance}px)`));
-    await sleep(duration*1000);
+    await Promise.all([sleep(duration*1000),videoDone]);
     if(!queue.length)hideActive();
   }
   async function drain(){if(playing)return;playing=true;stage.classList.add('active');await sleep(580);if(queue.length)setLook(queue[0]);banner.classList.add('show');await sleep(430);while(true){while(queue.length){await playOne(queue.shift());await sleep(100);if(superLoopActive&&!queue.length)queueSuperNext()}await sleep(420);if(queue.length)continue;break}hideActive();banner.classList.remove('show');await sleep(420);stage.classList.remove('active');await sleep(580);playing=false;if(queue.length)drain()}
