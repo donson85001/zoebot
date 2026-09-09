@@ -1,0 +1,138 @@
+name: Patch full video sync once
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-full-video-sync-once.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch formal and test playback
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, subprocess
+
+          media = [
+            'seal.mp4','Conan-520.mp4','sir.mp4','0725.mp4',
+            'boy.mp4','SLAM-DUNK-520.mp4','baseball-520.mp4','love.mp4',
+            '0859457.mp4','02-520.mp4','facechange-520.mp4','shark-520.mp4',
+            'lemon.mp4','up-520.mp4','ni.mp4','kokain.mp4'
+          ]
+          hashes = {}
+          for f in media:
+            p = Path(f)
+            assert p.exists() and p.stat().st_size > 0, f'missing/empty media: {f}'
+            hashes[f] = subprocess.check_output(['git','hash-object',f], text=True).strip()[:12]
+
+          def sync_media_tokens(s):
+            for f, token in hashes.items():
+              pattern = rf'(<video src="{re.escape(f)}\?v=)[^"]+(" playsinline preload="none"></video>)'
+              s, n = re.subn(pattern, rf'\g<1>{token}\2', s)
+              assert n == 1, f'expected exactly one mapping for {f}, got {n}'
+            return s
+
+          wait_fn_formal = """function durationFor(item,entry,distance){const pxPerSecond=item.count<100?188:172,natural=Math.max(item.count<100?6.8:7.2,distance/pxPerSecond),video=entry.video,clip=Number(video.duration),current=Math.max(0,Number(video.currentTime)||0),remaining=Number.isFinite(clip)&&clip>0?Math.max(0,clip-current):0;return Math.max(natural,remaining+.2)}
+function waitForVideoFinish(video){if(!video||video.ended)return Promise.resolve();return new Promise(resolve=>{let done=false,poll=0,timer=0;const cleanup=()=>{video.removeEventListener('ended',finish);video.removeEventListener('error',finish);clearInterval(poll);clearTimeout(timer)},finish=()=>{if(done)return;done=true;cleanup();resolve()},check=()=>{const d=Number(video.duration),t=Number(video.currentTime);if(video.ended||(Number.isFinite(d)&&d>0&&Number.isFinite(t)&&t>=d-.04))finish()};video.addEventListener('ended',finish,{once:true});video.addEventListener('error',finish,{once:true});poll=setInterval(check,100);const d=Number(video.duration);timer=setTimeout(finish,Number.isFinite(d)&&d>0?Math.min(90000,Math.max(10000,(d+15)*1000)):45000);check()})}"""
+
+          p = Path('obs-overlay-core-v16.html')
+          s = p.read_text(encoding='utf-8')
+          s = sync_media_tokens(s)
+          old_build = "const OBS_BUILD='20260909-0415-production-four-v25'"
+          assert old_build in s
+          s = s.replace(old_build, "const OBS_BUILD='20260909-1748-production-fullclip-v26'", 1)
+          a = s.index('function durationFor(item,entry,distance){')
+          b = s.index('\nconst SHEET_ID=', a)
+          s = s[:a] + wait_fn_formal + s[b:]
+          old_play = "async function playOne(item){const entry=entryFor(item.count,item.variant,item.mediaAlt);await switchMedia(entry);setLook(item);text.style.transition='none';text.style.transform='translateX(0)';await sleep(70);const distance=lane.clientWidth+text.scrollWidth+54,duration=durationFor(item,entry,distance);text.style.transition=`transform ${duration}s linear`;requestAnimationFrame(()=>requestAnimationFrame(()=>text.style.transform=`translateX(-${distance}px)`));await sleep(duration*1000);if(!queue.length)hideActive()}"
+          new_play = "async function playOne(item){const entry=entryFor(item.count,item.variant,item.mediaAlt);await switchMedia(entry);setLook(item);text.style.transition='none';text.style.transform='translateX(0)';await sleep(70);const distance=lane.clientWidth+text.scrollWidth+54,duration=durationFor(item,entry,distance),videoDone=waitForVideoFinish(entry.video);text.style.transition=`transform ${duration}s linear`;requestAnimationFrame(()=>requestAnimationFrame(()=>text.style.transform=`translateX(-${distance}px)`));await Promise.all([sleep(duration*1000),videoDone]);if(!queue.length)hideActive()}"
+          assert old_play in s
+          s = s.replace(old_play, new_play, 1)
+          p.write_text(s, encoding='utf-8')
+
+          wait_fn_test = """  function durationFor(item,entry,distance){
+    const pxPerSecond=item.count<100?188:172,natural=Math.max(item.count<100?6.8:7.2,distance/pxPerSecond),video=entry.video,clip=Number(video.duration),current=Math.max(0,Number(video.currentTime)||0),remaining=Number.isFinite(clip)&&clip>0?Math.max(0,clip-current):0;
+    return Math.max(natural,remaining+.2);
+  }
+  function waitForVideoFinish(video){
+    if(!video||video.ended)return Promise.resolve();
+    return new Promise(resolve=>{
+      let done=false,poll=0,timer=0;
+      const cleanup=()=>{video.removeEventListener('ended',finish);video.removeEventListener('error',finish);clearInterval(poll);clearTimeout(timer)};
+      const finish=()=>{if(done)return;done=true;cleanup();resolve()};
+      const check=()=>{const d=Number(video.duration),t=Number(video.currentTime);if(video.ended||(Number.isFinite(d)&&d>0&&Number.isFinite(t)&&t>=d-.04))finish()};
+      video.addEventListener('ended',finish,{once:true});video.addEventListener('error',finish,{once:true});
+      poll=setInterval(check,100);const d=Number(video.duration);timer=setTimeout(finish,Number.isFinite(d)&&d>0?Math.min(90000,Math.max(10000,(d+15)*1000)):45000);check();
+    });
+  }"""
+
+          p = Path('gift-marquee-obs-test.html')
+          s = p.read_text(encoding='utf-8')
+          s = sync_media_tokens(s)
+          a = s.index('  function durationFor(item,entry,distance){')
+          b = s.index('\n  async function playOne(item){', a)
+          s = s[:a] + wait_fn_test + s[b:]
+          old_play = """  async function playOne(item){
+    const entry=entryFor(item.count,item.variant);if(!entry)return;await switchMedia(entry);setLook(item);
+    text.style.transition='none';text.style.transform='translateX(0)';await sleep(70);
+    const distance=lane.clientWidth+text.scrollWidth+54,duration=durationFor(item,entry,distance);
+    text.style.transition=`transform ${duration}s linear`;requestAnimationFrame(()=>requestAnimationFrame(()=>text.style.transform=`translateX(-${distance}px)`));
+    await sleep(duration*1000);
+    if(!queue.length)hideActive();
+  }"""
+          new_play = """  async function playOne(item){
+    const entry=entryFor(item.count,item.variant);if(!entry)return;await switchMedia(entry);setLook(item);
+    text.style.transition='none';text.style.transform='translateX(0)';await sleep(70);
+    const distance=lane.clientWidth+text.scrollWidth+54,duration=durationFor(item,entry,distance),videoDone=waitForVideoFinish(entry.video);
+    text.style.transition=`transform ${duration}s linear`;requestAnimationFrame(()=>requestAnimationFrame(()=>text.style.transform=`translateX(-${distance}px)`));
+    await Promise.all([sleep(duration*1000),videoDone]);
+    if(!queue.length)hideActive();
+  }"""
+          assert old_play in s
+          s = s.replace(old_play, new_play, 1)
+          p.write_text(s, encoding='utf-8')
+
+          p = Path('obs-overlay.html')
+          s = p.read_text(encoding='utf-8')
+          assert "const OBS_BUILD='20260909-0415-sheet-four-v25'" in s
+          assert "const CORE_URL='obs-overlay-core-v16.html?v=20260909-0415-four'" in s
+          s = s.replace("const OBS_BUILD='20260909-0415-sheet-four-v25'", "const OBS_BUILD='20260909-1748-sheet-fullclip-v26'", 1)
+          s = s.replace("const CORE_URL='obs-overlay-core-v16.html?v=20260909-0415-four'", "const CORE_URL='obs-overlay-core-v16.html?v=20260909-1748-fullclip'", 1)
+          p.write_text(s, encoding='utf-8')
+
+          # Final source-level verification for all 16 mappings and both players.
+          for html in ['obs-overlay-core-v16.html','gift-marquee-obs-test.html']:
+            s = Path(html).read_text(encoding='utf-8')
+            assert s.count('class="tierMedia"') == 16, (html, s.count('class="tierMedia"'))
+            assert 'waitForVideoFinish' in s
+            assert 'Promise.all([sleep(duration*1000),videoDone])' in s
+            assert 'clip-.15' not in s and 'clip<=30' not in s
+            for f, token in hashes.items():
+              assert f'{f}?v={token}' in s, f'{html}: stale token for {f}'
+          print('Verified 16/16 media mappings in formal and test; marquee waits for video completion.')
+          print(hashes)
+          PY
+      - name: Probe active video files
+        run: |
+          set -e
+          files=(seal.mp4 Conan-520.mp4 sir.mp4 0725.mp4 boy.mp4 SLAM-DUNK-520.mp4 baseball-520.mp4 love.mp4 0859457.mp4 02-520.mp4 facechange-520.mp4 shark-520.mp4 lemon.mp4 up-520.mp4 ni.mp4 kokain.mp4)
+          if command -v ffprobe >/dev/null 2>&1; then
+            for f in "${files[@]}"; do
+              d=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$f")
+              test -n "$d"
+              echo "$f $d"
+            done
+          else
+            echo 'ffprobe unavailable; file existence/hash verification already passed.'
+          fi
+      - name: Commit
+        run: |
+          rm -f .github/workflows/patch-full-video-sync-once.yml
+          git config user.name donson85001
+          git config user.email donson85001@gmail.com
+          git add -A
+          git commit -m "Wait for full video before marquee advances"
+          git push
