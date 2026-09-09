@@ -189,27 +189,14 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   }
   function setLook(item){const mode=modeFor(item.count);banner.classList.remove('mode50','mode100','mode150','mode200','shine-now');banner.classList.add(mode);badgeIcon.textContent=iconFor(item.count);badgeCount.textContent=String(item.count);text.textContent=messageFor(item);void banner.offsetWidth;banner.classList.add('shine-now')}
   const variantOrder={50:[1,2,3,4],100:[1,2,3,4],150:[1,2,3,4],200:[1,2,3,4]};function chooseVariant(item){if(item.variant>=1&&item.variant<=4)return item.variant;const tier=tierForCount(item.count),order=variantOrder[tier],v=nextVariant[tier],i=Math.max(0,order.indexOf(v));nextVariant[tier]=order[(i+1)%order.length];return v}
-  function durationFor(item,entry,distance){
-    const pxPerSecond=item.count<100?188:172,natural=Math.max(item.count<100?6.8:7.2,distance/pxPerSecond),video=entry.video,clip=Number(video.duration),current=Math.max(0,Number(video.currentTime)||0),remaining=Number.isFinite(clip)&&clip>0?Math.max(0,clip-current):0;
-    return Math.max(natural,remaining+.2);
-  }
-  function waitForVideoFinish(video){
-    if(!video||video.ended)return Promise.resolve();
-    return new Promise(resolve=>{
-      let done=false,poll=0,timer=0;
-      const cleanup=()=>{video.removeEventListener('ended',finish);video.removeEventListener('error',finish);clearInterval(poll);clearTimeout(timer)};
-      const finish=()=>{if(done)return;done=true;cleanup();resolve()};
-      const check=()=>{const d=Number(video.duration),t=Number(video.currentTime);if(video.ended||(Number.isFinite(d)&&d>0&&Number.isFinite(t)&&t>=d-.04))finish()};
-      video.addEventListener('ended',finish,{once:true});video.addEventListener('error',finish,{once:true});
-      poll=setInterval(check,100);const d=Number(video.duration);timer=setTimeout(finish,Number.isFinite(d)&&d>0?Math.min(90000,Math.max(10000,(d+15)*1000)):45000);check();
-    });
-  }
+  function fallbackDuration(item,distance){const pxPerSecond=item.count<100?188:172;return Math.max(item.count<100?6.8:7.2,distance/pxPerSecond)}
+  function runMarqueeSyncedToVideo(item,entry,distance){const video=entry.video,clip=Number(video.duration),start=Math.max(0,Number(video.currentTime)||0);if(!(Number.isFinite(clip)&&clip>start+.05)){const duration=fallbackDuration(item,distance);text.style.transition=`transform ${duration}s linear`;requestAnimationFrame(()=>requestAnimationFrame(()=>text.style.transform=`translateX(-${distance}px)`));return sleep(duration*1000)}text.style.transition='none';return new Promise(resolve=>{let done=false;const span=Math.max(.001,clip-start),finish=()=>{if(done)return;done=true;text.style.transform=`translateX(-${distance}px)`;resolve()},tick=()=>{if(done)return;const now=Math.max(start,Number(video.currentTime)||start),progress=Math.min(1,Math.max(0,(now-start)/span));text.style.transform=`translateX(-${distance*progress}px)`;if(video.ended||now>=clip-.04){finish();return}requestAnimationFrame(tick)};requestAnimationFrame(tick)})}
+  function waitForVideoFinish(video){if(!video||video.ended)return Promise.resolve();return new Promise(resolve=>{let done=false,poll=0,timer=0;const cleanup=()=>{video.removeEventListener('ended',finish);video.removeEventListener('error',finish);clearInterval(poll);clearTimeout(timer)},finish=()=>{if(done)return;done=true;cleanup();resolve()},check=()=>{const d=Number(video.duration),t=Number(video.currentTime);if(video.ended||(Number.isFinite(d)&&d>0&&Number.isFinite(t)&&t>=d-.04))finish()};video.addEventListener('ended',finish,{once:true});video.addEventListener('error',finish,{once:true});poll=setInterval(check,100);const d=Number(video.duration);timer=setTimeout(finish,Number.isFinite(d)&&d>0?Math.min(90000,Math.max(10000,(d+15)*1000)):45000);check()})}
   async function playOne(item){
     const entry=entryFor(item.count,item.variant);if(!entry)return;await switchMedia(entry);setLook(item);
     text.style.transition='none';text.style.transform='translateX(0)';await sleep(70);
-    const distance=lane.clientWidth+text.scrollWidth+54,duration=durationFor(item,entry,distance),videoDone=waitForVideoFinish(entry.video);
-    text.style.transition=`transform ${duration}s linear`;requestAnimationFrame(()=>requestAnimationFrame(()=>text.style.transform=`translateX(-${distance}px)`));
-    await Promise.all([sleep(duration*1000),videoDone]);
+    const distance=lane.clientWidth+text.scrollWidth+54,videoDone=waitForVideoFinish(entry.video),marqueeDone=runMarqueeSyncedToVideo(item,entry,distance);
+    await Promise.all([marqueeDone,videoDone]);
     if(!queue.length)hideActive();
   }
   async function drain(){if(playing)return;playing=true;stage.classList.add('active');await sleep(580);if(queue.length)setLook(queue[0]);banner.classList.add('show');await sleep(430);while(true){while(queue.length){await playOne(queue.shift());await sleep(100);if(superLoopActive&&!queue.length)queueSuperNext()}await sleep(420);if(queue.length)continue;break}hideActive();banner.classList.remove('show');await sleep(420);stage.classList.remove('active');await sleep(580);playing=false;if(queue.length)drain()}
