@@ -4,14 +4,14 @@ const glow=(x,y,r,col,a)=>{let g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColo
 const draw=(im,x,y,s=1,a=1,r=0)=>{if(!im?.naturalWidth)return;ctx.save();ctx.globalAlpha=a;ctx.translate(x,y);ctx.rotate(r);ctx.scale(s,s);ctx.drawImage(im,-im.naturalWidth/2,-im.naturalHeight/2);ctx.restore()};
 ctx.clearRect(0,0,w,h);ctx.save();
 if(tier===50){
- const enter=eo(p/.24),hit=cl((p-.22)/.11),op=sm((p-.43)/.22),fade=1-sm((p-.91)/.09),y=-120+340*enter+Math.sin(hit*Math.PI*5)*(1-hit)*15;
+ const enter=eo(p/.24),hit=cl((p-.22)/.11),op=sm((p-.43)/.22),fade=.42+.58*(1-sm((p-.91)/.09)),y=-120+340*enter+Math.sin(hit*Math.PI*5)*(1-hit)*15;
  glow(w/2,220,260,'255,75,185',.20*enter*fade);
  if(p>.22){ctx.strokeStyle=rgba('255,190,230',(.68-hit*.5)*fade);ctx.lineWidth=4;ctx.beginPath();ctx.ellipse(w/2,330,55+hit*210,14+hit*36,0,0,Math.PI*2);ctx.stroke()}
  if(op<.04)draw(closed,w/2+Math.sin(p*145)*6*(1-op),y,.78,fade);
  else{draw(img,w/2,y,.80,op*fade);if(closed?.naturalWidth){ctx.save();ctx.globalAlpha=(1-op)*fade;ctx.translate(w/2,y-22-op*110);ctx.rotate(-op*.48);ctx.scale(.78,Math.max(.12,1-op*.72));ctx.drawImage(closed,0,0,closed.naturalWidth,closed.naturalHeight*.47,-closed.naturalWidth/2,-closed.naturalHeight*.47,closed.naturalWidth,closed.naturalHeight*.47);ctx.restore()}}
  if(op>0){glow(w/2,y,230,'255,235,125',.7*Math.sin(op*Math.PI)*fade);for(let i=0;i<58;i++){let a=introNoise(i+11),b=introNoise(i+91),t=cl((op-a*.34)*1.55),an=a*Math.PI*2,d=35+t*(90+235*b),x=w/2+Math.cos(an)*d,yy=y+10+Math.sin(an)*d*.55-t*65;ctx.fillStyle=rgba(b>.5?'255,225,90':'255,110,220',(1-t)*.85*fade);ctx.beginPath();ctx.arc(x,yy,2+5*(1-t),0,Math.PI*2);ctx.fill()}}
 }else if(tier===100){
- const enter=eo(p/.22),charge=cl((p-.24)/.29),op=sm((p-.52)/.20),fade=1-sm((p-.93)/.07),y=520-295*enter;
+ const enter=eo(p/.22),charge=cl((p-.24)/.29),op=sm((p-.52)/.20),fade=.42+.58*(1-sm((p-.93)/.07)),y=520-295*enter;
  glow(w/2,250,350,'160,82,8',.32*enter*fade);
  if(p>.20){let hit=cl((p-.20)/.13);ctx.strokeStyle=rgba('255,185,50',(.8-hit*.64)*fade);ctx.lineWidth=7;ctx.beginPath();ctx.ellipse(w/2,340,60+hit*250,16+hit*38,0,0,Math.PI*2);ctx.stroke()}
  for(let k=0;k<3;k++){let z=cl((charge-k*.25)/.20);if(z>0&&z<1)glow(w/2,y,145+z*140,'255,150,25',.34*Math.sin(z*Math.PI)*fade)}
