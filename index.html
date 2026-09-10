@@ -175,9 +175,9 @@
           });
           await post('set', {subscriptionMonths:m, giftSubCount:g});
           localStorage.setItem(marker, 'done');
-          if (debug) debug.textContent = `[SELFTEST] GAS 完整寫入測試完成，累積數字已還原 ${m}/${g}\n${debug.textContent}`;
+          if (debug) debug.textContent = `[SELFTEST] GAS 完整寫入測試完成，累積數字已還原 ${m}/${g}${debug.textContent}`;
         } catch (err) {
-          if (debug) debug.textContent = `[SELFTEST] 失敗：${err.message}\n${debug.textContent}`;
+          if (debug) debug.textContent = `[SELFTEST] 失敗：${err.message}${debug.textContent}`;
         }
       });
     })();
