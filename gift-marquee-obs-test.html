@@ -66,7 +66,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
 </head>
 <body>
 <div id="stage">
-  <div id="tierIntro" aria-hidden="true"><canvas id="tierIntroCanvas" width="630" height="420"></canvas><div id="tierIntroLabel"></div></div>
+  <div id="tierIntro" aria-hidden="true"><canvas id="tierIntroCanvas" width="630" height="420"></canvas><div id="tierIntroLabel"></div></div></div>
   <div id="counterPanel"><div id="months" class="num">0</div><div id="gifts" class="num">0</div></div>
   <div id="marqueeSlot">
     <div id="banner">
@@ -99,7 +99,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   <div id="cropLine"></div><div id="cropLabel">↓ 被裁掉 56px</div>
 </div>
 <script src="gift-intro-v40.js?v=20260910-3"></script>
-<script src="gift-sfx-v42.js?v=20260910-2"></script>
+<script src="gift-sfx-v42.js?v=20260910-3"></script>
 <script>
 (() => {
   const params=new URLSearchParams(location.search);
@@ -214,17 +214,17 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
     return new Promise(resolve=>{let done=false;const events=['progress','canplaythrough','durationchange','loadeddata'];const cleanup=()=>{events.forEach(x=>video.removeEventListener(x,check));clearInterval(poll);clearTimeout(timer)};const finish=()=>{if(done)return;done=true;cleanup();resolve()};const check=()=>{if(safelyBuffered(video))finish()};events.forEach(x=>video.addEventListener(x,check));const poll=setInterval(check,120);const timer=setTimeout(finish,timeout)})
   }
   function waitForRenderedFrame(video,timeout=450){if(typeof video.requestVideoFrameCallback==='function')return new Promise(resolve=>{let done=false;const finish=()=>{if(done)return;done=true;clearTimeout(timer);resolve()};const timer=setTimeout(finish,timeout);video.requestVideoFrameCallback(finish)});return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))}
-  function resetVideo(video){video.pause();video.muted=true;try{video.currentTime=0}catch(_){}}
+  function resetVideo(video){if(!video)return;video.pause();try{video.currentTime=0}catch(_){}video.volume=1}
+  async function startVideoWithAudio(video,muted){resetVideo(video);video.muted=muted;video.volume=1;try{await video.play();return true}catch(e){console.warn('video-play-retry',e);try{video.load();await waitUntilPlayable(video,1500);video.muted=muted;video.volume=1;await video.play();return true}catch(e2){console.error('video-play-failed',e2);return false}}}
   async function switchMedia(entry){
     const {media,video,muted}=entry;
     await ensureCriticalBlob(entry);
     video.preload='auto';if(video.readyState===0){try{video.load()}catch(_){}}
     await waitUntilSafe(entry);
-    if(activeEntry===entry){resetVideo(video);try{await video.play()}catch(e){console.error(e)}await waitForRenderedFrame(video);video.muted=muted;return}
-    resetVideo(video);try{await video.play()}catch(e){console.error(e)}await waitForRenderedFrame(video);
+    if(activeEntry===entry){await startVideoWithAudio(video,muted);await waitForRenderedFrame(video);return}
+    await startVideoWithAudio(video,muted);await waitForRenderedFrame(video);
     const old=activeEntry;media.classList.add('show');activeEntry=entry;
     if(old&&old!==entry){old.media.classList.remove('show');resetVideo(old.video)}
-    video.muted=muted;
   }
   function hideActive(){if(!activeEntry)return;activeEntry.media.classList.remove('show');resetVideo(activeEntry.video);activeEntry=null}
   function normalize(p){return{name:String(p?.name||p?.who||'匿名').trim()||'匿名',count:Math.max(0,Math.floor(Number(p?.count??p?.total??0)||0)),variant:Number(p?.variant)||0,mediaAlt:String(p?.mediaAlt||'')}}
