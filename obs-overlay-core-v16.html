@@ -68,7 +68,7 @@ html,body{margin:0;padding:0;width:630px;height:420px;overflow:hidden;background
 <script>
 (()=>{
 'use strict';
-const OBS_BUILD='20260910-1210-full-gift-sequences-v35',UPDATE_CHECK_MS=10000,MIN_GIFT=50,IDLE_GRACE_MS=1100,VARIANT_STATE_KEY='zoebot-marquee-next-variant-v3';
+const OBS_BUILD='20260910-1320-wider-rocket-v36',UPDATE_CHECK_MS=10000,MIN_GIFT=50,IDLE_GRACE_MS=1100,VARIANT_STATE_KEY='zoebot-marquee-next-variant-v3';
 const stage=document.getElementById('stage'),banner=document.getElementById('banner'),badgeIcon=document.getElementById('badgeIcon'),badgeCount=document.getElementById('badgeCount'),lane=document.getElementById('lane'),text=document.getElementById('text'),months=document.getElementById('months'),gifts=document.getElementById('gifts');
 const queue=[],seenEventIds=new Set();let playing=false,lastEnqueueAt=0,pendingBuild='',recoveryReloadPending=false,activeEntry=null;const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const nextVariant={50:3,100:1,150:4,200:3};try{const saved=JSON.parse(localStorage.getItem(VARIANT_STATE_KEY)||'{}');[50,100,150,200].forEach(t=>{const v=Number(saved?.[t]);if(v>=1&&v<=4)nextVariant[t]=v})}catch(_){}function saveVariantState(){try{localStorage.setItem(VARIANT_STATE_KEY,JSON.stringify(nextVariant))}catch(_){}}const tierForCount=count=>count>=200?200:count>=150?150:count>=100?100:50;const tierIntro=document.getElementById('tierIntro'),tierIntroCanvas=document.getElementById('tierIntroCanvas'),tierIntroLabel=document.getElementById('tierIntroLabel'),tierIntroCtx=tierIntroCanvas.getContext('2d',{alpha:true});
@@ -100,7 +100,7 @@ const nextVariant={50:3,100:1,150:4,200:3};try{const saved=JSON.parse(localStora
     if(tier===150){scale=.72;rot=0;if(p<.25){y=560}else if(p<.40){const t=easeOut((p-.25)/.15);y=560-350*t}else if(p<.76){y=210+Math.sin(p*19)*3}else{const t=(p-.76)/.24;y=210-590*t*t}}
     if(tier===200){scale=.78;rot=-.018;if(p<.14){x=-430;y=230}else if(p<.34){const t=easeOut((p-.14)/.20);x=-430+745*t;y=230+Math.sin(p*18)*4}else if(p<.78){x=w*.5;y=230+Math.sin(p*18)*4}else{const t=(p-.78)/.22;x=w*.5+720*t*t;y=230+Math.sin(p*18)*4}}
     if(p>.92)alpha=(1-p)/.08;
-    if(img&&img.complete&&img.naturalWidth){ctx.globalAlpha=Math.max(0,alpha);ctx.translate(x,y);ctx.rotate(rot);ctx.scale(scale,scale);ctx.drawImage(img,-img.naturalWidth/2,-img.naturalHeight/2);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1}
+    if(img&&img.complete&&img.naturalWidth){ctx.globalAlpha=Math.max(0,alpha);ctx.translate(x,y);ctx.rotate(rot);ctx.scale(tier===150?scale*1.32:scale,scale);ctx.drawImage(img,-img.naturalWidth/2,-img.naturalHeight/2);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1}
     if(tier<=100){const flash=Math.max(0,1-Math.abs(p-.46)/.09);const fg=ctx.createRadialGradient(w*.5,h*.48,5,w*.5,h*.48,310);fg.addColorStop(0,`rgba(255,255,225,${flash*.88})`);fg.addColorStop(1,'rgba(255,205,60,0)');ctx.fillStyle=fg;ctx.fillRect(0,0,w,h)}
     if(tier===150&&p>.22&&p<.78){const flick=.55+.45*Math.sin(p*120);ctx.fillStyle=`rgba(180,90,255,${.15*flick})`;ctx.fillRect(0,0,w,h)}
     if(tier===200&&p>.48&&p<.86){for(let k=0;k<3;k++){const fp=Math.max(0,Math.min(1,(p-.48-k*.08)/.22)),cx=130+k*185,cy=85+(k%2)*45;ctx.strokeStyle=`rgba(${k===1?255:125},${k===1?205:220},255,${1-fp})`;for(let z=0;z<18;z++){const an=z*Math.PI/9,rr=fp*(45+18*k);ctx.beginPath();ctx.moveTo(cx+Math.cos(an)*rr*.55,cy+Math.sin(an)*rr*.55);ctx.lineTo(cx+Math.cos(an)*rr,cy+Math.sin(an)*rr);ctx.stroke()}}}
