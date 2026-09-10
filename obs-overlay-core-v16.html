@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <link rel="preload" as="image" href="gift-motion-50.webp?v=20260910-1">
 <link rel="preload" as="image" href="gift-motion-100.webp?v=20260910-1">
-<link rel="preload" as="image" href="gift-motion-150.webp?v=20260910-1">
-<link rel="preload" as="image" href="gift-motion-200.webp?v=20260910-1">
+<link rel="preload" as="image" href="gift-motion-150-v3.webp?v=20260910-2">
+<link rel="preload" as="image" href="gift-motion-200-v2.webp?v=20260910-2">
 
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>OBS 餘興節目計數器</title>
@@ -68,11 +68,11 @@ html,body{margin:0;padding:0;width:630px;height:420px;overflow:hidden;background
 <script>
 (()=>{
 'use strict';
-const OBS_BUILD='20260910-0915-platform-gift-motion-v31',UPDATE_CHECK_MS=10000,MIN_GIFT=50,IDLE_GRACE_MS=1100,VARIANT_STATE_KEY='zoebot-marquee-next-variant-v3';
+const OBS_BUILD='20260910-1010-platform-rocket-yacht-v32',UPDATE_CHECK_MS=10000,MIN_GIFT=50,IDLE_GRACE_MS=1100,VARIANT_STATE_KEY='zoebot-marquee-next-variant-v3';
 const stage=document.getElementById('stage'),banner=document.getElementById('banner'),badgeIcon=document.getElementById('badgeIcon'),badgeCount=document.getElementById('badgeCount'),lane=document.getElementById('lane'),text=document.getElementById('text'),months=document.getElementById('months'),gifts=document.getElementById('gifts');
 const queue=[],seenEventIds=new Set();let playing=false,lastEnqueueAt=0,pendingBuild='',recoveryReloadPending=false,activeEntry=null;const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const nextVariant={50:3,100:1,150:4,200:3};try{const saved=JSON.parse(localStorage.getItem(VARIANT_STATE_KEY)||'{}');[50,100,150,200].forEach(t=>{const v=Number(saved?.[t]);if(v>=1&&v<=4)nextVariant[t]=v})}catch(_){}function saveVariantState(){try{localStorage.setItem(VARIANT_STATE_KEY,JSON.stringify(nextVariant))}catch(_){}}const tierForCount=count=>count>=200?200:count>=150?150:count>=100?100:50;const tierIntro=document.getElementById('tierIntro'),tierIntroCanvas=document.getElementById('tierIntroCanvas'),tierIntroLabel=document.getElementById('tierIntroLabel'),tierIntroCtx=tierIntroCanvas.getContext('2d',{alpha:true});
-  const introAssets={50:'gift-motion-50.webp?v=20260910-1',100:'gift-motion-100.webp?v=20260910-1',150:'gift-motion-150.webp?v=20260910-1',200:'gift-motion-200.webp?v=20260910-1'};
+  const introAssets={50:'gift-motion-50.webp?v=20260910-1',100:'gift-motion-100.webp?v=20260910-1',150:'gift-motion-150-v3.webp?v=20260910-2',200:'gift-motion-200-v2.webp?v=20260910-2'};
   const introImages={},introReady={};Object.entries(introAssets).forEach(([tier,src])=>{const img=new Image();introImages[tier]=img;introReady[tier]=new Promise(resolve=>{img.onload=img.onerror=resolve;img.src=src})});
   function introNoise(seed){return Math.abs(Math.sin(seed*12.9898+78.233)*43758.5453)%1}
   function drawIntroFrame(tier,p){
@@ -83,15 +83,15 @@ const nextVariant={50:3,100:1,150:4,200:3};try{const saved=JSON.parse(localStora
     const n=tier===150?150:tier===200?120:180;
     for(let i=0;i<n;i++){const a=introNoise(i+1),b=introNoise(i+37),c=introNoise(i+91),life=(p*1.55+c)%1;let x,y,r,alpha=(1-life)*(.25+.75*b);
       if(tier===50||tier===100){const ang=a*Math.PI*2,dist=life*(80+330*b),cx=w*.5,cy=h*.5;x=cx+Math.cos(ang)*dist;y=cy+Math.sin(ang)*dist;r=1+5*(1-life);ctx.fillStyle=tier===50?`rgba(255,${120+Math.floor(130*b)},80,${alpha})`:`rgba(255,215,75,${alpha})`}
-      else if(tier===150){x=-60+q*770-(life*170)+(a-.5)*80;y=440-q*610+life*210+(b-.5)*90;r=2+9*(1-life);ctx.fillStyle=b>.45?`rgba(255,226,150,${alpha})`:`rgba(255,75,10,${alpha})`}
+      else if(tier===150){x=w*.5+(a-.5)*(55+life*135);y=h*.57+life*(145+120*b);r=2+9*(1-life);ctx.fillStyle=b>.45?`rgba(150,220,255,${alpha})`:`rgba(225,80,255,${alpha})`}
       else{x=-180+q*700-life*150+(a-.5)*90;y=315+life*95+Math.sin(i+p*20)*10;r=2+8*(1-life);ctx.fillStyle=`rgba(210,246,255,${alpha*.9})`}
       ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
     }
     if(img&&img.complete&&img.naturalWidth){let x=w/2,y=h/2,scale=1,rot=0,alpha=1;
       if(tier===50){const inQ=Math.min(1,p/.34);scale=.18+inQ*.78+(p>.34?Math.sin((p-.34)*15)*.035*(1-p):0);rot=(1-inQ)*-.18;y=h*.49}
       if(tier===100){const inQ=Math.min(1,p/.38);scale=.28+inQ*.72;x=w*.5;y=h*(.85-.34*inQ);rot=Math.sin(p*13)*.018*(1-p)}
-      if(tier===150){scale=.56+.22*q;x=-120+q*900;y=510-q*720;rot=-.82}
-      if(tier===200){const inQ=Math.min(1,p/.48);scale=.60+.22*inQ;x=-330+q*1080;y=h*(.60+.025*Math.sin(p*18));rot=-.025}
+      if(tier===150){scale=.72;rot=0;if(p<.22){const t=1-Math.pow(1-p/.22,3);x=w*.5;y=590-380*t}else if(p<.75){x=w*.5;y=210+Math.sin(p*18)*3}else{const t=(p-.75)/.25;x=w*.5;y=210-560*t*t}}
+      if(tier===200){scale=.78;rot=-.018;if(p<.28){const t=1-Math.pow(1-p/.28,3);x=-430+745*t}else if(p<.75){x=w*.5;y=230+Math.sin(p*18)*4}else{const t=(p-.75)/.25;x=w*.5+720*t*t}if(p<.28)y=230+Math.sin(p*18)*4}
       if(p>.86)alpha=(1-p)/.14;ctx.globalAlpha=Math.max(0,alpha);ctx.translate(x,y);ctx.rotate(rot);ctx.scale(scale,scale);ctx.drawImage(img,-img.naturalWidth/2,-img.naturalHeight/2);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;
     }
     if(tier===200){for(let j=0;j<4;j++){ctx.strokeStyle=`rgba(205,242,255,${.36-j*.06})`;ctx.lineWidth=3+j;ctx.beginPath();for(let x=0;x<=w;x+=10){const y=345+j*12+Math.sin(x*.032+p*19+j)*7;ctx.lineTo(x,y)}ctx.stroke()}}
