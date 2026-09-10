@@ -49,7 +49,7 @@ html,body{margin:0;padding:0;width:630px;height:420px;overflow:hidden;background
 </head>
 <body>
 <div id="stage">
-  <div id="tierIntro" aria-hidden="true"><canvas id="tierIntroCanvas" width="630" height="420"></canvas><div id="tierIntroLabel"></div></div></div>
+  <div id="tierIntro" aria-hidden="true"><canvas id="tierIntroCanvas" width="630" height="420"></canvas><div id="tierIntroLabel"></div></div>
   <div id="counterPanel"><div id="months" class="num">1546</div><div id="gifts" class="num">395</div></div>
   <div id="marqueeSlot"><div id="banner"><div id="shine"></div><div id="badge"><div id="badgeIcon">🎁</div><div id="badgeValueRow"><span id="badgeCount">50</span><span id="badgeUnit">贈</span></div></div><div id="lane"><div id="text"></div></div></div></div>
   <div class="tierMedia" data-tier="50" data-variant="1"><video src="seal.mp4?v=fa7babdabdcd" playsinline preload="none"></video></div>
@@ -75,7 +75,7 @@ html,body{margin:0;padding:0;width:630px;height:420px;overflow:hidden;background
 <script>
 (()=>{
 'use strict';
-const OBS_BUILD='20260910-2700-audio-unlock-loop-v47',UPDATE_CHECK_MS=10000,MIN_GIFT=50,IDLE_GRACE_MS=1100,VARIANT_STATE_KEY='zoebot-marquee-next-variant-v3';
+const OBS_BUILD='20260910-2830-stage-alignment-v48',UPDATE_CHECK_MS=10000,MIN_GIFT=50,IDLE_GRACE_MS=1100,VARIANT_STATE_KEY='zoebot-marquee-next-variant-v3';
 const stage=document.getElementById('stage'),banner=document.getElementById('banner'),badgeIcon=document.getElementById('badgeIcon'),badgeCount=document.getElementById('badgeCount'),lane=document.getElementById('lane'),text=document.getElementById('text'),months=document.getElementById('months'),gifts=document.getElementById('gifts');
 const queue=[],seenEventIds=new Set();let playing=false,lastEnqueueAt=0,pendingBuild='',recoveryReloadPending=false,activeEntry=null;const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const nextVariant={50:3,100:1,150:4,200:3};try{const saved=JSON.parse(localStorage.getItem(VARIANT_STATE_KEY)||'{}');[50,100,150,200].forEach(t=>{const v=Number(saved?.[t]);if(v>=1&&v<=4)nextVariant[t]=v})}catch(_){}function saveVariantState(){try{localStorage.setItem(VARIANT_STATE_KEY,JSON.stringify(nextVariant))}catch(_){}}const tierForCount=count=>count>=200?200:count>=150?150:count>=100?100:50;const tierIntro=document.getElementById('tierIntro'),tierIntroCanvas=document.getElementById('tierIntroCanvas'),tierIntroLabel=document.getElementById('tierIntroLabel'),tierIntroCtx=tierIntroCanvas.getContext('2d',{alpha:true});
