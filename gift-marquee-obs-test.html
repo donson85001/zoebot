@@ -94,7 +94,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
 
   <div id="cropLine"></div><div id="cropLabel">↓ 被裁掉 56px</div>
 </div>
-<script src="gift-intro-v40.js?v=20260910-1"></script>
+<script src="gift-intro-v40.js?v=20260910-2"></script>
 <script>
 (() => {
   const params=new URLSearchParams(location.search);
@@ -155,7 +155,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
     if(tier===200&&p>.40&&p<.91){for(let k=0;k<3;k++){const start=.40+k*.10,fp=(p-start)/.30,cx=125+k*190,cy=72+(k%2)*38;if(fp<=0||fp>=1)continue;ctx.save();ctx.globalCompositeOperation='lighter';if(fp<.32){const rise=fp/.32,ry=330-(330-cy)*easeOut(rise);ctx.strokeStyle=`rgba(255,${190+k*18},110,${.75-rise*.25})`;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(cx,ry+34);ctx.lineTo(cx,ry);ctx.stroke();ctx.fillStyle='rgba(255,255,220,.95)';ctx.beginPath();ctx.arc(cx,ry,4,0,Math.PI*2);ctx.fill()}else{const burst=(fp-.32)/.68,rr=easeOut(Math.min(1,burst*1.45))*(54+12*k),fade=Math.max(0,1-burst),cr=k===1?'255,205,105':'115,220,255';for(let z=0;z<22;z++){const an=z*Math.PI/11+k*.35,fall=burst*burst*28,inner=rr*.48,outer=rr*(.82+.18*introNoise(z+k*31));ctx.strokeStyle=`rgba(${cr},${fade*.82})`;ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(cx+Math.cos(an)*inner,cy+Math.sin(an)*inner+fall);ctx.quadraticCurveTo(cx+Math.cos(an)*outer*.78,cy+Math.sin(an)*outer*.78+fall*.5,cx+Math.cos(an)*outer,cy+Math.sin(an)*outer+fall);ctx.stroke();ctx.fillStyle=`rgba(255,245,190,${fade*.72})`;ctx.beginPath();ctx.arc(cx+Math.cos(an)*outer,cy+Math.sin(an)*outer+fall,1.8,0,Math.PI*2);ctx.fill()}}ctx.restore()}}
     ctx.restore();
   }
-  async function playTierIntro(item){const tier=tierForCount(item.count),duration=({50:2500,100:3500,150:4300,200:5500})[tier];await Promise.race([introReady[tier],sleep(1000)]);tierIntro.className='';tierIntroLabel.textContent=tier+' 份贈訂';void tierIntro.offsetWidth;tierIntro.className='play tier'+tier;const start=performance.now();await new Promise(resolve=>{function frame(now){const p=Math.min(1,(now-start)/duration);drawIntroFrameV40(tier,p);if(p<1)requestAnimationFrame(frame);else resolve()}requestAnimationFrame(frame)});tierIntro.className=''}
+  async function playTierIntro(item){const tier=tierForCount(item.count),duration=({50:2500,100:3500,150:4300,200:5500})[tier],env={ctx:tierIntroCtx,introImages,introClosedImages,introNoise};await Promise.race([introReady[tier],sleep(1000)]);tierIntro.className='';tierIntroLabel.textContent=tier+' 份贈訂';void tierIntro.offsetWidth;tierIntro.className='play tier'+tier;const start=performance.now();await new Promise(resolve=>{function frame(now){const p=Math.min(1,(now-start)/duration);drawIntroFrameV40(tier,p,env);if(p<1)requestAnimationFrame(frame);else resolve()}requestAnimationFrame(frame)});tierIntro.className=''}
   const entryFor=(count,variant)=>entryMap.get(`${tierForCount(count)}:${variant}`)||null;
   const criticalKeys=new Set(['50:1','200:1']);
   const keyOf=entryKey;

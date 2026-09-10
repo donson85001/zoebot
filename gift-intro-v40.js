@@ -1,5 +1,5 @@
-function drawIntroFrameV40(tier,p){
-const ctx=tierIntroCtx,w=630,h=420,img=introImages[tier],closed=introClosedImages[tier],cl=v=>Math.max(0,Math.min(1,v)),eo=t=>1-Math.pow(1-cl(t),3),sm=t=>{t=cl(t);return t*t*(3-2*t)},rgba=(s,a)=>'rgba('+s+','+a+')';
+function drawIntroFrameV40(tier,p,env){
+const {ctx,introImages,introClosedImages,introNoise}=env,w=630,h=420,img=introImages[tier],closed=introClosedImages[tier],cl=v=>Math.max(0,Math.min(1,v)),eo=t=>1-Math.pow(1-cl(t),3),sm=t=>{t=cl(t);return t*t*(3-2*t)},rgba=(s,a)=>'rgba('+s+','+a+')';
 const glow=(x,y,r,col,a)=>{let g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,rgba(col,a));g.addColorStop(1,rgba(col,0));ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2)};
 const draw=(im,x,y,s=1,a=1,r=0)=>{if(!im?.naturalWidth)return;ctx.save();ctx.globalAlpha=a;ctx.translate(x,y);ctx.rotate(r);ctx.scale(s,s);ctx.drawImage(im,-im.naturalWidth/2,-im.naturalHeight/2);ctx.restore()};
 ctx.clearRect(0,0,w,h);ctx.save();
