@@ -16,6 +16,7 @@
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;width:630px;height:420px;overflow:hidden;background:transparent;font-family:Arial,'Noto Sans TC','Microsoft JhengHei',sans-serif}
+#audioUnlock{position:absolute;z-index:100;left:50%;top:150px;transform:translateX(-50%);border:2px solid rgba(255,225,135,.9);border-radius:14px;padding:13px 24px;background:rgba(25,12,42,.94);color:#fff4be;font-size:20px;font-weight:900;letter-spacing:2px;box-shadow:0 0 30px rgba(255,180,70,.55);cursor:pointer}
 #stage{position:relative;width:630px;height:420px;overflow:hidden;background:transparent}
 #marqueeSlot{position:absolute;left:0;top:0;width:630px;height:168px;overflow:hidden;z-index:3;pointer-events:none}
 #banner{position:absolute;left:0;top:0;width:630px;height:162px;border-radius:24px;overflow:hidden;opacity:0;transform:translateX(-650px);transition:transform .42s cubic-bezier(.2,.9,.25,1),opacity .25s ease;filter:drop-shadow(0 8px 14px rgba(0,0,0,.22))}
@@ -65,6 +66,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
 </style>
 </head>
 <body>
+<button id="audioUnlock" type="button">點一下啟用音效</button>
 <div id="stage">
   <div id="tierIntro" aria-hidden="true"><canvas id="tierIntroCanvas" width="630" height="420"></canvas><div id="tierIntroLabel"></div></div></div>
   <div id="counterPanel"><div id="months" class="num">0</div><div id="gifts" class="num">0</div></div>
@@ -99,7 +101,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   <div id="cropLine"></div><div id="cropLabel">↓ 被裁掉 56px</div>
 </div>
 <script src="gift-intro-v40.js?v=20260910-3"></script>
-<script src="gift-sfx-v42.js?v=20260910-3"></script>
+<script src="gift-sfx-v42.js?v=20260910-4"></script>
 <script>
 (() => {
   const params=new URLSearchParams(location.search);
@@ -112,6 +114,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   let superLoopActive=false,superLoopIndex=0,superLoopName='匿名';
   function queueSuperNext(){if(!superLoopActive)return;const item=superSequence[superLoopIndex];superLoopIndex=(superLoopIndex+1)%superSequence.length;queue.push({name:superLoopName,count:item.count,variant:item.variant,eventId:'',mediaAlt:''})}
   const entries=[...document.querySelectorAll('.tierMedia')].map(media=>({media,video:media.querySelector('video'),tier:Number(media.dataset.tier),variant:Number(media.dataset.variant),alt:String(media.dataset.alt||''),muted:media.dataset.muted==='1',blobPromise:null,blobUrl:null,sourceUrl:media.querySelector('video').getAttribute('src')}));
+  const audioUnlock=document.getElementById('audioUnlock');audioUnlock.addEventListener('click',()=>{const videoUnlocks=entries.map(({video,muted})=>{video.pause();video.muted=false;video.volume=.001;try{video.currentTime=0}catch(_){}const p=video.play();return Promise.resolve(p).then(()=>new Promise(r=>setTimeout(r,45))).then(()=>{video.pause();try{video.currentTime=0}catch(_){}video.volume=1;video.muted=muted}).catch(()=>{video.volume=1;video.muted=muted})});Promise.allSettled([unlockGiftAudio(),...videoUnlocks]).then(()=>audioUnlock.remove())},{once:true});
   const entryKey=e=>`${e.tier}:${e.variant}${e.alt?':'+e.alt:''}`;
   const entryMap=new Map(entries.map(e=>[entryKey(e),e]));
   const tierForCount=count=>count>=200?200:count>=150?150:count>=100?100:50;

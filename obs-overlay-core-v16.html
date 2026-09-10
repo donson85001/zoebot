@@ -70,12 +70,12 @@ html,body{margin:0;padding:0;width:630px;height:420px;overflow:hidden;background
   <div class="tierMedia" data-tier="200" data-variant="4"><video src="kokain.mp4?v=307b80fe072f" playsinline preload="none"></video></div>
 </div>
 <script src="gift-intro-v40.js?v=20260910-3"></script>
-<script src="gift-sfx-v42.js?v=20260910-3"></script>
+<script src="gift-sfx-v42.js?v=20260910-4"></script>
 <script src="gift-formal-preload-v45.js?v=20260910-1"></script>
 <script>
 (()=>{
 'use strict';
-const OBS_BUILD='20260910-2600-stable-loop-audio-v46',UPDATE_CHECK_MS=10000,MIN_GIFT=50,IDLE_GRACE_MS=1100,VARIANT_STATE_KEY='zoebot-marquee-next-variant-v3';
+const OBS_BUILD='20260910-2700-audio-unlock-loop-v47',UPDATE_CHECK_MS=10000,MIN_GIFT=50,IDLE_GRACE_MS=1100,VARIANT_STATE_KEY='zoebot-marquee-next-variant-v3';
 const stage=document.getElementById('stage'),banner=document.getElementById('banner'),badgeIcon=document.getElementById('badgeIcon'),badgeCount=document.getElementById('badgeCount'),lane=document.getElementById('lane'),text=document.getElementById('text'),months=document.getElementById('months'),gifts=document.getElementById('gifts');
 const queue=[],seenEventIds=new Set();let playing=false,lastEnqueueAt=0,pendingBuild='',recoveryReloadPending=false,activeEntry=null;const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const nextVariant={50:3,100:1,150:4,200:3};try{const saved=JSON.parse(localStorage.getItem(VARIANT_STATE_KEY)||'{}');[50,100,150,200].forEach(t=>{const v=Number(saved?.[t]);if(v>=1&&v<=4)nextVariant[t]=v})}catch(_){}function saveVariantState(){try{localStorage.setItem(VARIANT_STATE_KEY,JSON.stringify(nextVariant))}catch(_){}}const tierForCount=count=>count>=200?200:count>=150?150:count>=100?100:50;const tierIntro=document.getElementById('tierIntro'),tierIntroCanvas=document.getElementById('tierIntroCanvas'),tierIntroLabel=document.getElementById('tierIntroLabel'),tierIntroCtx=tierIntroCanvas.getContext('2d',{alpha:true});
