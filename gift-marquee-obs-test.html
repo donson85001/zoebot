@@ -2,10 +2,10 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<link rel="preload" as="image" href="intro-gift.svg?v=20260909-1">
-<link rel="preload" as="image" href="intro-chest.svg?v=20260909-1">
-<link rel="preload" as="image" href="intro-rocket.svg?v=20260909-1">
-<link rel="preload" as="image" href="intro-yacht.svg?v=20260909-1">
+<link rel="preload" as="image" href="intro-cinematic-50.webp?v=20260910-1">
+<link rel="preload" as="image" href="intro-cinematic-100.webp?v=20260910-1">
+<link rel="preload" as="image" href="intro-cinematic-150.webp?v=20260910-1">
+<link rel="preload" as="image" href="intro-cinematic-200.webp?v=20260910-1">
 
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Zoebot OBS 跑馬燈測試版</title>
@@ -49,27 +49,20 @@ body.debug #cropLine{display:block;position:absolute;left:0;top:419px;width:630p
 body.debug #cropLabel{display:block;position:absolute;right:8px;top:424px;padding:4px 8px;border-radius:6px;background:#ff4d67;color:#fff;font-size:13px;font-weight:900;z-index:11;pointer-events:none}
 body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下方就是被裁掉的 56px';position:absolute;left:8px;top:446px;color:#ff9eaa;font-size:12px;font-weight:700;z-index:12}
 
-#tierIntro{position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;overflow:hidden;background:radial-gradient(circle at 50% 48%,rgba(255,255,255,.48),rgba(255,170,215,.16) 35%,transparent 67%)}
-#tierIntro::before{content:'';position:absolute;width:560px;height:560px;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(255,255,255,.42) 0 7deg,transparent 7deg 19deg);transform:scale(.25) rotate(0);opacity:0}
-#tierIntro.play{animation:intro-shell 2s ease both}
-#tierIntro.play::before{animation:intro-rays 2s ease-out both}
-#tierIntroCard{position:relative;width:360px;height:255px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 12px 18px rgba(25,5,40,.32))}
-#tierIntroImg{display:block;width:320px;height:180px;object-fit:contain;will-change:transform,opacity}
-#tierIntroLabel{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);padding:8px 22px;border-radius:999px;white-space:nowrap;background:linear-gradient(90deg,#ff5d98,#9d45d8);border:3px solid #fff;color:#fff;font-size:27px;font-weight:900;letter-spacing:2px;text-shadow:0 2px 4px rgba(55,0,55,.35);box-shadow:0 6px 18px rgba(68,12,88,.28)}
-#tierIntro.tier50 #tierIntroImg,#tierIntro.tier100 #tierIntroImg{animation:intro-pop 2s cubic-bezier(.2,.9,.2,1) both}
-#tierIntro.tier150 #tierIntroImg{animation:intro-rocket 2s cubic-bezier(.18,.72,.22,1) both}
-#tierIntro.tier200 #tierIntroImg{animation:intro-yacht 2s cubic-bezier(.18,.78,.2,1) both}
-@keyframes intro-shell{0%{opacity:0}8%,82%{opacity:1}100%{opacity:0}}
-@keyframes intro-rays{0%{opacity:0;transform:scale(.25) rotate(0)}22%{opacity:.8}100%{opacity:0;transform:scale(1.15) rotate(38deg)}}
-@keyframes intro-pop{0%{opacity:0;transform:translateY(110px) scale(.25) rotate(-10deg)}24%{opacity:1;transform:translateY(-12px) scale(1.16) rotate(4deg)}42%,78%{opacity:1;transform:translateY(0) scale(1) rotate(0)}100%{opacity:0;transform:translateY(-25px) scale(1.12)}}
-@keyframes intro-rocket{0%{opacity:0;transform:translate(-210px,170px) scale(.45) rotate(-18deg)}18%{opacity:1}64%{opacity:1;transform:translate(5px,-5px) scale(1.08) rotate(0)}100%{opacity:0;transform:translate(230px,-190px) scale(.65) rotate(12deg)}}
-@keyframes intro-yacht{0%{opacity:0;transform:translateX(390px) scale(.72)}18%{opacity:1}58%,78%{opacity:1;transform:translateX(0) scale(1.08)}100%{opacity:0;transform:translateX(-390px) scale(.88)}}
+
+#tierIntro{position:absolute;inset:0;z-index:30;pointer-events:none;opacity:0;overflow:hidden;background:#02040a}
+#tierIntro.play{animation:cinematic-shell 2.15s linear both}
+#tierIntroCanvas{position:absolute;inset:0;width:630px;height:420px}
+#tierIntroLabel{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);padding:7px 24px;white-space:nowrap;color:#fff7cf;font-size:25px;font-weight:900;letter-spacing:5px;text-shadow:0 2px 8px #000,0 0 18px rgba(255,198,70,.8);background:linear-gradient(90deg,transparent,rgba(0,0,0,.72) 20%,rgba(0,0,0,.72) 80%,transparent);border-top:1px solid rgba(255,220,125,.75);border-bottom:1px solid rgba(255,220,125,.75);opacity:0}
+#tierIntro.play #tierIntroLabel{animation:cinematic-label 2.15s ease both}
+@keyframes cinematic-shell{0%{opacity:0}5%,90%{opacity:1}100%{opacity:0}}
+@keyframes cinematic-label{0%,20%{opacity:0;transform:translate(-50%,18px);letter-spacing:11px}36%,82%{opacity:1;transform:translate(-50%,0);letter-spacing:5px}100%{opacity:0;transform:translate(-50%,-8px)}}
 
 </style>
 </head>
 <body>
 <div id="stage">
-  <div id="tierIntro" aria-hidden="true"><div id="tierIntroCard"><img id="tierIntroImg" alt=""><div id="tierIntroLabel"></div></div></div>
+  <div id="tierIntro" aria-hidden="true"><canvas id="tierIntroCanvas" width="630" height="420"></canvas><div id="tierIntroLabel"></div></div></div>
   <div id="counterPanel"><div id="months" class="num">0</div><div id="gifts" class="num">0</div></div>
   <div id="marqueeSlot">
     <div id="banner">
@@ -116,11 +109,34 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   const entryKey=e=>`${e.tier}:${e.variant}${e.alt?':'+e.alt:''}`;
   const entryMap=new Map(entries.map(e=>[entryKey(e),e]));
   const tierForCount=count=>count>=200?200:count>=150?150:count>=100?100:50;
-  const tierIntro=document.getElementById('tierIntro'),tierIntroImg=document.getElementById('tierIntroImg'),tierIntroLabel=document.getElementById('tierIntroLabel');
-  const introAssets={50:'intro-gift.svg?v=20260909-1',100:'intro-chest.svg?v=20260909-1',150:'intro-rocket.svg?v=20260909-1',200:'intro-yacht.svg?v=20260909-1'};
-  const introReady={};Object.entries(introAssets).forEach(([tier,src])=>{introReady[tier]=new Promise(resolve=>{const img=new Image();img.onload=img.onerror=resolve;img.src=src})});
-  async function playTierIntro(item){const tier=tierForCount(item.count);await Promise.race([introReady[tier],sleep(800)]);tierIntro.className='';tierIntroImg.src=introAssets[tier];tierIntroLabel.textContent=tier+' 份贈訂';void tierIntro.offsetWidth;tierIntro.className='play tier'+tier;await sleep(2000);tierIntro.className=''}
-    const entryFor=(count,variant)=>entryMap.get(`${tierForCount(count)}:${variant}`)||null;
+  const tierIntro=document.getElementById('tierIntro'),tierIntroCanvas=document.getElementById('tierIntroCanvas'),tierIntroLabel=document.getElementById('tierIntroLabel'),tierIntroCtx=tierIntroCanvas.getContext('2d',{alpha:false});
+  const introAssets={50:'intro-cinematic-50.webp?v=20260910-1',100:'intro-cinematic-100.webp?v=20260910-1',150:'intro-cinematic-150.webp?v=20260910-1',200:'intro-cinematic-200.webp?v=20260910-1'};
+  const introImages={},introReady={};Object.entries(introAssets).forEach(([tier,src])=>{const img=new Image();introImages[tier]=img;introReady[tier]=new Promise(resolve=>{img.onload=img.onerror=resolve;img.src=src})});
+  function introNoise(seed){return Math.abs(Math.sin(seed*12.9898+78.233)*43758.5453)%1}
+  function drawIntroFrame(tier,p){
+    const ctx=tierIntroCtx,w=630,h=420,img=introImages[tier],ease=1-Math.pow(1-p,3);
+    ctx.save();ctx.fillStyle='#02040a';ctx.fillRect(0,0,w,h);
+    const shake=tier>=150?(1-p)*8:3*(1-p),sx=(introNoise(p*97)-.5)*shake,sy=(introNoise(p*113)-.5)*shake;
+    const zoom=tier===150?1.14-.10*ease:tier===200?1.10+.035*Math.sin(p*Math.PI):1.08+.045*ease;
+    const panX=tier===200?(1-p)*26:tier===150?(p-.5)*10:0,panY=tier===150?(1-p)*28:0;
+    if(img&&img.complete&&img.naturalWidth){ctx.translate(w/2+sx+panX,h/2+sy-panY);ctx.scale(zoom,zoom);ctx.drawImage(img,-w/2,-h/2,w,h);ctx.setTransform(1,0,0,1,0,0)}
+    const count=tier===50?170:tier===100?135:tier===150?185:155;
+    for(let i=0;i<count;i++){
+      const a=introNoise(i+1),b=introNoise(i+31),c=introNoise(i+73),life=(p*(tier>=150?1.65:1.35)+c)%1;
+      let x,y,r,alpha=(1-life)*(.35+.65*b);
+      if(tier===50){const ang=a*Math.PI*2,dist=life*(120+260*b);x=w*.5+Math.cos(ang)*dist;y=h*.5+Math.sin(ang)*dist;r=1+4*(1-life);ctx.fillStyle=`rgba(255,${135+Math.floor(110*b)},45,${alpha})`}
+      else if(tier===100){x=a*w;y=h*(.20+b*.62)+Math.sin(p*8+i)*8;r=1+3*(1-life);ctx.fillStyle=`rgba(255,220,110,${alpha})`}
+      else if(tier===150){x=w*.52+(a-.5)*(35+life*230);y=h*.72+life*(135+160*b);r=2+8*(1-life);ctx.fillStyle=b>.55?`rgba(255,230,145,${alpha})`:`rgba(255,75,12,${alpha})`}
+      else{x=w*(.56+life*.50)+(a-.5)*170;y=h*(.68+life*.22)+Math.sin(i+p*18)*10;r=2+7*(1-life);ctx.fillStyle=`rgba(215,245,255,${alpha*.8})`}
+      ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+      if(tier>=150){ctx.strokeStyle=ctx.fillStyle;ctx.lineWidth=Math.max(1,r*.55);ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+(tier===200?-18*(1-life):(a-.5)*8),y-22*(1-life));ctx.stroke()}
+    }
+    if(tier===200){for(let j=0;j<5;j++){ctx.strokeStyle=`rgba(210,245,255,${.34-j*.045})`;ctx.lineWidth=3+j;ctx.beginPath();for(let x=0;x<=w;x+=12){const y=h*.76+j*13+Math.sin(x*.028+p*16+j)*6;ctx.lineTo(x,y)}ctx.stroke()}}
+    const flash=Math.max(0,1-Math.abs(p-.12)/.12);ctx.fillStyle=`rgba(255,245,205,${flash*.42})`;ctx.fillRect(0,0,w,h);
+    const grad=ctx.createRadialGradient(w/2,h/2,120,w/2,h/2,390);grad.addColorStop(0,'rgba(0,0,0,0)');grad.addColorStop(1,'rgba(0,0,0,.62)');ctx.fillStyle=grad;ctx.fillRect(0,0,w,h);ctx.restore();
+  }
+  async function playTierIntro(item){const tier=tierForCount(item.count);await Promise.race([introReady[tier],sleep(1000)]);tierIntro.className='';tierIntroLabel.textContent=tier+' 份贈訂';void tierIntro.offsetWidth;tierIntro.className='play tier'+tier;const start=performance.now();await new Promise(resolve=>{function frame(now){const p=Math.min(1,(now-start)/2150);drawIntroFrame(tier,p);if(p<1)requestAnimationFrame(frame);else resolve()}requestAnimationFrame(frame)});tierIntro.className=''}
+  const entryFor=(count,variant)=>entryMap.get(`${tierForCount(count)}:${variant}`)||null;
   const criticalKeys=new Set(['50:1','200:1']);
   const keyOf=entryKey;
   function preloadEntries(list){list.forEach(e=>{e.video.preload='auto';e.video.volume=1;try{e.video.load()}catch(_){}})}
