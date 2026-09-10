@@ -51,10 +51,10 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
 
 
 #tierIntro{position:absolute;inset:0;z-index:30;pointer-events:none;opacity:0;overflow:hidden;background:transparent}
-#tierIntro.play{animation:cinematic-shell 2.15s linear both}
+#tierIntro.play{animation:cinematic-shell 2.8s linear both}
 #tierIntroCanvas{position:absolute;inset:0;width:630px;height:420px}
 #tierIntroLabel{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);padding:7px 24px;white-space:nowrap;color:#fff7cf;font-size:25px;font-weight:900;letter-spacing:5px;text-shadow:0 2px 8px #000,0 0 18px rgba(255,198,70,.8);background:linear-gradient(90deg,transparent,rgba(0,0,0,.72) 20%,rgba(0,0,0,.72) 80%,transparent);border-top:1px solid rgba(255,220,125,.75);border-bottom:1px solid rgba(255,220,125,.75);opacity:0}
-#tierIntro.play #tierIntroLabel{animation:cinematic-label 2.15s ease both}
+#tierIntro.play #tierIntroLabel{animation:cinematic-label 2.8s ease both}
 @keyframes cinematic-shell{0%{opacity:0}5%,90%{opacity:1}100%{opacity:0}}
 @keyframes cinematic-label{0%,20%{opacity:0;transform:translate(-50%,18px);letter-spacing:11px}36%,82%{opacity:1;transform:translate(-50%,0);letter-spacing:5px}100%{opacity:0;transform:translate(-50%,-8px)}}
 
@@ -111,33 +111,40 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   const tierForCount=count=>count>=200?200:count>=150?150:count>=100?100:50;
   const tierIntro=document.getElementById('tierIntro'),tierIntroCanvas=document.getElementById('tierIntroCanvas'),tierIntroLabel=document.getElementById('tierIntroLabel'),tierIntroCtx=tierIntroCanvas.getContext('2d',{alpha:true});
   const introAssets={50:'gift-motion-50.webp?v=20260910-1',100:'gift-motion-100.webp?v=20260910-1',150:'gift-motion-150-v3.webp?v=20260910-2',200:'gift-motion-200-v2.webp?v=20260910-2'};
-  const introImages={},introReady={};Object.entries(introAssets).forEach(([tier,src])=>{const img=new Image();introImages[tier]=img;introReady[tier]=new Promise(resolve=>{img.onload=img.onerror=resolve;img.src=src})});
+  const introClosedAssets={50:'gift-motion-50-closed.webp?v=20260910-1',100:'gift-motion-100-closed.webp?v=20260910-1'};
+  const introImages={},introClosedImages={},introReady={};
+  Object.entries(introAssets).forEach(([tier,src])=>{const img=new Image();introImages[tier]=img;introReady[tier]=new Promise(resolve=>{img.onload=img.onerror=resolve;img.src=src})});
+  Object.entries(introClosedAssets).forEach(([tier,src])=>{const img=new Image();introClosedImages[tier]=img;const prior=introReady[tier];introReady[tier]=Promise.all([prior,new Promise(resolve=>{img.onload=img.onerror=resolve;img.src=src})])});
   function introNoise(seed){return Math.abs(Math.sin(seed*12.9898+78.233)*43758.5453)%1}
+  function easeOut(t){return 1-Math.pow(1-Math.max(0,Math.min(1,t)),3)}
   function drawIntroFrame(tier,p){
-    const ctx=tierIntroCtx,w=630,h=420,img=introImages[tier],q=1-Math.pow(1-Math.min(1,p),3);
+    const ctx=tierIntroCtx,w=630,h=420,openImg=introImages[tier],closedImg=introClosedImages[tier],q=easeOut(p);
     ctx.clearRect(0,0,w,h);ctx.save();
-    const pulse=Math.max(0,1-Math.abs(p-.42)/.42),hue=tier===200?'28,128,210':tier===150?'42,74,160':tier===100?'210,142,28':'170,54,210';
-    const aura=ctx.createRadialGradient(w*.5,h*.52,20,w*.5,h*.52,370);aura.addColorStop(0,`rgba(${hue},${.46*pulse})`);aura.addColorStop(.52,`rgba(${hue},${.18*pulse})`);aura.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=aura;ctx.fillRect(0,0,w,h);
-    const n=tier===150?150:tier===200?120:180;
-    for(let i=0;i<n;i++){const a=introNoise(i+1),b=introNoise(i+37),c=introNoise(i+91),life=(p*1.55+c)%1;let x,y,r,alpha=(1-life)*(.25+.75*b);
-      if(tier===50||tier===100){const ang=a*Math.PI*2,dist=life*(80+330*b),cx=w*.5,cy=h*.5;x=cx+Math.cos(ang)*dist;y=cy+Math.sin(ang)*dist;r=1+5*(1-life);ctx.fillStyle=tier===50?`rgba(255,${120+Math.floor(130*b)},80,${alpha})`:`rgba(255,215,75,${alpha})`}
-      else if(tier===150){x=w*.5+(a-.5)*(55+life*135);y=h*.57+life*(145+120*b);r=2+9*(1-life);ctx.fillStyle=b>.45?`rgba(150,220,255,${alpha})`:`rgba(225,80,255,${alpha})`}
-      else{x=-180+q*700-life*150+(a-.5)*90;y=315+life*95+Math.sin(i+p*20)*10;r=2+8*(1-life);ctx.fillStyle=`rgba(210,246,255,${alpha*.9})`}
+    const hue=tier===200?'20,135,220':tier===150?'92,62,220':tier===100?'220,145,20':'180,55,220';
+    const pulse=Math.sin(Math.min(1,p)*Math.PI),aura=ctx.createRadialGradient(w*.5,h*.52,15,w*.5,h*.52,360);aura.addColorStop(0,`rgba(${hue},${.38*pulse})`);aura.addColorStop(.55,`rgba(${hue},${.13*pulse})`);aura.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=aura;ctx.fillRect(0,0,w,h);
+    if(tier===150){for(let j=0;j<4;j++){const rp=40+j*45+Math.sin(p*16+j)*12;ctx.strokeStyle=`rgba(${j%2?120:235},${j%2?205:80},255,${.52-j*.08})`;ctx.lineWidth=3;ctx.beginPath();ctx.arc(w*.5,210,rp,0,Math.PI*2);ctx.stroke()}}
+    if(tier===200){for(let j=0;j<5;j++){ctx.strokeStyle=`rgba(205,245,255,${.38-j*.055})`;ctx.lineWidth=3+j;ctx.beginPath();for(let x=0;x<=w;x+=10){ctx.lineTo(x,340+j*12+Math.sin(x*.035+p*20+j)*7)}ctx.stroke()}}
+    const opened=tier<=100&&p>=.46,emit=tier<=100?Math.max(0,(p-.43)/.57):p;
+    const n=tier<=100?210:tier===150?170:145;
+    for(let i=0;i<n;i++){const a=introNoise(i+1),b=introNoise(i+37),c=introNoise(i+91),life=(emit*1.55+c)%1;if(tier<=100&&!opened)continue;let x,y,r,alpha=(1-life)*(.28+.72*b);
+      if(tier<=100){const ang=a*Math.PI*2,dist=life*(65+360*b);x=w*.5+Math.cos(ang)*dist;y=h*.5+Math.sin(ang)*dist-life*70;r=1+6*(1-life);ctx.fillStyle=tier===50?`rgba(255,${110+Math.floor(140*b)},100,${alpha})`:`rgba(255,210,55,${alpha})`}
+      else if(tier===150){x=w*.5+(a-.5)*(45+life*150);y=248+life*(130+130*b);r=2+10*(1-life);ctx.fillStyle=b>.5?`rgba(125,215,255,${alpha})`:`rgba(235,70,255,${alpha})`}
+      else{x=-120+q*820-life*150+(a-.5)*80;y=300+life*105+Math.sin(i+p*22)*11;r=2+8*(1-life);ctx.fillStyle=`rgba(205,245,255,${alpha})`}
       ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
     }
-    if(img&&img.complete&&img.naturalWidth){let x=w/2,y=h/2,scale=1,rot=0,alpha=1;
-      if(tier===50){const inQ=Math.min(1,p/.34);scale=.18+inQ*.78+(p>.34?Math.sin((p-.34)*15)*.035*(1-p):0);rot=(1-inQ)*-.18;y=h*.49}
-      if(tier===100){const inQ=Math.min(1,p/.38);scale=.28+inQ*.72;x=w*.5;y=h*(.85-.34*inQ);rot=Math.sin(p*13)*.018*(1-p)}
-      if(tier===150){scale=.72;rot=0;if(p<.22){const t=1-Math.pow(1-p/.22,3);x=w*.5;y=590-380*t}else if(p<.75){x=w*.5;y=210+Math.sin(p*18)*3}else{const t=(p-.75)/.25;x=w*.5;y=210-560*t*t}}
-      if(tier===200){scale=.78;rot=-.018;if(p<.28){const t=1-Math.pow(1-p/.28,3);x=-430+745*t}else if(p<.75){x=w*.5;y=230+Math.sin(p*18)*4}else{const t=(p-.75)/.25;x=w*.5+720*t*t}if(p<.28)y=230+Math.sin(p*18)*4}
-      if(p>.86)alpha=(1-p)/.14;ctx.globalAlpha=Math.max(0,alpha);ctx.translate(x,y);ctx.rotate(rot);ctx.scale(scale,scale);ctx.drawImage(img,-img.naturalWidth/2,-img.naturalHeight/2);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;
-    }
-    if(tier===200){for(let j=0;j<4;j++){ctx.strokeStyle=`rgba(205,242,255,${.36-j*.06})`;ctx.lineWidth=3+j;ctx.beginPath();for(let x=0;x<=w;x+=10){const y=345+j*12+Math.sin(x*.032+p*19+j)*7;ctx.lineTo(x,y)}ctx.stroke()}}
-    if(tier===150){const flash=Math.max(0,1-Math.abs(p-.70)/.16);ctx.fillStyle=`rgba(255,245,210,${flash*.23})`;ctx.fillRect(0,0,w,h)}
-    if(tier<=100){const flash=Math.max(0,1-Math.abs(p-.32)/.13);ctx.fillStyle=`rgba(255,246,205,${flash*.44})`;ctx.fillRect(0,0,w,h)}
+    let img=openImg,x=w*.5,y=h*.5,scale=1,rot=0,alpha=1;
+    if(tier===50){img=opened?openImg:closedImg;const enter=easeOut(p/.20);scale=.74;y=-150+365*enter;if(!opened&&p>.20){x+=Math.sin(p*95)*Math.min(12,(p-.20)*45);rot=Math.sin(p*80)*.035}if(opened){scale=.80;y=210}}
+    if(tier===100){img=opened?openImg:closedImg;const enter=easeOut(p/.22);scale=.78;y=520-305*enter;if(!opened&&p>.24){x+=Math.sin(p*86)*Math.min(10,(p-.24)*40);rot=Math.sin(p*72)*.025}if(opened){scale=.82;y=215}}
+    if(tier===150){scale=.72;rot=0;if(p<.25){y=560}else if(p<.40){const t=easeOut((p-.25)/.15);y=560-350*t}else if(p<.76){y=210+Math.sin(p*19)*3}else{const t=(p-.76)/.24;y=210-590*t*t}}
+    if(tier===200){scale=.78;rot=-.018;if(p<.14){x=-430;y=230}else if(p<.34){const t=easeOut((p-.14)/.20);x=-430+745*t;y=230+Math.sin(p*18)*4}else if(p<.78){x=w*.5;y=230+Math.sin(p*18)*4}else{const t=(p-.78)/.22;x=w*.5+720*t*t;y=230+Math.sin(p*18)*4}}
+    if(p>.92)alpha=(1-p)/.08;
+    if(img&&img.complete&&img.naturalWidth){ctx.globalAlpha=Math.max(0,alpha);ctx.translate(x,y);ctx.rotate(rot);ctx.scale(scale,scale);ctx.drawImage(img,-img.naturalWidth/2,-img.naturalHeight/2);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1}
+    if(tier<=100){const flash=Math.max(0,1-Math.abs(p-.46)/.09);const fg=ctx.createRadialGradient(w*.5,h*.48,5,w*.5,h*.48,310);fg.addColorStop(0,`rgba(255,255,225,${flash*.88})`);fg.addColorStop(1,'rgba(255,205,60,0)');ctx.fillStyle=fg;ctx.fillRect(0,0,w,h)}
+    if(tier===150&&p>.22&&p<.78){const flick=.55+.45*Math.sin(p*120);ctx.fillStyle=`rgba(180,90,255,${.15*flick})`;ctx.fillRect(0,0,w,h)}
+    if(tier===200&&p>.48&&p<.86){for(let k=0;k<3;k++){const fp=Math.max(0,Math.min(1,(p-.48-k*.08)/.22)),cx=130+k*185,cy=85+(k%2)*45;ctx.strokeStyle=`rgba(${k===1?255:125},${k===1?205:220},255,${1-fp})`;for(let z=0;z<18;z++){const an=z*Math.PI/9,rr=fp*(45+18*k);ctx.beginPath();ctx.moveTo(cx+Math.cos(an)*rr*.55,cy+Math.sin(an)*rr*.55);ctx.lineTo(cx+Math.cos(an)*rr,cy+Math.sin(an)*rr);ctx.stroke()}}}
     ctx.restore();
   }
-  async function playTierIntro(item){const tier=tierForCount(item.count);await Promise.race([introReady[tier],sleep(1000)]);tierIntro.className='';tierIntroLabel.textContent=tier+' 份贈訂';void tierIntro.offsetWidth;tierIntro.className='play tier'+tier;const start=performance.now();await new Promise(resolve=>{function frame(now){const p=Math.min(1,(now-start)/2150);drawIntroFrame(tier,p);if(p<1)requestAnimationFrame(frame);else resolve()}requestAnimationFrame(frame)});tierIntro.className=''}
+  async function playTierIntro(item){const tier=tierForCount(item.count);await Promise.race([introReady[tier],sleep(1000)]);tierIntro.className='';tierIntroLabel.textContent=tier+' 份贈訂';void tierIntro.offsetWidth;tierIntro.className='play tier'+tier;const start=performance.now();await new Promise(resolve=>{function frame(now){const p=Math.min(1,(now-start)/2800);drawIntroFrame(tier,p);if(p<1)requestAnimationFrame(frame);else resolve()}requestAnimationFrame(frame)});tierIntro.className=''}
   const entryFor=(count,variant)=>entryMap.get(`${tierForCount(count)}:${variant}`)||null;
   const criticalKeys=new Set(['50:1','200:1']);
   const keyOf=entryKey;
