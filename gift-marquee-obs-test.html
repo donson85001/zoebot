@@ -212,10 +212,8 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   }
   const loadingScreen=document.getElementById('loadingScreen'),loadingProgress=document.getElementById('loadingProgress');
   async function preloadAllMedia(){
-    await Promise.allSettled(Object.values(introReady));let done=0,next=0;
-    const first=['50:1','200:1'],ordered=[...first.map(k=>entryMap.get(k)).filter(Boolean),...entries.filter(e=>!first.includes(keyOf(e)))];
-    const worker=async()=>{while(next<ordered.length){const entry=ordered[next++];await ensureMediaBlob(entry);done++;loadingProgress.textContent=`載入影片 ${done} / ${ordered.length}`}};
-    await Promise.all([worker(),worker(),worker()]);try{await unlockGiftAudio()}catch(_){}
+    loadingProgress.textContent='載入過場動畫…';
+    await Promise.allSettled(Object.values(introReady));try{await unlockGiftAudio()}catch(_){}
     loadingProgress.textContent='載入完成';loadingScreen.classList.add('done');await sleep(300);loadingScreen.remove();
   }
   const appReadyPromise=preloadAllMedia();
