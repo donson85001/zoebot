@@ -18,8 +18,9 @@
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;width:630px;height:420px;overflow:hidden;background:transparent;font-family:Arial,'Noto Sans TC','Microsoft JhengHei',sans-serif}
-#audioUnlock{position:absolute;z-index:100;left:50%;top:150px;transform:translateX(-50%);border:2px solid rgba(255,225,135,.9);border-radius:14px;padding:13px 24px;background:rgba(25,12,42,.94);color:#fff4be;font-size:20px;font-weight:900;letter-spacing:2px;box-shadow:0 0 30px rgba(255,180,70,.55);cursor:pointer}
 #stage{position:relative;width:630px;height:420px;overflow:hidden;background:transparent}
+#loadingScreen{position:absolute;inset:0;z-index:120;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;background:radial-gradient(circle at 50% 42%,rgba(78,25,92,.96),rgba(12,8,24,.99) 72%);color:#fff;transition:opacity .28s ease}
+#loadingScreen.done{opacity:0;pointer-events:none}.loadingRing{width:58px;height:58px;border-radius:50%;border:5px solid rgba(255,255,255,.16);border-top-color:#ffd46f;border-right-color:#ef65a6;animation:loadingSpin .8s linear infinite}.loadingTitle{font-size:24px;font-weight:900;letter-spacing:4px}.loadingProgress{font-size:15px;color:#ffe8b0;font-weight:800;letter-spacing:2px}@keyframes loadingSpin{to{transform:rotate(360deg)}}
 #marqueeSlot{position:absolute;left:0;top:0;width:630px;height:168px;overflow:hidden;z-index:3;pointer-events:none}
 #banner{position:absolute;left:0;top:0;width:630px;height:162px;border-radius:24px;overflow:hidden;opacity:0;transform:translateX(-650px);transition:transform .42s cubic-bezier(.2,.9,.25,1),opacity .25s ease;filter:drop-shadow(0 8px 14px rgba(0,0,0,.22))}
 #banner.show{opacity:1;transform:translateX(0)}
@@ -68,8 +69,8 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
 </style>
 </head>
 <body>
-<button id="audioUnlock" type="button">點一下啟用音效</button>
 <div id="stage">
+  <div id="loadingScreen"><div class="loadingRing"></div><div class="loadingTitle">正在載入</div><div id="loadingProgress" class="loadingProgress">準備動畫素材…</div></div>
   <div id="tierIntro" aria-hidden="true"><canvas id="tierIntroCanvas" width="630" height="420"></canvas><div id="tierIntroLabel"></div></div>
   <div id="counterPanel"><div id="months" class="num">0</div><div id="gifts" class="num">0</div></div>
   <div id="marqueeSlot">
@@ -116,7 +117,6 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   let superLoopActive=false,superLoopIndex=0,superLoopName='匿名';
   function queueSuperNext(){if(!superLoopActive)return;const item=superSequence[superLoopIndex];superLoopIndex=(superLoopIndex+1)%superSequence.length;queue.push({name:superLoopName,count:item.count,variant:item.variant,eventId:'',mediaAlt:''})}
   const entries=[...document.querySelectorAll('.tierMedia')].map(media=>({media,video:media.querySelector('video'),tier:Number(media.dataset.tier),variant:Number(media.dataset.variant),alt:String(media.dataset.alt||''),muted:media.dataset.muted==='1',blobPromise:null,blobUrl:null,sourceUrl:media.querySelector('video').getAttribute('src')}));
-  const audioUnlock=document.getElementById('audioUnlock');audioUnlock.addEventListener('click',()=>{const videoUnlocks=entries.map(({video,muted})=>{video.pause();video.muted=false;video.volume=.001;try{video.currentTime=0}catch(_){}const p=video.play();return Promise.resolve(p).then(()=>new Promise(r=>setTimeout(r,45))).then(()=>{video.pause();try{video.currentTime=0}catch(_){}video.volume=1;video.muted=muted}).catch(()=>{video.volume=1;video.muted=muted})});Promise.allSettled([unlockGiftAudio(),...videoUnlocks]).then(()=>audioUnlock.remove())},{once:true});
   const entryKey=e=>`${e.tier}:${e.variant}${e.alt?':'+e.alt:''}`;
   const entryMap=new Map(entries.map(e=>[entryKey(e),e]));
   const tierForCount=count=>count>=200?200:count>=150?150:count>=100?100:50;
@@ -210,13 +210,15 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
     })();
     return entry.blobPromise;
   }
-  const celEntry=entryMap.get('200:1'),waterEntry=entryMap.get('50:1');
-  if(celEntry)ensureMediaBlob(celEntry);
-  if(waterEntry)setTimeout(()=>ensureMediaBlob(waterEntry),250);
-  setTimeout(()=>preloadEntries(entries.filter(e=>e.variant===1&&!criticalKeys.has(keyOf(e)))),700);
-  setTimeout(()=>preloadEntries(entries.filter(e=>e.variant===2)),1400);
-  setTimeout(()=>preloadEntries(entries.filter(e=>e.variant===3)),2400);
-  setTimeout(()=>preloadEntries(entries.filter(e=>e.variant===4)),3200);
+  const loadingScreen=document.getElementById('loadingScreen'),loadingProgress=document.getElementById('loadingProgress');
+  async function preloadAllMedia(){
+    await Promise.allSettled(Object.values(introReady));let done=0,next=0;
+    const first=['50:1','200:1'],ordered=[...first.map(k=>entryMap.get(k)).filter(Boolean),...entries.filter(e=>!first.includes(keyOf(e)))];
+    const worker=async()=>{while(next<ordered.length){const entry=ordered[next++];await ensureMediaBlob(entry);done++;loadingProgress.textContent=`載入影片 ${done} / ${ordered.length}`}};
+    await Promise.all([worker(),worker(),worker()]);try{await unlockGiftAudio()}catch(_){}
+    loadingProgress.textContent='載入完成';loadingScreen.classList.add('done');await sleep(300);loadingScreen.remove();
+  }
+  const appReadyPromise=preloadAllMedia();
   const COUNTER_API='https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec?action=stats';
   async function updateCounters(){try{const r=await fetch(COUNTER_API+'&_='+Date.now(),{cache:'no-store'}),d=await r.json();if(d&&d.ok!==false){const m=Number(d.subscriptionMonths),g=Number(d.giftSubCount);if(Number.isFinite(m))months.textContent=String(Math.trunc(m));if(Number.isFinite(g))gifts.textContent=String(Math.trunc(g))}}catch(e){console.error(e)}}
   updateCounters();setInterval(updateCounters,5000);
@@ -287,7 +289,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
     const distance=lane.clientWidth+text.scrollWidth+54,videoDone=waitForVideoFinish(entry.video),marqueeDone=runMarqueeSyncedToVideo(item,entry,distance);
     await Promise.all([marqueeDone,videoDone]);hideActive();banner.classList.remove('show');await sleep(220);
   }
-  async function drain(){if(playing)return;playing=true;stage.classList.add('active');await sleep(300);while(true){while(queue.length){await playOne(queue.shift());if(superLoopActive&&!queue.length)queueSuperNext()}await sleep(220);if(queue.length)continue;break}hideActive();banner.classList.remove('show');stage.classList.remove('active');await sleep(420);playing=false;if(queue.length)drain()}
+  async function drain(){if(playing)return;playing=true;await appReadyPromise;stage.classList.add('active');await sleep(300);while(true){while(queue.length){await playOne(queue.shift());if(superLoopActive&&!queue.length)queueSuperNext()}await sleep(220);if(queue.length)continue;break}hideActive();banner.classList.remove('show');stage.classList.remove('active');await sleep(420);playing=false;if(queue.length)drain()}
   function enqueue(payload){const item=normalize(payload);if(item.count<MIN_GIFT)return{accepted:false,reason:'below-threshold'};item.variant=chooseVariant(item);if(!entryFor(item.count,item.variant))return{accepted:false,reason:'empty-slot'};queue.push(item);drain();return{accepted:true,tier:tierForCount(item.count),variant:item.variant}}
   function resetVariants(){nextVariant[50]=1;nextVariant[100]=1;nextVariant[150]=1;nextVariant[200]=1;superLoopIndex=0;return{...nextVariant}}
   function startSuperLoop(payload={}){superLoopName=String(payload.name||'匿名').trim()||'匿名';superLoopActive=true;superLoopIndex=0;queue.length=0;queueSuperNext();drain();return{active:true}}
