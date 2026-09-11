@@ -19,8 +19,6 @@
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;width:630px;height:420px;overflow:hidden;background:transparent;font-family:Arial,'Noto Sans TC','Microsoft JhengHei',sans-serif}
 #stage{position:relative;width:630px;height:420px;overflow:hidden;background:transparent}
-#loadingScreen{position:absolute;inset:0;z-index:120;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;background:radial-gradient(circle at 50% 42%,rgba(78,25,92,.96),rgba(12,8,24,.99) 72%);color:#fff;transition:opacity .28s ease}
-#loadingScreen.done{opacity:0;pointer-events:none}.loadingRing{width:58px;height:58px;border-radius:50%;border:5px solid rgba(255,255,255,.16);border-top-color:#ffd46f;border-right-color:#ef65a6;animation:loadingSpin .8s linear infinite}.loadingTitle{font-size:24px;font-weight:900;letter-spacing:4px}.loadingProgress{font-size:15px;color:#ffe8b0;font-weight:800;letter-spacing:2px}@keyframes loadingSpin{to{transform:rotate(360deg)}}
 #marqueeSlot{position:absolute;left:0;top:0;width:630px;height:168px;overflow:hidden;z-index:3;pointer-events:none}
 #banner{position:absolute;left:0;top:0;width:630px;height:162px;border-radius:24px;overflow:hidden;opacity:0;transform:translateX(-650px);transition:transform .42s cubic-bezier(.2,.9,.25,1),opacity .25s ease;filter:drop-shadow(0 8px 14px rgba(0,0,0,.22))}
 #banner.show{opacity:1;transform:translateX(0)}
@@ -70,7 +68,6 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
 </head>
 <body>
 <div id="stage">
-  <div id="loadingScreen"><div class="loadingRing"></div><div class="loadingTitle">正在載入</div><div id="loadingProgress" class="loadingProgress">準備動畫素材…</div></div>
   <div id="tierIntro" aria-hidden="true"><canvas id="tierIntroCanvas" width="630" height="420"></canvas><div id="tierIntroLabel"></div></div>
   <div id="counterPanel"><div id="months" class="num">0</div><div id="gifts" class="num">0</div></div>
   <div id="marqueeSlot">
@@ -182,14 +179,15 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   const entryFor=(count,variant)=>entryMap.get(`${tierForCount(count)}:${variant}`)||null;
   const criticalKeys=new Set(['50:1','200:1']);
   const keyOf=entryKey;
-  function preloadEntries(list){list.forEach(e=>ensureMediaBlob(e))}
-  async function ensureMediaBlob(entry){
+  let idlePreloadEntry=null,idlePreloadTimer=0;
+  async function ensureMediaBlob(entry,isIdle=false){
     if(!entry)return;
     if(entry.blobUrl&&entry.video.src.startsWith('blob:'))return;
     if(entry.blobPromise)return entry.blobPromise;
+    const controller=new AbortController();entry.blobController=controller;if(isIdle)idlePreloadEntry=entry;
     entry.blobPromise=(async()=>{
       try{
-        const r=await fetch(entry.sourceUrl,{cache:'no-store'});
+        const r=await fetch(entry.sourceUrl,{cache:'force-cache',signal:controller.signal});
         if(!r.ok)throw new Error(`HTTP ${r.status}`);
         const blob=await r.blob();
         if(entry.blobUrl)URL.revokeObjectURL(entry.blobUrl);
@@ -203,20 +201,17 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
           const timer=setTimeout(finish,3000);entry.video.addEventListener('canplay',finish,{once:true});
         });
       }catch(e){
+        if(e?.name==='AbortError'){entry.blobPromise=null;return}
         console.error('media blob preload failed',keyOf(entry),e);
         entry.blobPromise=null;
         entry.video.src=entry.sourceUrl;entry.video.preload='auto';try{entry.video.load()}catch(_){}
-      }
+      }finally{if(idlePreloadEntry===entry)idlePreloadEntry=null}
     })();
     return entry.blobPromise;
   }
-  const loadingScreen=document.getElementById('loadingScreen'),loadingProgress=document.getElementById('loadingProgress');
-  async function preloadAllMedia(){
-    loadingProgress.textContent='載入過場動畫…';
-    await Promise.allSettled(Object.values(introReady));try{await unlockGiftAudio()}catch(_){}
-    loadingProgress.textContent='載入完成';loadingScreen.classList.add('done');await sleep(300);loadingScreen.remove();
-  }
-  const appReadyPromise=preloadAllMedia();
+  function stopIdlePreload(keep=null){clearTimeout(idlePreloadTimer);if(idlePreloadEntry&&idlePreloadEntry!==keep){idlePreloadEntry.blobController?.abort();idlePreloadEntry.blobPromise=null;idlePreloadEntry=null}}
+  function scheduleIdlePreload(){clearTimeout(idlePreloadTimer);if(playing)return;idlePreloadTimer=setTimeout(async()=>{if(playing)return;const entry=entries.find(e=>!e.blobUrl&&!e.blobPromise);if(!entry)return;await ensureMediaBlob(entry,true);if(!playing)scheduleIdlePreload()},450)}
+  Promise.allSettled(Object.values(introReady)).then(()=>{try{unlockGiftAudio()}catch(_){}scheduleIdlePreload()});
   const COUNTER_API='https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec?action=stats';
   async function updateCounters(){try{const r=await fetch(COUNTER_API+'&_='+Date.now(),{cache:'no-store'}),d=await r.json();if(d&&d.ok!==false){const m=Number(d.subscriptionMonths),g=Number(d.giftSubCount);if(Number.isFinite(m))months.textContent=String(Math.trunc(m));if(Number.isFinite(g))gifts.textContent=String(Math.trunc(g))}}catch(e){console.error(e)}}
   updateCounters();setInterval(updateCounters,5000);
@@ -281,13 +276,13 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   function waitForVideoFinish(video){if(!video||video.ended)return Promise.resolve();return new Promise(resolve=>{let done=false,lastTime=Math.max(0,Number(video.currentTime)||0),lastMove=Date.now(),recovering=false;const cleanup=()=>{video.removeEventListener('ended',finish);video.removeEventListener('pause',check);video.removeEventListener('stalled',recover);video.removeEventListener('waiting',recover);clearInterval(poll);clearTimeout(hard)},finish=()=>{if(done)return;done=true;cleanup();resolve()},recover=async()=>{if(recovering||done||video.ended)return;recovering=true;try{video.muted=activeEntry?.muted??video.muted;video.volume=1;await video.play()}catch(e){console.warn('video-resume-retry',e)}finally{recovering=false}},check=()=>{const d=Number(video.duration),t=Math.max(0,Number(video.currentTime)||0);if(video.ended||(Number.isFinite(d)&&d>0&&t>=d-.04)){finish();return}if(t>lastTime+.015){lastTime=t;lastMove=Date.now();return}if(activeEntry?.video===video&&(video.paused||Date.now()-lastMove>1600))recover()};video.addEventListener('ended',finish,{once:true});video.addEventListener('pause',check);video.addEventListener('stalled',recover);video.addEventListener('waiting',recover);const poll=setInterval(check,250),hard=setTimeout(()=>{console.error('video hard timeout',video.currentSrc);finish()},180000);check()})}
   async function playOne(item){
     const entry=entryFor(item.count,item.variant);if(!entry)return;
-    hideActive();banner.classList.remove('show');const mediaReady=ensureMediaBlob(entry);await sleep(180);await playTierIntro(item);
+    stopIdlePreload(entry);hideActive();banner.classList.remove('show');const mediaReady=ensureMediaBlob(entry);await sleep(180);await playTierIntro(item);
     await mediaReady;await switchMedia(entry);setLook(item);text.style.transition='none';text.style.transform='translateX(0)';
     banner.classList.add('show');tierIntro.className='';
     const distance=lane.clientWidth+text.scrollWidth+54,videoDone=waitForVideoFinish(entry.video),marqueeDone=runMarqueeSyncedToVideo(item,entry,distance);
     await Promise.all([marqueeDone,videoDone]);hideActive();banner.classList.remove('show');await sleep(220);
   }
-  async function drain(){if(playing)return;playing=true;await appReadyPromise;stage.classList.add('active');await sleep(300);while(true){while(queue.length){await playOne(queue.shift());if(superLoopActive&&!queue.length)queueSuperNext()}await sleep(220);if(queue.length)continue;break}hideActive();banner.classList.remove('show');stage.classList.remove('active');await sleep(420);playing=false;if(queue.length)drain()}
+  async function drain(){if(playing)return;playing=true;stage.classList.add('active');await sleep(300);while(true){while(queue.length){await playOne(queue.shift());if(superLoopActive&&!queue.length)queueSuperNext()}await sleep(220);if(queue.length)continue;break}hideActive();banner.classList.remove('show');stage.classList.remove('active');await sleep(420);playing=false;scheduleIdlePreload();if(queue.length)drain()}
   function enqueue(payload){const item=normalize(payload);if(item.count<MIN_GIFT)return{accepted:false,reason:'below-threshold'};item.variant=chooseVariant(item);if(!entryFor(item.count,item.variant))return{accepted:false,reason:'empty-slot'};queue.push(item);drain();return{accepted:true,tier:tierForCount(item.count),variant:item.variant}}
   function resetVariants(){nextVariant[50]=1;nextVariant[100]=1;nextVariant[150]=1;nextVariant[200]=1;superLoopIndex=0;return{...nextVariant}}
   function startSuperLoop(payload={}){superLoopName=String(payload.name||'匿名').trim()||'匿名';superLoopActive=true;superLoopIndex=0;queue.length=0;queueSuperNext();drain();return{active:true}}

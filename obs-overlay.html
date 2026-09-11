@@ -5,20 +5,19 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>OBS 餘興節目計數器</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;padding:0;width:630px;height:420px;overflow:hidden;background:transparent}#core{position:absolute;inset:0;display:block;width:630px;height:420px;border:0;background:transparent}#bootLoading{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;background:radial-gradient(circle at 50% 42%,#4e195c,#0c0818 72%);color:#fff;font-family:Arial,'Noto Sans TC','Microsoft JhengHei',sans-serif;transition:opacity .2s}.ring{width:58px;height:58px;border-radius:50%;border:5px solid rgba(255,255,255,.16);border-top-color:#ffd46f;border-right-color:#ef65a6;animation:spin .8s linear infinite}.title{font-size:24px;font-weight:900;letter-spacing:4px}.sub{font-size:15px;color:#ffe8b0;font-weight:800;letter-spacing:2px}@keyframes spin{to{transform:rotate(360deg)}}
+*{box-sizing:border-box}html,body{margin:0;padding:0;width:630px;height:420px;overflow:hidden;background:transparent}#core{position:absolute;inset:0;display:block;width:630px;height:420px;border:0;background:transparent}
 </style>
 </head>
 <body>
-<div id="bootLoading"><div class="ring"></div><div class="title">正在載入</div><div class="sub">同步播放設定…</div></div>
 <iframe id="core" allow="autoplay" scrolling="no" title="Zoebot OBS overlay core"></iframe>
 <script>
 (()=>{
 'use strict';
-const OBS_BUILD='20260911-1205-fast-loading-v56';
+const OBS_BUILD='20260911-1345-idle-preload-v57';
 const SHEET_ID='14Yv_DyqvCsgQJQ98vZk_IkQ527xLPSVvLaNBnDGcMug';
 const DETAIL_SHEET='SubscriptionDetail',STATE_SHEET='動畫播放狀態';
 const VARIANT_STATE_KEY='zoebot-marquee-next-variant-v3',SEEN_KEY='zoebot-marquee-sheet-seen-v1',INIT_KEY='zoebot-marquee-sheet-initialized-v1';
-const CORE_URL='obs-overlay-core-v16.html?v=20260911-1205-fast-loading-v56';
+const CORE_URL='obs-overlay-core-v16.html?v=20260911-1345-idle-preload-v57';
 const frame=document.getElementById('core');
 const tierForCount=n=>n>=200?200:n>=150?150:n>=100?100:50;
 const previousVariant=n=>n===1?4:n-1;
@@ -36,7 +35,7 @@ function stateBeforeFresh(currentState,freshDesc){const pre={50:Number(currentSt
 async function syncVariantState(){const stateResp=await getGviz(STATE_SHEET,'select A,B where A is not null'),current=parseState(stateResp);if([50,100,150,200].some(t=>!(current[t]>=1&&current[t]<=4)))throw new Error('animation state incomplete');const giftsResp=await getGviz(DETAIL_SHEET,"select A,B,C,E,I where B = '贈送訂閱' order by A desc limit 100"),items=parseGiftRows(giftsResp),fresh=willCoreProcess(items),pre=stateBeforeFresh(current,fresh);localStorage.setItem(VARIANT_STATE_KEY,JSON.stringify(pre));console.log('variant bootstrap',{current,fresh:fresh.length,pre})}
 function loadCore(){if(frame.src)return;frame.src=CORE_URL}
 async function start(){try{await Promise.race([syncVariantState(),new Promise((_,rej)=>setTimeout(()=>rej(new Error('bootstrap timeout')),6500))])}catch(e){console.error('variant bootstrap skipped',e)}finally{loadCore()}}
-frame.addEventListener('load',()=>{document.getElementById('bootLoading')?.remove();window.ZoeGiftMarquee={enqueue:p=>frame.contentWindow?.ZoeGiftMarquee?.enqueue(p),getQueue:()=>frame.contentWindow?.ZoeGiftMarquee?.getQueue?.()||[],isPlaying:()=>!!frame.contentWindow?.ZoeGiftMarquee?.isPlaying?.(),getNextVariants:()=>frame.contentWindow?.ZoeGiftMarquee?.getNextVariants?.()||{}}});
+frame.addEventListener('load',()=>{window.ZoeGiftMarquee={enqueue:p=>frame.contentWindow?.ZoeGiftMarquee?.enqueue(p),getQueue:()=>frame.contentWindow?.ZoeGiftMarquee?.getQueue?.()||[],isPlaying:()=>!!frame.contentWindow?.ZoeGiftMarquee?.isPlaying?.(),getNextVariants:()=>frame.contentWindow?.ZoeGiftMarquee?.getNextVariants?.()||{}}});
 window.addEventListener('message',e=>{if(e?.data?.type==='zoebot-gift-marquee')frame.contentWindow?.postMessage(e.data,'*')});
 async function checkForPageUpdate(){try{const u=new URL(location.href);u.searchParams.set('__obs_update_check',String(Date.now()));const r=await fetch(u.toString(),{cache:'no-store'});if(!r.ok)return;const html=await r.text(),m=html.match(/const OBS_BUILD='([^']+)'/),remote=m&&m[1];if(remote&&remote!==OBS_BUILD){u.searchParams.delete('__obs_update_check');u.searchParams.set('__obs_build',remote);u.searchParams.set('_',String(Date.now()));location.replace(u.toString())}}catch(_){}}
 start();setTimeout(checkForPageUpdate,7000);setInterval(checkForPageUpdate,10000);
