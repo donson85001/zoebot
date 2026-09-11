@@ -13,12 +13,14 @@
 <script>
 (()=>{
 'use strict';
-const OBS_BUILD='20260911-1345-idle-preload-v57';
+const OBS_BUILD='20260912-0105-state-ack-v58';
 const SHEET_ID='14Yv_DyqvCsgQJQ98vZk_IkQ527xLPSVvLaNBnDGcMug';
 const DETAIL_SHEET='SubscriptionDetail',STATE_SHEET='動畫播放狀態';
 const VARIANT_STATE_KEY='zoebot-marquee-next-variant-v3',SEEN_KEY='zoebot-marquee-sheet-seen-v1',INIT_KEY='zoebot-marquee-sheet-initialized-v1';
-const CORE_URL='obs-overlay-core-v16.html?v=20260911-1345-idle-preload-v57';
+const CORE_URL='obs-overlay-core-v16.html?v=20260912-0105-state-ack-v58';
+const ACK_API='https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec',ACK_KEY='donson-twitch-2026-change-this';
 const frame=document.getElementById('core');
+let stateSyncBusy=false,lastAppliedSignature='';
 const tierForCount=n=>n>=200?200:n>=150?150:n>=100?100:50;
 const previousVariant=n=>n===1?4:n-1;
 const cellValue=c=>!c||c.v===null||c.v===undefined?'':c.v;
@@ -32,13 +34,16 @@ function parseGiftRows(resp){return(resp?.table?.rows||[]).map(r=>{const c=r?.c|
 function readSeen(){try{const v=JSON.parse(localStorage.getItem(SEEN_KEY)||'[]');return new Set(Array.isArray(v)?v.map(String):[])}catch(_){return new Set()}}
 function willCoreProcess(items){const seen=readSeen();let initialized=false;try{initialized=localStorage.getItem(INIT_KEY)==='1'}catch(_){}if(initialized||seen.size){return items.filter(x=>x.count>=50&&!seen.has(x.eventId))}const now=Date.now(),cutoff=3*60*1000;return items.filter(x=>x.count>=50&&x.tsMs&&now-x.tsMs>=0&&now-x.tsMs<=cutoff)}
 function stateBeforeFresh(currentState,freshDesc){const pre={50:Number(currentState[50]),100:Number(currentState[100]),150:Number(currentState[150]),200:Number(currentState[200])};for(const item of freshDesc){const tier=tierForCount(item.count),n=pre[tier];if(!(n>=1&&n<=4))continue;pre[tier]=previousVariant(n)}return pre}
-async function syncVariantState(){const stateResp=await getGviz(STATE_SHEET,'select A,B where A is not null'),current=parseState(stateResp);if([50,100,150,200].some(t=>!(current[t]>=1&&current[t]<=4)))throw new Error('animation state incomplete');const giftsResp=await getGviz(DETAIL_SHEET,"select A,B,C,E,I where B = '贈送訂閱' order by A desc limit 100"),items=parseGiftRows(giftsResp),fresh=willCoreProcess(items),pre=stateBeforeFresh(current,fresh);localStorage.setItem(VARIANT_STATE_KEY,JSON.stringify(pre));console.log('variant bootstrap',{current,fresh:fresh.length,pre})}
+async function syncVariantState(){const stateResp=await getGviz(STATE_SHEET,'select A,B where A is not null'),current=parseState(stateResp);if([50,100,150,200].some(t=>!(current[t]>=1&&current[t]<=4)))throw new Error('animation state incomplete');const giftsResp=await getGviz(DETAIL_SHEET,"select A,B,C,E,I where B = '贈送訂閱' order by A desc limit 100"),items=parseGiftRows(giftsResp),fresh=willCoreProcess(items),pre=stateBeforeFresh(current,fresh);localStorage.setItem(VARIANT_STATE_KEY,JSON.stringify(pre));return{current,pre,fresh}}
+const stateSignature=state=>[50,100,150,200].map(t=>`${t}:${state[t]}`).join('|');
+async function acknowledgeState(state){await fetch(ACK_API,{method:'POST',mode:'no-cors',cache:'no-store',headers:{'Content-Type':'text/plain;charset=UTF-8'},body:JSON.stringify({key:ACK_KEY,action:'ack-animation-state',build:OBS_BUILD,states:state})})}
+async function syncAndApply(){if(stateSyncBusy||!frame.contentWindow?.ZoeGiftMarquee||frame.contentWindow.ZoeGiftMarquee.isPlaying?.())return;stateSyncBusy=true;try{const{current,pre,fresh}=await syncVariantState();if(frame.contentWindow.ZoeGiftMarquee.isPlaying?.())return;const applied=frame.contentWindow.ZoeGiftMarquee.setNextVariants?.(pre);if(!applied?.ok)return;const actual=frame.contentWindow.ZoeGiftMarquee.getNextVariants?.()||{},preSig=stateSignature(pre),currentSig=stateSignature(current);if(stateSignature(actual)!==preSig)throw new Error('animation state apply mismatch');if(!fresh.length&&preSig===currentSig&&currentSig!==lastAppliedSignature){await acknowledgeState(current);lastAppliedSignature=currentSig;console.log('animation state confirmed',current)}}catch(e){console.error('animation state sync failed',e)}finally{stateSyncBusy=false}}
 function loadCore(){if(frame.src)return;frame.src=CORE_URL}
-async function start(){try{await Promise.race([syncVariantState(),new Promise((_,rej)=>setTimeout(()=>rej(new Error('bootstrap timeout')),6500))])}catch(e){console.error('variant bootstrap skipped',e)}finally{loadCore()}}
-frame.addEventListener('load',()=>{window.ZoeGiftMarquee={enqueue:p=>frame.contentWindow?.ZoeGiftMarquee?.enqueue(p),getQueue:()=>frame.contentWindow?.ZoeGiftMarquee?.getQueue?.()||[],isPlaying:()=>!!frame.contentWindow?.ZoeGiftMarquee?.isPlaying?.(),getNextVariants:()=>frame.contentWindow?.ZoeGiftMarquee?.getNextVariants?.()||{}}});
+function start(){loadCore()}
+frame.addEventListener('load',()=>{window.ZoeGiftMarquee={enqueue:p=>frame.contentWindow?.ZoeGiftMarquee?.enqueue(p),getQueue:()=>frame.contentWindow?.ZoeGiftMarquee?.getQueue?.()||[],isPlaying:()=>!!frame.contentWindow?.ZoeGiftMarquee?.isPlaying?.(),getNextVariants:()=>frame.contentWindow?.ZoeGiftMarquee?.getNextVariants?.()||{},setNextVariants:v=>frame.contentWindow?.ZoeGiftMarquee?.setNextVariants?.(v)};syncAndApply()});
 window.addEventListener('message',e=>{if(e?.data?.type==='zoebot-gift-marquee')frame.contentWindow?.postMessage(e.data,'*')});
 async function checkForPageUpdate(){try{const u=new URL(location.href);u.searchParams.set('__obs_update_check',String(Date.now()));const r=await fetch(u.toString(),{cache:'no-store'});if(!r.ok)return;const html=await r.text(),m=html.match(/const OBS_BUILD='([^']+)'/),remote=m&&m[1];if(remote&&remote!==OBS_BUILD){u.searchParams.delete('__obs_update_check');u.searchParams.set('__obs_build',remote);u.searchParams.set('_',String(Date.now()));location.replace(u.toString())}}catch(_){}}
-start();setTimeout(checkForPageUpdate,7000);setInterval(checkForPageUpdate,10000);
+start();setInterval(syncAndApply,5000);setTimeout(checkForPageUpdate,7000);setInterval(checkForPageUpdate,10000);
 })();
 </script>
 </body>

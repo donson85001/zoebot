@@ -287,7 +287,8 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   function resetVariants(){nextVariant[50]=1;nextVariant[100]=1;nextVariant[150]=1;nextVariant[200]=1;superLoopIndex=0;return{...nextVariant}}
   function startSuperLoop(payload={}){superLoopName=String(payload.name||'匿名').trim()||'匿名';superLoopActive=true;superLoopIndex=0;queue.length=0;queueSuperNext();drain();return{active:true}}
   function stopSuperLoop(){superLoopActive=false;queue.length=0;return{active:false}}
-  window.ZoeGiftMarquee={enqueue,getQueue:()=>queue.slice(),isPlaying:()=>playing,resetVariants,getNextVariants:()=>({...nextVariant}),startSuperLoop,stopSuperLoop};
+  function setNextVariants(values){if(playing||queue.length)return{ok:false,reason:'busy',values:{...nextVariant}};for(const tier of[50,100,150,200]){const v=Number(values?.[tier]);if(!(v>=1&&v<=4))return{ok:false,reason:'invalid',values:{...nextVariant}}}for(const tier of[50,100,150,200])nextVariant[tier]=Number(values[tier]);return{ok:true,values:{...nextVariant}}}
+  window.ZoeGiftMarquee={enqueue,getQueue:()=>queue.slice(),isPlaying:()=>playing,resetVariants,getNextVariants:()=>({...nextVariant}),setNextVariants,startSuperLoop,stopSuperLoop};
   window.addEventListener('message',e=>{if(e?.data?.type==='zoebot-gift-marquee')enqueue(e.data);else if(e?.data?.type==='zoebot-gift-marquee-reset'){superLoopActive=false;queue.length=0;resetVariants()}else if(e?.data?.type==='zoebot-super-loop-start')startSuperLoop(e.data);else if(e?.data?.type==='zoebot-super-loop-stop')stopSuperLoop()});
   if(params.has('count'))setTimeout(()=>enqueue({name:params.get('name')||'測試觀眾',count:params.get('count'),variant:params.get('variant')}),450);
 })();

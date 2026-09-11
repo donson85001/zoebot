@@ -13,6 +13,7 @@ const UPDATE_KEY = 'donson-twitch-2026-change-this';
 const COUNTER_SHEET = 'TwitchCounter';
 const LOG_SHEET = 'EventLog';
 const DETAIL_SHEET = 'SubscriptionDetail';
+const ANIMATION_STATE_SHEET = '動畫播放狀態';
 const INITIAL_MONTHS = 1546;
 const INITIAL_GIFTS = 395;
 const LOG_HEADERS = ['時間','eventId','類型','月份增加','贈禮增加','更新後月份','更新後贈禮','事件類型','誰','Tier','數量／一次幾個月','累積第幾月'];
@@ -36,8 +37,23 @@ function setup() {
 }
 
 function doGet(e){try{syncDailyCounterSnapshot_();const action=String((e&&e.parameter&&e.parameter.action)||'stats').toLowerCase(),c=readCounters_();if(action==='months'||action==='subscription-months')return text_(String(c.subscriptionMonths));if(action==='gifts'||action==='gift-count')return text_(String(c.giftSubCount));return json_({ok:true,...c,updatedAt:new Date().toISOString()});}catch(err){return json_({ok:false,error:String(err&&err.message?err.message:err)});}}
-function doPost(e){const lock=LockService.getScriptLock();lock.waitLock(10000);try{const body=parseBody_(e);if(String(body.key||'')!==UPDATE_KEY)return json_({ok:false,error:'更新金鑰錯誤'});syncDailyCounterSnapshot_();const action=String(body.action||'').toLowerCase();if(action==='set')return setCounters_(body);if(action==='increment')return incrementCounters_(body);if(action==='rebuild-detail')return json_({ok:true,rows:rebuildSubscriptionDetailFromLog_()});return json_({ok:false,error:'未知 action'});}catch(err){return json_({ok:false,error:String(err&&err.message?err.message:err)});}finally{lock.releaseLock();}}
+function doPost(e){const lock=LockService.getScriptLock();lock.waitLock(10000);try{const body=parseBody_(e);if(String(body.key||'')!==UPDATE_KEY)return json_({ok:false,error:'更新金鑰錯誤'});syncDailyCounterSnapshot_();const action=String(body.action||'').toLowerCase();if(action==='set')return setCounters_(body);if(action==='increment')return incrementCounters_(body);if(action==='rebuild-detail')return json_({ok:true,rows:rebuildSubscriptionDetailFromLog_()});if(action==='ack-animation-state')return acknowledgeAnimationState_(body);return json_({ok:false,error:'未知 action'});}catch(err){return json_({ok:false,error:String(err&&err.message?err.message:err)});}finally{lock.releaseLock();}}
 function setCounters_(body){const months=toNonNegativeInt_(body.subscriptionMonths,'subscriptionMonths'),gifts=toNonNegativeInt_(body.giftSubCount,'giftSubCount');writeCounters_(months,gifts);return json_({ok:true,subscriptionMonths:months,giftSubCount:gifts});}
+
+function acknowledgeAnimationState_(body){
+  const id=PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');if(!id)throw new Error('尚未執行 setup()');
+  const ss=SpreadsheetApp.openById(id),s=ss.getSheetByName(ANIMATION_STATE_SHEET);if(!s)throw new Error('找不到動畫播放狀態');
+  const supplied=body.states&&typeof body.states==='object'?body.states:{};
+  const live=s.getRange('A2:B5').getValues(),expected={};
+  live.forEach(r=>{const tier=Number(r[0]),next=Number(r[1]);if([50,100,150,200].indexOf(tier)!==-1)expected[tier]=next;});
+  [50,100,150,200].forEach(t=>{const got=Number(supplied[t]);if(!(got>=1&&got<=4)||got!==expected[t])throw new Error(t+' 檔位確認值與試算表不一致');});
+  const build=cleanCell_(body.build||''),now=new Date();
+  s.getRange('I1:J1').setValues([['正式程式確認時間','正式程式已讀設定']]).setFontWeight('bold');
+  s.getRange('I2:I5').setValues([[now],[now],[now],[now]]).setNumberFormat('yyyy/m/d HH:mm:ss');
+  s.getRange('J2:J5').setValues([50,100,150,200].map(t=>['已讀 '+expected[t]+'｜'+build]));
+  s.setColumnWidth(9,175);s.setColumnWidth(10,260);SpreadsheetApp.flush();
+  return json_({ok:true,confirmedAt:now.toISOString(),states:expected,build:build});
+}
 
 function incrementCounters_(body){
   const eventId=String(body.eventId||'').trim();
