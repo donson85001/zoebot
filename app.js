@@ -210,6 +210,10 @@
       return;
     }
     const n=ev.notice_type, who=ev.chatter_is_anonymous?'匿名':(ev.chatter_user_name||ev.chatter_user_login||'未知');
+    // event.message_id identifies the actual chat notification. The outer
+    // metadata.message_id only identifies one EventSub delivery, so the same
+    // event received by two monitor tabs gets two different outer IDs.
+    const logicalEventId=String(ev.message_id||p.metadata?.message_id||'').trim();
     if(n==='sub'){
       const d=ev.sub||{}; state.counts.sub++; counts();
       const item={type:'sub',tier:tier(d.sub_tier),isPrime:!!d.is_prime}; last(item);
@@ -219,7 +223,7 @@
       const item={type:'resub',tier:tier(d.sub_tier),cumulativeMonths:d.cumulative_months??null,durationMonths:d.duration_months??null,streakMonths:d.streak_months??null}; last(item);
       card('resub','續訂',who,ev.message?.text||'',Object.entries(item).map(([k,v])=>`${k}=${v}`));
       if(Number.isFinite(months)&&months>0) {
-        increment(months,0,p.metadata?.message_id,{
+        increment(months,0,logicalEventId,{
           type:'resub',
           who,
           tier:tier(d.sub_tier),
@@ -232,7 +236,7 @@
       const item={type:'community_sub_gift',tier:tier(d.sub_tier),total:d.total??null,cumulativeTotal:d.cumulative_total??null}; last(item);
       card('gift','批次贈訂',who,ev.message?.text||'',Object.entries(item).map(([k,v])=>`${k}=${v}`));
       if(plus>0) {
-        increment(0,plus,p.metadata?.message_id,{
+        increment(0,plus,logicalEventId,{
           type:'community_sub_gift',
           who,
           tier:tier(d.sub_tier),
