@@ -13,11 +13,11 @@
 <script>
 (()=>{
 'use strict';
-const OBS_BUILD='20260915-variant5-hotfix-v64';
+const OBS_BUILD='20260915-reload-guard-v65';
 const SHEET_ID='14Yv_DyqvCsgQJQ98vZk_IkQ527xLPSVvLaNBnDGcMug';
 const DETAIL_SHEET='SubscriptionDetail',STATE_SHEET='動畫播放狀態';
 const VARIANT_STATE_KEY='zoebot-marquee-next-variant-v3',SEEN_KEY='zoebot-marquee-sheet-seen-v1',INIT_KEY='zoebot-marquee-sheet-initialized-v1';
-const CORE_URL='obs-overlay-core-v16.html?v=20260915-variant5-hotfix-v64';
+const CORE_URL='obs-overlay-core-v16.html?v=20260915-reload-guard-v65';
 const ACK_API='https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec',ACK_KEY='donson-twitch-2026-change-this';
 const frame=document.getElementById('core');
 let stateSyncBusy=false,lastAppliedSignature='';
@@ -42,7 +42,7 @@ function loadCore(){if(frame.src)return;frame.src=CORE_URL}
 function start(){loadCore()}
 frame.addEventListener('load',()=>{window.ZoeGiftMarquee={enqueue:p=>frame.contentWindow?.ZoeGiftMarquee?.enqueue(p),getQueue:()=>frame.contentWindow?.ZoeGiftMarquee?.getQueue?.()||[],isPlaying:()=>!!frame.contentWindow?.ZoeGiftMarquee?.isPlaying?.(),getNextVariants:()=>frame.contentWindow?.ZoeGiftMarquee?.getNextVariants?.()||{},setNextVariants:v=>frame.contentWindow?.ZoeGiftMarquee?.setNextVariants?.(v)};syncAndApply()});
 window.addEventListener('message',e=>{if(e?.data?.type==='zoebot-gift-marquee')frame.contentWindow?.postMessage(e.data,'*')});
-async function checkForPageUpdate(){try{const u=new URL(location.href);u.searchParams.set('__obs_update_check',String(Date.now()));const r=await fetch(u.toString(),{cache:'no-store'});if(!r.ok)return;const html=await r.text(),m=html.match(/const OBS_BUILD='([^']+)'/),remote=m&&m[1];if(remote&&remote!==OBS_BUILD){u.searchParams.delete('__obs_update_check');u.searchParams.set('__obs_build',remote);u.searchParams.set('_',String(Date.now()));location.replace(u.toString())}}catch(_){}}
+async function checkForPageUpdate(){try{const u=new URL(location.href);u.searchParams.set('__obs_update_check',String(Date.now()));const r=await fetch(u.toString(),{cache:'no-store'});if(!r.ok)return;const html=await r.text(),m=html.match(/const OBS_BUILD='([^']+)'/),remote=m&&m[1];if(remote&&Number(remote.split('-v').pop())>Number(OBS_BUILD.split('-v').pop())){u.searchParams.delete('__obs_update_check');u.searchParams.set('__obs_build',remote);u.searchParams.set('_',String(Date.now()));location.replace(u.toString())}}catch(_){}}
 start();setInterval(syncAndApply,5000);setTimeout(checkForPageUpdate,7000);setInterval(checkForPageUpdate,10000);
 })();
 </script>
