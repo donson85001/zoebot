@@ -1,452 +1,129 @@
 <!doctype html>
 <html lang="zh-Hant">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Zoebot 贈訂跑馬燈測試</title>
-    <style>
-      * {
-        box-sizing: border-box;
-      }
-      body {
-        margin: 0;
-        min-height: 100vh;
-        background: #151821;
-        color: #fff;
-        font-family: Arial, "Noto Sans TC", "Microsoft JhengHei", sans-serif;
-      }
-      .page {
-        padding: 24px;
-        display: flex;
-        gap: 24px;
-        align-items: flex-start;
-        flex-wrap: wrap;
-      }
-      .controls {
-        width: 560px;
-        background: #20242f;
-        border: 1px solid #383e4d;
-        border-radius: 16px;
-        padding: 18px;
-      }
-      h1 {
-        font-size: 23px;
-        margin: 0 0 8px;
-      }
-      .note {
-        font-size: 13px;
-        color: #aeb4c2;
-        line-height: 1.55;
-        margin-bottom: 14px;
-      }
-      label {
-        display: block;
-        margin: 12px 0 6px;
-        color: #cdd2dc;
-        font-size: 14px;
-      }
-      input {
-        width: 100%;
-        height: 42px;
-        border-radius: 9px;
-        border: 1px solid #454c5e;
-        background: #11141c;
-        color: white;
-        padding: 0 11px;
-        font-size: 17px;
-      }
-      .tier {
-        margin-top: 13px;
-        padding: 12px;
-        border: 1px solid #3a4050;
-        border-radius: 12px;
-        background: #191d26;
-      }
-      .tier-title {
-        font-weight: 900;
-        margin-bottom: 8px;
-      }
-      .buttons {
-        display: grid;
-        grid-template-columns: repeat(6, minmax(0, 1fr));
-        gap: 7px;
-      }
-      .buttons.five {
-        grid-template-columns: repeat(6, minmax(0, 1fr));
-      }
-      button {
-        height: 48px;
-        min-height: 48px;
-        border: 0;
-        border-radius: 9px;
-        background: #ef629a;
-        color: #fff;
-        font-weight: 800;
-        cursor: pointer;
-        padding: 5px 6px;
-        line-height: 1.1;
-        overflow: hidden;
-      }
-      button.v2 {
-        background: #8c57dc;
-      }
-      button.v3 {
-        background: #4e7fc9;
-      }
-      button.auto {
-        background: #a97816;
-      }
-      button.wide {
-        width: 100%;
-        margin-top: 10px;
-        background: #485063;
-      }
-      button.super {
-        background: #b83f8f;
-      }
-      #status {
-        margin-top: 14px;
-        font-size: 14px;
-        color: #ffd5e5;
-        line-height: 1.5;
-        min-height: 22px;
-      }
-      .preview-area {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-      .preview-title {
-        font-size: 14px;
-        color: #c4c9d4;
-        max-width: 630px;
-        line-height: 1.5;
-      }
-      .preview-box {
-        width: 630px;
-        height: 476px;
-        position: relative;
-        background: #171a22;
-        overflow: visible;
-        border: 1px dashed #545b6d;
-      }
-      #preview {
-        width: 630px;
-        height: 476px;
-        border: 0;
-        display: block;
-        background: transparent;
-      }
-      .legend {
-        font-size: 13px;
-        color: #ff9eaa;
-        max-width: 630px;
-        line-height: 1.55;
-      }
-      @media (max-width: 1160px) {
-        .page {
-          padding: 14px;
-        }
-        .controls {
-          width: 100%;
-          max-width: 630px;
-        }
-        .preview-box {
-          max-width: 100%;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="page">
-      <section class="controls">
-        <h1>跑馬燈測試</h1>
-        <div class="note">
-          目前測試版四個檔位皆為 1→2→3→4→5；「超級循環」按一次就會自動從 50-1
-          一路連續播放到 200-5，再回 50-1 無限循環；再按一次停止。
-        </div>
-        <label for="name">贈訂者名稱</label><input id="name" value="調皮0123" />
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zoebot 贈訂跑馬燈測試</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:#151821;color:#fff;font-family:Arial,'Noto Sans TC','Microsoft JhengHei',sans-serif}
+.page{padding:24px;display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+.controls{width:560px;background:#20242f;border:1px solid #383e4d;border-radius:16px;padding:18px}
+h1{font-size:23px;margin:0 0 8px}.note{font-size:13px;color:#aeb4c2;line-height:1.55;margin-bottom:14px}
+label{display:block;margin:12px 0 6px;color:#cdd2dc;font-size:14px}
+input{width:100%;height:42px;border-radius:9px;border:1px solid #454c5e;background:#11141c;color:white;padding:0 11px;font-size:17px}
+.tier{margin-top:13px;padding:12px;border:1px solid #3a4050;border-radius:12px;background:#191d26}.tier-title{font-weight:900;margin-bottom:8px}.buttons{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}.buttons.five{grid-template-columns:repeat(6,minmax(0,1fr))}
+button{height:48px;min-height:48px;border:0;border-radius:9px;background:#ef629a;color:#fff;font-weight:800;cursor:pointer;padding:5px 6px;line-height:1.1;overflow:hidden}button.v2{background:#8c57dc}button.v3{background:#4e7fc9}button.auto{background:#a97816}button.wide{width:100%;margin-top:10px;background:#485063}button.super{background:#b83f8f}
+#status{margin-top:14px;font-size:14px;color:#ffd5e5;line-height:1.5;min-height:22px}
+.preview-area{display:flex;flex-direction:column;gap:8px}.preview-title{font-size:14px;color:#c4c9d4;max-width:630px;line-height:1.5}
+.preview-box{width:630px;height:476px;position:relative;background:#171a22;overflow:visible;border:1px dashed #545b6d}
+#preview{width:630px;height:476px;border:0;display:block;background:transparent}
+.legend{font-size:13px;color:#ff9eaa;max-width:630px;line-height:1.55}
+@media(max-width:1160px){.page{padding:14px}.controls{width:100%;max-width:630px}.preview-box{max-width:100%}}
+</style>
+</head>
+<body>
+<div class="page">
+  <section class="controls">
+    <h1>跑馬燈測試</h1>
+    <div class="note">目前測試版四個檔位皆為 1→2→3→4→5；「超級循環」按一次就會自動從 50-1 一路連續播放到 200-5，再回 50-1 無限循環；再按一次停止。</div>
+    <label for="name">贈訂者名稱</label><input id="name" value="調皮0123">
 
-        <div class="tier">
-          <div class="tier-title">50 訂閱</div>
-          <div class="buttons five">
-            <button data-count="50" data-variant="1" data-label="海豹拍">
-              1 海豹拍
-            </button>
-            <button
-              class="v2"
-              data-count="50"
-              data-variant="2"
-              data-label="柯南"
-            >
-              2 柯南
-            </button>
-            <button
-              class="v3"
-              data-count="50"
-              data-variant="3"
-              data-label="瑟瑟"
-            >
-              3 瑟瑟
-            </button>
-            <button data-count="50" data-variant="4" data-label="Now">
-              4 Now
-            </button>
-            <button
-              class="v2"
-              data-count="50"
-              data-variant="5"
-              data-label="梳子"
-            >
-              5 梳子
-            </button>
-            <button class="auto" data-count="50" data-label="自動下一個">
-              自動下一個
-            </button>
-          </div>
-        </div>
-
-        <div class="tier">
-          <div class="tier-title">100 訂閱</div>
-          <div class="buttons">
-            <button data-count="100" data-variant="1" data-label="男的吧">
-              1 男的吧
-            </button>
-            <button
-              class="v2"
-              data-count="100"
-              data-variant="2"
-              data-label="灌籃高手"
-            >
-              2 灌籃高手
-            </button>
-            <button
-              class="v3"
-              data-count="100"
-              data-variant="3"
-              data-label="棒球"
-            >
-              3 棒球
-            </button>
-            <button data-count="100" data-variant="4" data-label="戀愛粉">
-              4 戀愛粉
-            </button>
-            <button
-              class="v2"
-              data-count="100"
-              data-variant="5"
-              data-label="台中人"
-            >
-              5 台中人
-            </button>
-            <button class="auto" data-count="100" data-label="自動下一個">
-              自動下一個
-            </button>
-          </div>
-        </div>
-
-        <div class="tier">
-          <div class="tier-title">150 訂閱</div>
-          <div class="buttons">
-            <button data-count="150" data-variant="1" data-label="0859457">
-              1 調皮
-            </button>
-            <button
-              class="v2"
-              data-count="150"
-              data-variant="2"
-              data-label="02"
-            >
-              2 02
-            </button>
-            <button
-              class="v3"
-              data-count="150"
-              data-variant="3"
-              data-label="變臉"
-            >
-              3 變臉
-            </button>
-            <button data-count="150" data-variant="4" data-label="shark">
-              4 shark
-            </button>
-            <button
-              class="v2"
-              data-count="150"
-              data-variant="5"
-              data-label="調皮2"
-            >
-              5 調皮2
-            </button>
-            <button class="auto" data-count="150" data-label="自動下一個">
-              自動下一個
-            </button>
-          </div>
-        </div>
-
-        <div class="tier">
-          <div class="tier-title">200+ 訂閱</div>
-          <div class="buttons">
-            <button data-count="200" data-variant="1" data-label="lemon">
-              1 lemon
-            </button>
-            <button
-              class="v2"
-              data-count="200"
-              data-variant="2"
-              data-label="up"
-            >
-              2 up
-            </button>
-            <button
-              class="v3"
-              data-count="200"
-              data-variant="3"
-              data-label="cmonBruh"
-            >
-              3 cmonBruh
-            </button>
-            <button data-count="200" data-variant="4" data-label="kokain">
-              4 kokain
-            </button>
-            <button
-              class="v2"
-              data-count="200"
-              data-variant="5"
-              data-label="香港人"
-            >
-              5 香港人
-            </button>
-            <button class="auto" data-count="200" data-label="自動下一個">
-              自動下一個
-            </button>
-          </div>
-        </div>
-
-        <button id="reset" class="wide">
-          重置四個檔位的順序，下一次都從 1 開始
-        </button>
-        <button id="superLoop" class="wide super">超級循環</button>
-        <div id="status">載入測試畫面中…</div>
-      </section>
-
-      <section class="preview-area">
-        <div class="preview-title">
-          <b>紅色虛線就是實際 630×420 的底線。</b> 測試版目前共 20
-          支影片；四個檔位皆完整 1→2→3→4→5。
-        </div>
-        <div class="preview-box">
-          <iframe
-            id="preview"
-            scrolling="no"
-            allow="autoplay"
-            title="固定 630x420 裁切檢視"
-          ></iframe>
-        </div>
-        <div class="legend">
-          正式使用時紅線以下完全看不到；這裡是測試控制頁，不會改動正式播放順序。
-        </div>
-      </section>
+    <div class="tier">
+      <div class="tier-title">50 訂閱</div>
+      <div class="buttons five">
+        <button data-count="50" data-variant="1" data-label="海豹拍">1 海豹拍</button>
+        <button class="v2" data-count="50" data-variant="2" data-label="柯南">2 柯南</button>
+        <button class="v3" data-count="50" data-variant="3" data-label="瑟瑟">3 瑟瑟</button>
+        <button data-count="50" data-variant="4" data-label="Now">4 Now</button>
+        <button class="v2" data-count="50" data-variant="5" data-label="梳子">5 梳子</button>
+        <button class="auto" data-count="50" data-label="自動下一個">自動下一個</button>
+      </div>
     </div>
-    <script>
-      (() => {
-        const preview = document.getElementById("preview"),
-          name = document.getElementById("name"),
-          status = document.getElementById("status");
-        let previewReady = false;
-        const pending = [];
-        let superLoopRunning = false;
-        function post(payload) {
-          if (!previewReady) {
-            pending.push(payload);
-            return;
-          }
-          preview.contentWindow?.postMessage(payload, "*");
-        }
-        function flush() {
-          while (pending.length)
-            preview.contentWindow?.postMessage(pending.shift(), "*");
-        }
-        preview.addEventListener("load", () => {
-          previewReady = true;
-          flush();
-          status.textContent =
-            "待命中；按「超級循環」會從 50-1 開始一路自動播放";
-        });
-        preview.src =
-          "gift-marquee-obs-test.html?debug=1&v=20260915-variant5-text-v63&_=" +
-          Date.now();
-        function sendButton(btn) {
-          const count = Number(btn.dataset.count),
-            variant = Number(btn.dataset.variant) || 0,
-            who = name.value.trim() || "匿名",
-            label = btn.dataset.label || "";
-          const payload = { type: "zoebot-gift-marquee", name: who, count };
-          if (variant) payload.variant = variant;
-          post(payload);
-          status.textContent = variant
-            ? `已送出：${count} 訂閱 / 編號 ${variant} / ${label}`
-            : `已送出：${count} 訂閱 / 自動下一個（會依目前有影片的格子輪替）`;
-        }
-        function toggleSuperLoop() {
-          const btn = document.getElementById("superLoop");
-          if (!superLoopRunning) {
-            superLoopRunning = true;
-            post({
-              type: "zoebot-super-loop-start",
-              name: name.value.trim() || "匿名",
-            });
-            btn.textContent = "停止超級循環";
-            status.textContent =
-              "超級循環播放中：50-1 → 50-2 → … → 200-5 → 50-1，會持續循環";
-          } else {
-            superLoopRunning = false;
-            post({ type: "zoebot-super-loop-stop" });
-            btn.textContent = "超級循環";
-            status.textContent = "超級循環已停止";
-          }
-        }
-        document
-          .querySelectorAll("[data-count]")
-          .forEach((btn) =>
-            btn.addEventListener("click", () => sendButton(btn)),
-          );
-        document
-          .getElementById("superLoop")
-          .addEventListener("click", toggleSuperLoop);
-        document.getElementById("reset").addEventListener("click", () => {
-          post({ type: "zoebot-gift-marquee-reset" });
-          superLoopRunning = false;
-          document.getElementById("superLoop").textContent = "超級循環";
-          status.textContent =
-            "已重置：四個檔位自動順序與超級循環都回到 50 / 編號 1";
-        });
-      })();
-    </script>
 
-    <script>
-      (() => {
-        const TEST_BUILD = "20260915-variant5-text-v63";
-        async function checkForPageUpdate() {
-          try {
-            const u = new URL(location.href);
-            u.searchParams.set("__test_update_check", String(Date.now()));
-            const r = await fetch(u.toString(), { cache: "no-store" });
-            if (!r.ok) return;
-            const html = await r.text(),
-              m = html.match(/const TEST_BUILD='([^']+)'/),
-              remote = m && m[1];
-            if (remote && remote !== TEST_BUILD) {
-              u.searchParams.delete("__test_update_check");
-              u.searchParams.set("__test_build", remote);
-              u.searchParams.set("_", String(Date.now()));
-              location.replace(u.toString());
-            }
-          } catch (_) {}
-        }
-        setTimeout(checkForPageUpdate, 7000);
-        setInterval(checkForPageUpdate, 10000);
-      })();
-    </script>
-  </body>
+    <div class="tier">
+      <div class="tier-title">100 訂閱</div>
+      <div class="buttons">
+        <button data-count="100" data-variant="1" data-label="男的吧">1 男的吧</button>
+        <button class="v2" data-count="100" data-variant="2" data-label="灌籃高手">2 灌籃高手</button>
+        <button class="v3" data-count="100" data-variant="3" data-label="棒球">3 棒球</button>
+        <button data-count="100" data-variant="4" data-label="戀愛粉">4 戀愛粉</button>
+        <button class="v2" data-count="100" data-variant="5" data-label="台中人">5 台中人</button>
+        <button class="auto" data-count="100" data-label="自動下一個">自動下一個</button>
+      </div>
+    </div>
+
+    <div class="tier">
+      <div class="tier-title">150 訂閱</div>
+      <div class="buttons">
+        <button data-count="150" data-variant="1" data-label="0859457">1 調皮</button>
+        <button class="v2" data-count="150" data-variant="2" data-label="02">2 02</button>
+        <button class="v3" data-count="150" data-variant="3" data-label="變臉">3 變臉</button>
+        <button data-count="150" data-variant="4" data-label="shark">4 shark</button>
+        <button class="v2" data-count="150" data-variant="5" data-label="調皮2">5 調皮2</button>
+        <button class="auto" data-count="150" data-label="自動下一個">自動下一個</button>
+      </div>
+    </div>
+
+    <div class="tier">
+      <div class="tier-title">200+ 訂閱</div>
+      <div class="buttons">
+        <button data-count="200" data-variant="1" data-label="lemon">1 lemon</button>
+        <button class="v2" data-count="200" data-variant="2" data-label="up">2 up</button>
+        <button class="v3" data-count="200" data-variant="3" data-label="cmonBruh">3 cmonBruh</button>
+        <button data-count="200" data-variant="4" data-label="kokain">4 kokain</button>
+        <button class="v2" data-count="200" data-variant="5" data-label="香港人">5 香港人</button>
+        <button class="auto" data-count="200" data-label="自動下一個">自動下一個</button>
+      </div>
+    </div>
+
+    <button id="reset" class="wide">重置四個檔位的順序，下一次都從 1 開始</button>
+    <button id="superLoop" class="wide super">超級循環</button>
+    <div id="status">載入測試畫面中…</div>
+  </section>
+
+  <section class="preview-area">
+    <div class="preview-title"><b>紅色虛線就是實際 630×420 的底線。</b> 測試版目前共 20 支影片；四個檔位皆完整 1→2→3→4→5。</div>
+    <div class="preview-box"><iframe id="preview" scrolling="no" allow="autoplay" title="固定 630x420 裁切檢視"></iframe></div>
+    <div class="legend">正式使用時紅線以下完全看不到；這裡是測試控制頁，不會改動正式播放順序。</div>
+  </section>
+</div>
+<script>
+(() => {
+  const preview=document.getElementById('preview'),name=document.getElementById('name'),status=document.getElementById('status');
+  let previewReady=false;const pending=[];
+  let superLoopRunning=false;
+  function post(payload){if(!previewReady){pending.push(payload);return}preview.contentWindow?.postMessage(payload,'*')}
+  function flush(){while(pending.length)preview.contentWindow?.postMessage(pending.shift(),'*')}
+  preview.addEventListener('load',()=>{previewReady=true;flush();status.textContent='待命中；按「超級循環」會從 50-1 開始一路自動播放'});
+  preview.src='gift-marquee-obs-test.html?debug=1&v=20260915-variant5-hotfix-v64&_='+Date.now();
+  function sendButton(btn){
+    const count=Number(btn.dataset.count),variant=Number(btn.dataset.variant)||0,who=name.value.trim()||'匿名',label=btn.dataset.label||'';
+    const payload={type:'zoebot-gift-marquee',name:who,count};if(variant)payload.variant=variant;post(payload);
+    status.textContent=variant?`已送出：${count} 訂閱 / 編號 ${variant} / ${label}`:`已送出：${count} 訂閱 / 自動下一個（會依目前有影片的格子輪替）`;
+  }
+  function toggleSuperLoop(){
+    const btn=document.getElementById('superLoop');
+    if(!superLoopRunning){
+      superLoopRunning=true;
+      post({type:'zoebot-super-loop-start',name:name.value.trim()||'匿名'});
+      btn.textContent='停止超級循環';
+      status.textContent='超級循環播放中：50-1 → 50-2 → … → 200-5 → 50-1，會持續循環';
+    }else{
+      superLoopRunning=false;
+      post({type:'zoebot-super-loop-stop'});
+      btn.textContent='超級循環';
+      status.textContent='超級循環已停止';
+    }
+  }
+  document.querySelectorAll('[data-count]').forEach(btn=>btn.addEventListener('click',()=>sendButton(btn)));
+  document.getElementById('superLoop').addEventListener('click',toggleSuperLoop);
+  document.getElementById('reset').addEventListener('click',()=>{post({type:'zoebot-gift-marquee-reset'});superLoopRunning=false;document.getElementById('superLoop').textContent='超級循環';status.textContent='已重置：四個檔位自動順序與超級循環都回到 50 / 編號 1'});
+})();
+</script>
+
+<script>
+(()=>{const TEST_BUILD='20260915-variant5-hotfix-v64';async function checkForPageUpdate(){try{const u=new URL(location.href);u.searchParams.set('__test_update_check',String(Date.now()));const r=await fetch(u.toString(),{cache:'no-store'});if(!r.ok)return;const html=await r.text(),m=html.match(/const TEST_BUILD='([^']+)'/),remote=m&&m[1];if(remote&&remote!==TEST_BUILD){u.searchParams.delete('__test_update_check');u.searchParams.set('__test_build',remote);u.searchParams.set('_',String(Date.now()));location.replace(u.toString())}}catch(_){}}setTimeout(checkForPageUpdate,7000);setInterval(checkForPageUpdate,10000)})();
+</script>
+</body>
 </html>
