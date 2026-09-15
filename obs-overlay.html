@@ -13,12 +13,12 @@
 <script>
 (()=>{
 'use strict';
-const OBS_BUILD='20260915-safe-sync-v67';
+const OBS_BUILD='20260915-state-confirm-v68';
 const SHEET_ID='14Yv_DyqvCsgQJQ98vZk_IkQ527xLPSVvLaNBnDGcMug';
 const DETAIL_SHEET='SubscriptionDetail',STATE_SHEET='動畫播放狀態';
 const VARIANT_STATE_KEY='zoebot-marquee-next-variant-v3',SEEN_KEY='zoebot-marquee-sheet-seen-v1',INIT_KEY='zoebot-marquee-sheet-initialized-v1';
 const CORE_URL='obs-overlay-core-v16.html?v=20260915-safe-sync-v67';
-const ACK_API='https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec';
+const ACK_API='https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec',ACK_KEY='donson-twitch-2026-change-this';
 const frame=document.getElementById('core');
 let stateSyncBusy=false,lastAppliedSignature='',pendingRemoteBuild='',remoteBuildHits=0;
 const tierForCount=n=>n>=200?200:n>=150?150:n>=100?100:50;
@@ -36,7 +36,7 @@ function willCoreProcess(items){const seen=readSeen();let initialized=false;try{
 function stateBeforeFresh(currentState,freshDesc){const pre={50:Number(currentState[50]),100:Number(currentState[100]),150:Number(currentState[150]),200:Number(currentState[200])};for(const item of freshDesc){const tier=tierForCount(item.count),n=pre[tier];if(!(n>=1&&n<=5))continue;pre[tier]=previousVariant(n)}return pre}
 async function syncVariantState(){const stateResp=await getGviz(STATE_SHEET,'select A,B where A is not null'),current=parseState(stateResp);if([50,100,150,200].some(t=>!(current[t]>=1&&current[t]<=5)))throw new Error('animation state incomplete');const giftsResp=await getGviz(DETAIL_SHEET,"select A,B,C,E,I where B = '贈送訂閱' order by A desc limit 100"),items=parseGiftRows(giftsResp),fresh=willCoreProcess(items),pre=stateBeforeFresh(current,fresh);localStorage.setItem(VARIANT_STATE_KEY,JSON.stringify(pre));return{current,pre,fresh}}
 const stateSignature=state=>[50,100,150,200].map(t=>`${t}:${state[t]}`).join('|');
-async function acknowledgeState(state){await fetch(ACK_API,{method:'POST',mode:'no-cors',cache:'no-store',headers:{'Content-Type':'text/plain;charset=UTF-8'},body:JSON.stringify({action:'ack-animation-state',build:OBS_BUILD,states:state})})}
+async function acknowledgeState(state){await fetch(ACK_API,{method:'POST',mode:'no-cors',cache:'no-store',headers:{'Content-Type':'text/plain;charset=UTF-8'},body:JSON.stringify({key:ACK_KEY,action:'ack-animation-state',build:OBS_BUILD,states:state})})}
 async function syncAndApply(){if(stateSyncBusy||!frame.contentWindow?.ZoeGiftMarquee||frame.contentWindow.ZoeGiftMarquee.isPlaying?.())return;stateSyncBusy=true;try{const{current,pre,fresh}=await syncVariantState();if(frame.contentWindow.ZoeGiftMarquee.isPlaying?.())return;const applied=frame.contentWindow.ZoeGiftMarquee.setNextVariants?.(pre);if(!applied?.ok)return;const actual=frame.contentWindow.ZoeGiftMarquee.getNextVariants?.()||{},currentSig=stateSignature(current);if(stateSignature(actual)!==stateSignature(pre))throw new Error('animation state apply mismatch');if(!fresh.length&&stateSignature(pre)===currentSig&&currentSig!==lastAppliedSignature){await acknowledgeState(current);lastAppliedSignature=currentSig}console.log('animation state applied',{current,fresh:fresh.length,pre})}catch(e){console.error('animation state sync failed',e)}finally{stateSyncBusy=false}}
 function loadCore(){if(frame.src)return;frame.src=CORE_URL}
 function start(){loadCore()}
