@@ -1,1970 +1,280 @@
 <!doctype html>
 <html lang="zh-Hant">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="preload" as="image" href="gift-motion-50.webp?v=20260910-1" />
-    <link rel="preload" as="image" href="gift-motion-100.webp?v=20260910-1" />
-    <link
-      rel="preload"
-      as="image"
-      href="gift-motion-50-closed.webp?v=20260910-1"
-    />
-    <link
-      rel="preload"
-      as="image"
-      href="gift-motion-100-closed.webp?v=20260910-1"
-    />
-    <link
-      rel="preload"
-      as="image"
-      href="gift-rocket-body-v4.webp?v=20260910-1"
-    />
-    <link
-      rel="preload"
-      as="image"
-      href="gift-yacht-body-v3.webp?v=20260910-1"
-    />
-    <link rel="preload" as="audio" href="gift-sfx-50-v2.ogg?v=20260910-1" />
-    <link rel="preload" as="audio" href="gift-sfx-100-v2.ogg?v=20260910-1" />
-    <link rel="preload" as="audio" href="gift-sfx-150-v2.ogg?v=20260910-1" />
-    <link rel="preload" as="audio" href="gift-sfx-200-v2.ogg?v=20260910-1" />
+<head>
+<meta charset="utf-8">
+<link rel="preload" as="image" href="gift-motion-50.webp?v=20260910-1">
+<link rel="preload" as="image" href="gift-motion-100.webp?v=20260910-1">
+<link rel="preload" as="image" href="gift-motion-50-closed.webp?v=20260910-1">
+<link rel="preload" as="image" href="gift-motion-100-closed.webp?v=20260910-1">
+<link rel="preload" as="image" href="gift-rocket-body-v4.webp?v=20260910-1">
+<link rel="preload" as="image" href="gift-yacht-body-v3.webp?v=20260910-1">
+<link rel="preload" as="audio" href="gift-sfx-50-v2.ogg?v=20260910-1">
+<link rel="preload" as="audio" href="gift-sfx-100-v2.ogg?v=20260910-1">
+<link rel="preload" as="audio" href="gift-sfx-150-v2.ogg?v=20260910-1">
+<link rel="preload" as="audio" href="gift-sfx-200-v2.ogg?v=20260910-1">
 
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Zoebot OBS 跑馬燈測試版 · 20260915-variant5-text-v63</title>
-    <style>
-      * {
-        box-sizing: border-box;
-      }
-      html,
-      body {
-        margin: 0;
-        padding: 0;
-        width: 630px;
-        height: 420px;
-        overflow: hidden;
-        background: transparent;
-        font-family: Arial, "Noto Sans TC", "Microsoft JhengHei", sans-serif;
-      }
-      #stage {
-        position: relative;
-        width: 630px;
-        height: 420px;
-        overflow: hidden;
-        background: transparent;
-      }
-      #marqueeSlot {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 630px;
-        height: 168px;
-        overflow: hidden;
-        z-index: 3;
-        pointer-events: none;
-      }
-      #banner {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 630px;
-        height: 162px;
-        border-radius: 24px;
-        overflow: hidden;
-        opacity: 0;
-        transform: translateX(-650px);
-        transition:
-          transform 0.42s cubic-bezier(0.2, 0.9, 0.25, 1),
-          opacity 0.25s ease;
-        filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.22));
-      }
-      #banner.show {
-        opacity: 1;
-        transform: translateX(0);
-      }
-      #banner.mode50 {
-        background: linear-gradient(90deg, #ef6598, #f79bc0 52%, #ef6598);
-        border: 5px solid rgba(255, 255, 255, 0.96);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
-      }
-      #banner.mode100 {
-        background: linear-gradient(
-          100deg,
-          #d94f72 0%,
-          #f07fa1 38%,
-          #ffd56b 62%,
-          #ec7099 100%
-        );
-        border: 5px solid #fff3bd;
-        box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.22);
-      }
-      #banner.mode150 {
-        background: linear-gradient(
-          100deg,
-          #70207f 0%,
-          #b9328b 32%,
-          #f04f9c 58%,
-          #8b2b99 100%
-        );
-        border: 5px solid #ffd6f0;
-        box-shadow: inset 0 0 24px rgba(255, 255, 255, 0.18);
-      }
-      #banner.mode200 {
-        background: linear-gradient(
-          100deg,
-          #25133f 0%,
-          #5c2679 30%,
-          #d34794 58%,
-          #f5b63a 100%
-        );
-        border: 5px solid #ffe28a;
-        box-shadow: inset 0 0 28px rgba(255, 230, 155, 0.16);
-      }
-      #shine {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(
-          115deg,
-          transparent 0 38%,
-          rgba(255, 255, 255, 0.28) 45%,
-          transparent 52%
-        );
-        transform: translateX(-125%);
-      }
-      #banner.shine-now #shine {
-        animation: shine 1.1s ease-out 1;
-      }
-      @keyframes shine {
-        to {
-          transform: translateX(125%);
-        }
-      }
-      #badge {
-        position: absolute;
-        left: 18px;
-        top: 37px;
-        width: 102px;
-        height: 88px;
-        border-radius: 22px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        z-index: 2;
-        border: 2px solid rgba(255, 255, 255, 0.92);
-        box-shadow:
-          0 4px 12px rgba(100, 20, 55, 0.12),
-          inset 0 1px 0 #fff;
-        transition:
-          background 0.2s ease,
-          color 0.2s ease;
-      }
-      .mode50 #badge {
-        background: linear-gradient(180deg, #fff, #fff7fb);
-        color: #be2d66;
-      }
-      .mode100 #badge {
-        background: linear-gradient(180deg, #fff7c7, #fffdf0 62%, #fff);
-        color: #a06400;
-      }
-      .mode150 #badge {
-        background: linear-gradient(180deg, #ffeaf7, #fff 65%);
-        color: #7d2678;
-      }
-      .mode200 #badge {
-        background: linear-gradient(180deg, #fff0ac, #fff8d9 58%, #fff);
-        color: #6f3e00;
-      }
-      #badgeIcon {
-        font-size: 23px;
-        line-height: 1;
-        margin-bottom: 7px;
-        filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.08));
-      }
-      #badgeValueRow {
-        display: flex;
-        align-items: flex-end;
-        justify-content: center;
-        gap: 4px;
-        line-height: 1;
-        max-width: 90px;
-        white-space: nowrap;
-      }
-      #badgeCount {
-        font-size: 29px;
-        line-height: 0.92;
-        font-weight: 900;
-        letter-spacing: -1.2px;
-      }
-      #badgeUnit {
-        font-size: 13px;
-        line-height: 1;
-        font-weight: 900;
-        margin-bottom: 2px;
-        letter-spacing: 0.2px;
-      }
-      #lane {
-        position: absolute;
-        left: 132px;
-        right: 18px;
-        top: 0;
-        height: 100%;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-      }
-      #text {
-        position: absolute;
-        left: 100%;
-        white-space: nowrap;
-        font-size: 60px;
-        line-height: 1.02;
-        font-weight: 900;
-        letter-spacing: 0.2px;
-        color: #fff;
-        text-shadow: 0 4px 10px rgba(60, 0, 30, 0.34);
-        will-change: transform;
-      }
-      #counterPanel {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 630px;
-        height: 420px;
-        background: url("WF拍肚.png") 0 0 / 630px 420px no-repeat;
-        transform: translateY(0);
-        transition: transform 0.55s cubic-bezier(0.22, 0.78, 0.24, 1);
-        will-change: transform;
-      }
-      #stage.active #counterPanel {
-        transform: translateY(56px);
-      }
-      .num {
-        position: absolute;
-        width: 102px;
-        height: 54px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: transparent;
-        border: 0;
-        box-shadow: none;
-        color: #d94f72;
-        font-weight: 800;
-        font-size: 38px;
-        line-height: 1;
-        letter-spacing: 0;
-        text-shadow: none;
-        white-space: nowrap;
-      }
-      #months {
-        left: 464px;
-        top: 198px;
-      }
-      #gifts {
-        left: 464px;
-        top: 278px;
-      }
-      .tierMedia {
-        position: absolute;
-        left: 12px;
-        top: 168px;
-        width: 252px;
-        height: 252px;
-        overflow: hidden;
-        border-radius: 18px;
-        display: block;
-        opacity: 0;
-        z-index: 2;
-        pointer-events: none;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
-        transition: opacity 0.06s linear;
-      }
-      .tierMedia.show {
-        opacity: 1;
-      }
-      .tierMedia video {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transform: scale(1.12);
-        transform-origin: center center;
-        display: block;
-      }
-      #cropLine,
-      #cropLabel {
-        display: none;
-      }
-      body.debug {
-        height: 476px;
-        overflow: visible;
-        background: #171a22;
-      }
-      body.debug #stage {
-        height: 476px;
-        overflow: visible;
-        background: rgba(0, 0, 0, 0.06);
-      }
-      body.debug #cropLine {
-        display: block;
-        position: absolute;
-        left: 0;
-        top: 419px;
-        width: 630px;
-        border-top: 3px dashed #ff4d67;
-        z-index: 10;
-        pointer-events: none;
-      }
-      body.debug #cropLabel {
-        display: block;
-        position: absolute;
-        right: 8px;
-        top: 424px;
-        padding: 4px 8px;
-        border-radius: 6px;
-        background: #ff4d67;
-        color: #fff;
-        font-size: 13px;
-        font-weight: 900;
-        z-index: 11;
-        pointer-events: none;
-      }
-      body.debug::after {
-        content: "實際 OBS 只到紅線，上面 630×420；紅線下方就是被裁掉的 56px";
-        position: absolute;
-        left: 8px;
-        top: 446px;
-        color: #ff9eaa;
-        font-size: 12px;
-        font-weight: 700;
-        z-index: 12;
-      }
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zoebot OBS 跑馬燈測試版 · 20260915-variant5-hotfix-v64</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;width:630px;height:420px;overflow:hidden;background:transparent;font-family:Arial,'Noto Sans TC','Microsoft JhengHei',sans-serif}
+#stage{position:relative;width:630px;height:420px;overflow:hidden;background:transparent}
+#marqueeSlot{position:absolute;left:0;top:0;width:630px;height:168px;overflow:hidden;z-index:3;pointer-events:none}
+#banner{position:absolute;left:0;top:0;width:630px;height:162px;border-radius:24px;overflow:hidden;opacity:0;transform:translateX(-650px);transition:transform .42s cubic-bezier(.2,.9,.25,1),opacity .25s ease;filter:drop-shadow(0 8px 14px rgba(0,0,0,.22))}
+#banner.show{opacity:1;transform:translateX(0)}
+#banner.mode50{background:linear-gradient(90deg,#ef6598,#f79bc0 52%,#ef6598);border:5px solid rgba(255,255,255,.96);box-shadow:inset 0 1px 0 rgba(255,255,255,.28)}
+#banner.mode100{background:linear-gradient(100deg,#d94f72 0%,#f07fa1 38%,#ffd56b 62%,#ec7099 100%);border:5px solid #fff3bd;box-shadow:inset 0 0 20px rgba(255,255,255,.22)}
+#banner.mode150{background:linear-gradient(100deg,#70207f 0%,#b9328b 32%,#f04f9c 58%,#8b2b99 100%);border:5px solid #ffd6f0;box-shadow:inset 0 0 24px rgba(255,255,255,.18)}
+#banner.mode200{background:linear-gradient(100deg,#25133f 0%,#5c2679 30%,#d34794 58%,#f5b63a 100%);border:5px solid #ffe28a;box-shadow:inset 0 0 28px rgba(255,230,155,.16)}
+#shine{position:absolute;inset:0;background:linear-gradient(115deg,transparent 0 38%,rgba(255,255,255,.28) 45%,transparent 52%);transform:translateX(-125%)}
+#banner.shine-now #shine{animation:shine 1.1s ease-out 1}
+@keyframes shine{to{transform:translateX(125%)}}
+#badge{position:absolute;left:18px;top:37px;width:102px;height:88px;border-radius:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2;border:2px solid rgba(255,255,255,.92);box-shadow:0 4px 12px rgba(100,20,55,.12),inset 0 1px 0 #fff;transition:background .2s ease,color .2s ease}
+.mode50 #badge{background:linear-gradient(180deg,#fff,#fff7fb);color:#be2d66}
+.mode100 #badge{background:linear-gradient(180deg,#fff7c7,#fffdf0 62%,#fff);color:#a06400}
+.mode150 #badge{background:linear-gradient(180deg,#ffeaf7,#fff 65%);color:#7d2678}
+.mode200 #badge{background:linear-gradient(180deg,#fff0ac,#fff8d9 58%,#fff);color:#6f3e00}
+#badgeIcon{font-size:23px;line-height:1;margin-bottom:7px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.08))}
+#badgeValueRow{display:flex;align-items:flex-end;justify-content:center;gap:4px;line-height:1;max-width:90px;white-space:nowrap}
+#badgeCount{font-size:29px;line-height:.92;font-weight:900;letter-spacing:-1.2px}
+#badgeUnit{font-size:13px;line-height:1;font-weight:900;margin-bottom:2px;letter-spacing:.2px}
+#lane{position:absolute;left:132px;right:18px;top:0;height:100%;overflow:hidden;display:flex;align-items:center}
+#text{position:absolute;left:100%;white-space:nowrap;font-size:60px;line-height:1.02;font-weight:900;letter-spacing:.2px;color:#fff;text-shadow:0 4px 10px rgba(60,0,30,.34);will-change:transform}
+#counterPanel{position:absolute;left:0;top:0;width:630px;height:420px;background:url('WF拍肚.png') 0 0 / 630px 420px no-repeat;transform:translateY(0);transition:transform .55s cubic-bezier(.22,.78,.24,1);will-change:transform}
+#stage.active #counterPanel{transform:translateY(56px)}
+.num{position:absolute;width:102px;height:54px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;box-shadow:none;color:#d94f72;font-weight:800;font-size:38px;line-height:1;letter-spacing:0;text-shadow:none;white-space:nowrap}
+#months{left:464px;top:198px}
+#gifts{left:464px;top:278px}
+.tierMedia{position:absolute;left:12px;top:168px;width:252px;height:252px;overflow:hidden;border-radius:18px;display:block;opacity:0;z-index:2;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.22);transition:opacity .06s linear}
+.tierMedia.show{opacity:1}
+.tierMedia video{width:100%;height:100%;object-fit:cover;transform:scale(1.12);transform-origin:center center;display:block}
+#cropLine,#cropLabel{display:none}
+body.debug{height:476px;overflow:visible;background:#171a22}
+body.debug #stage{height:476px;overflow:visible;background:rgba(0,0,0,.06)}
+body.debug #cropLine{display:block;position:absolute;left:0;top:419px;width:630px;border-top:3px dashed #ff4d67;z-index:10;pointer-events:none}
+body.debug #cropLabel{display:block;position:absolute;right:8px;top:424px;padding:4px 8px;border-radius:6px;background:#ff4d67;color:#fff;font-size:13px;font-weight:900;z-index:11;pointer-events:none}
+body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下方就是被裁掉的 56px';position:absolute;left:8px;top:446px;color:#ff9eaa;font-size:12px;font-weight:700;z-index:12}
 
-      #tierIntro {
-        position: absolute;
-        inset: 0;
-        z-index: 30;
-        pointer-events: none;
-        opacity: 0;
-        overflow: hidden;
-        background: transparent;
-      }
-      #tierIntro.play {
-        animation: cinematic-shell var(--intro-duration, 2500ms) linear both;
-      }
-      #tierIntroCanvas {
-        position: absolute;
-        inset: 0;
-        width: 630px;
-        height: 420px;
-      }
-      #tierIntroLabel {
-        position: absolute;
-        left: 50%;
-        bottom: 78px;
-        transform: translateX(-50%);
-        padding: 7px 24px;
-        white-space: nowrap;
-        color: #fff7cf;
-        font-size: 25px;
-        font-weight: 900;
-        letter-spacing: 5px;
-        text-shadow:
-          0 2px 8px #000,
-          0 0 18px rgba(255, 198, 70, 0.8);
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(0, 0, 0, 0.72) 20%,
-          rgba(0, 0, 0, 0.72) 80%,
-          transparent
-        );
-        border-top: 1px solid rgba(255, 220, 125, 0.75);
-        border-bottom: 1px solid rgba(255, 220, 125, 0.75);
-        opacity: 0;
-      }
-      #tierIntro.play #tierIntroLabel {
-        animation: cinematic-label var(--intro-duration, 2500ms) ease both;
-      }
-      @keyframes cinematic-shell {
-        0% {
-          opacity: 0;
-        }
-        5%,
-        90% {
-          opacity: 1;
-        }
-        100% {
-          opacity: 1;
-        }
-      }
-      @keyframes cinematic-label {
-        0%,
-        20% {
-          opacity: 0;
-          transform: translate(-50%, 18px);
-          letter-spacing: 11px;
-        }
-        36%,
-        82% {
-          opacity: 1;
-          transform: translate(-50%, 0);
-          letter-spacing: 5px;
-        }
-        100% {
-          opacity: 1;
-          transform: translate(-50%, 0);
-          letter-spacing: 5px;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div id="stage">
-      <div id="tierIntro" aria-hidden="true">
-        <canvas id="tierIntroCanvas" width="630" height="420"></canvas>
-        <div id="tierIntroLabel"></div>
-      </div>
-      <div id="counterPanel">
-        <div id="months" class="num">0</div>
-        <div id="gifts" class="num">0</div>
-      </div>
-      <div id="marqueeSlot">
-        <div id="banner">
-          <div id="shine"></div>
-          <div id="badge">
-            <div id="badgeIcon">🎁</div>
-            <div id="badgeValueRow">
-              <span id="badgeCount">50</span><span id="badgeUnit">贈</span>
-            </div>
-          </div>
-          <div id="lane"><div id="text"></div></div>
-        </div>
-      </div>
 
-      <div class="tierMedia" data-tier="50" data-variant="1">
-        <video src="seal.mp4?v=fa7babdabdcd" playsinline preload="none"></video>
-      </div>
-      <div class="tierMedia" data-tier="50" data-variant="2">
-        <video
-          src="Conan-520.mp4?v=32ffb0869107"
-          playsinline
-          preload="none"
-        ></video>
-      </div>
-      <div class="tierMedia" data-tier="50" data-variant="3">
-        <video src="sir.mp4?v=c973d0301c79" playsinline preload="none"></video>
-      </div>
-      <div class="tierMedia" data-tier="50" data-variant="4">
-        <video src="0725.mp4?v=72fb7c5cc455" playsinline preload="none"></video>
-      </div>
-      <div class="tierMedia" data-tier="50" data-variant="5">
-        <video
-          src="comb_1.mp4?v=879c5cec3f25"
-          playsinline
-          preload="none"
-        ></video>
-      </div>
+#tierIntro{position:absolute;inset:0;z-index:30;pointer-events:none;opacity:0;overflow:hidden;background:transparent}
+#tierIntro.play{animation:cinematic-shell var(--intro-duration,2500ms) linear both}
+#tierIntroCanvas{position:absolute;inset:0;width:630px;height:420px}
+#tierIntroLabel{position:absolute;left:50%;bottom:78px;transform:translateX(-50%);padding:7px 24px;white-space:nowrap;color:#fff7cf;font-size:25px;font-weight:900;letter-spacing:5px;text-shadow:0 2px 8px #000,0 0 18px rgba(255,198,70,.8);background:linear-gradient(90deg,transparent,rgba(0,0,0,.72) 20%,rgba(0,0,0,.72) 80%,transparent);border-top:1px solid rgba(255,220,125,.75);border-bottom:1px solid rgba(255,220,125,.75);opacity:0}
+#tierIntro.play #tierIntroLabel{animation:cinematic-label var(--intro-duration,2500ms) ease both}
+@keyframes cinematic-shell{0%{opacity:0}5%,90%{opacity:1}100%{opacity:1}}
+@keyframes cinematic-label{0%,20%{opacity:0;transform:translate(-50%,18px);letter-spacing:11px}36%,82%{opacity:1;transform:translate(-50%,0);letter-spacing:5px}100%{opacity:1;transform:translate(-50%,0);letter-spacing:5px}}
 
-      <div class="tierMedia" data-tier="100" data-variant="1">
-        <video src="boy.mp4?v=e52b14c12917" playsinline preload="none"></video>
-      </div>
-      <div class="tierMedia" data-tier="100" data-variant="2">
-        <video
-          src="SLAM-DUNK-520.mp4?v=9b1ab08a5c23"
-          playsinline
-          preload="none"
-        ></video>
-      </div>
-      <div class="tierMedia" data-tier="100" data-variant="3">
-        <video
-          src="baseball-520.mp4?v=833e68c70c39"
-          playsinline
-          preload="none"
-        ></video>
-      </div>
-      <div class="tierMedia" data-tier="100" data-variant="4">
-        <video src="love.mp4?v=2522c09e7b36" playsinline preload="none"></video>
-      </div>
-      <div class="tierMedia" data-tier="100" data-variant="5">
-        <video src="tc.mp4?v=6e914fd80eda" playsinline preload="none"></video>
-      </div>
-
-      <div class="tierMedia" data-tier="150" data-variant="1">
-        <video
-          src="0859457.mp4?v=1d53ab12fe18"
-          playsinline
-          preload="none"
-        ></video>
-      </div>
-      <div class="tierMedia" data-tier="150" data-variant="2">
-        <video
-          src="02-520.mp4?v=93fcd7ca1b74"
-          playsinline
-          preload="none"
-        ></video>
-      </div>
-      <div class="tierMedia" data-tier="150" data-variant="3">
-        <video
-          src="facechange-520.mp4?v=c741fa297cc7"
-          playsinline
-          preload="none"
-        ></video>
-      </div>
-      <div class="tierMedia" data-tier="150" data-variant="4">
-        <video
-          src="shark-520.mp4?v=21b272496d21"
-          playsinline
-          preload="none"
-        ></video>
-      </div>
-      <div class="tierMedia" data-tier="150" data-variant="5">
-        <video src="pi2.mp4?v=6a975fbf7c9c" playsinline preload="none"></video>
-      </div>
-
-      <div class="tierMedia" data-tier="200" data-variant="1">
-        <video
-          src="lemon.mp4?v=3fde48d7f5a7"
-          playsinline
-          preload="none"
-        ></video>
-      </div>
-      <div class="tierMedia" data-tier="200" data-variant="2">
-        <video
-          src="up-520.mp4?v=a6da404f2f61"
-          playsinline
-          preload="none"
-        ></video>
-      </div>
-      <div class="tierMedia" data-tier="200" data-variant="3">
-        <video src="ni.mp4?v=c6b4e1d69667" playsinline preload="none"></video>
-      </div>
-      <div class="tierMedia" data-tier="200" data-variant="4">
-        <video
-          src="kokain.mp4?v=307b80fe072f"
-          playsinline
-          preload="none"
-        ></video>
-      </div>
-      <div class="tierMedia" data-tier="200" data-variant="5">
-        <video
-          src="hongkong_1.mp4?v=086a16d9500c"
-          playsinline
-          preload="none"
-        ></video>
-      </div>
-
-      <div id="cropLine"></div>
-      <div id="cropLabel">↓ 被裁掉 56px</div>
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="tierIntro" aria-hidden="true"><canvas id="tierIntroCanvas" width="630" height="420"></canvas><div id="tierIntroLabel"></div></div>
+  <div id="counterPanel"><div id="months" class="num">0</div><div id="gifts" class="num">0</div></div>
+  <div id="marqueeSlot">
+    <div id="banner">
+      <div id="shine"></div>
+      <div id="badge"><div id="badgeIcon">🎁</div><div id="badgeValueRow"><span id="badgeCount">50</span><span id="badgeUnit">贈</span></div></div>
+      <div id="lane"><div id="text"></div></div>
     </div>
-    <script src="gift-intro-v52.js?v=20260911-2"></script>
-    <script src="gift-sfx-v42.js?v=20260910-4"></script>
-    <script>
-      (() => {
-        const params = new URLSearchParams(location.search);
-        if (params.get("debug") === "1") document.body.classList.add("debug");
-        const MIN_GIFT = 50;
-        const stage = document.getElementById("stage"),
-          banner = document.getElementById("banner"),
-          badgeIcon = document.getElementById("badgeIcon"),
-          badgeCount = document.getElementById("badgeCount"),
-          lane = document.getElementById("lane"),
-          text = document.getElementById("text"),
-          months = document.getElementById("months"),
-          gifts = document.getElementById("gifts");
-        const queue = [];
-        let playing = false,
-          activeEntry = null;
-        const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-        const nextVariant = { 50: 1, 100: 1, 150: 1, 200: 1 };
-        const superSequence = [];
-        [50, 100, 150, 200].forEach((count) => {
-          for (let variant = 1; variant <= 4; variant++)
-            superSequence.push({ count, variant });
+  </div>
+
+  <div class="tierMedia" data-tier="50" data-variant="1"><video src="seal.mp4?v=fa7babdabdcd" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="50" data-variant="2"><video src="Conan-520.mp4?v=32ffb0869107" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="50" data-variant="3"><video src="sir.mp4?v=c973d0301c79" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="50" data-variant="4"><video src="0725.mp4?v=72fb7c5cc455" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="50" data-variant="5"><video src="comb_1.mp4?v=879c5cec3f25" playsinline preload="none"></video></div>
+
+  <div class="tierMedia" data-tier="100" data-variant="1"><video src="boy.mp4?v=e52b14c12917" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="100" data-variant="2"><video src="SLAM-DUNK-520.mp4?v=9b1ab08a5c23" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="100" data-variant="3"><video src="baseball-520.mp4?v=833e68c70c39" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="100" data-variant="4"><video src="love.mp4?v=2522c09e7b36" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="100" data-variant="5"><video src="tc.mp4?v=6e914fd80eda" playsinline preload="none"></video></div>
+
+  <div class="tierMedia" data-tier="150" data-variant="1"><video src="0859457.mp4?v=1d53ab12fe18" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="150" data-variant="2"><video src="02-520.mp4?v=93fcd7ca1b74" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="150" data-variant="3"><video src="facechange-520.mp4?v=c741fa297cc7" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="150" data-variant="4"><video src="shark-520.mp4?v=21b272496d21" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="150" data-variant="5"><video src="pi2.mp4?v=6a975fbf7c9c" playsinline preload="none"></video></div>
+
+  <div class="tierMedia" data-tier="200" data-variant="1"><video src="lemon.mp4?v=3fde48d7f5a7" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="200" data-variant="2"><video src="up-520.mp4?v=a6da404f2f61" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="200" data-variant="3"><video src="ni.mp4?v=c6b4e1d69667" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="200" data-variant="4"><video src="kokain.mp4?v=307b80fe072f" playsinline preload="none"></video></div>
+  <div class="tierMedia" data-tier="200" data-variant="5"><video src="hongkong_1.mp4?v=086a16d9500c" playsinline preload="none"></video></div>
+
+  <div id="cropLine"></div><div id="cropLabel">↓ 被裁掉 56px</div>
+</div>
+<script src="gift-intro-v52.js?v=20260911-2"></script>
+<script src="gift-sfx-v42.js?v=20260910-4"></script>
+<script>
+(() => {
+  const params=new URLSearchParams(location.search);
+  if(params.get('debug')==='1')document.body.classList.add('debug');
+  const MIN_GIFT=50;
+  const stage=document.getElementById('stage'),banner=document.getElementById('banner'),badgeIcon=document.getElementById('badgeIcon'),badgeCount=document.getElementById('badgeCount'),lane=document.getElementById('lane'),text=document.getElementById('text'),months=document.getElementById('months'),gifts=document.getElementById('gifts');
+  const queue=[];let playing=false,activeEntry=null;const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  const nextVariant={50:1,100:1,150:1,200:1};
+  const superSequence=[];[50,100,150,200].forEach(count=>{for(let variant=1;variant<=4;variant++)superSequence.push({count,variant})});
+  let superLoopActive=false,superLoopIndex=0,superLoopName='匿名';
+  function queueSuperNext(){if(!superLoopActive)return;const item=superSequence[superLoopIndex];superLoopIndex=(superLoopIndex+1)%superSequence.length;queue.push({name:superLoopName,count:item.count,variant:item.variant,eventId:'',mediaAlt:''})}
+  const entries=[...document.querySelectorAll('.tierMedia')].map(media=>({media,video:media.querySelector('video'),tier:Number(media.dataset.tier),variant:Number(media.dataset.variant),alt:String(media.dataset.alt||''),muted:media.dataset.muted==='1',blobPromise:null,blobUrl:null,sourceUrl:media.querySelector('video').getAttribute('src')}));
+  const entryKey=e=>`${e.tier}:${e.variant}${e.alt?':'+e.alt:''}`;
+  const entryMap=new Map(entries.map(e=>[entryKey(e),e]));
+  const tierForCount=count=>count>=200?200:count>=150?150:count>=100?100:50;
+  const tierIntro=document.getElementById('tierIntro'),tierIntroCanvas=document.getElementById('tierIntroCanvas'),tierIntroLabel=document.getElementById('tierIntroLabel'),tierIntroCtx=tierIntroCanvas.getContext('2d',{alpha:true});
+  const introAssets={50:'gift-motion-50.webp?v=20260910-1',100:'gift-motion-100.webp?v=20260910-1',150:'gift-rocket-body-v4.webp?v=20260910-1',200:'gift-yacht-body-v3.webp?v=20260910-1'};
+  const introClosedAssets={50:'gift-motion-50-closed.webp?v=20260910-1',100:'gift-motion-100-closed.webp?v=20260910-1'};
+  const introImages={},introClosedImages={},introReady={};
+  Object.entries(introAssets).forEach(([tier,src])=>{const img=new Image();introImages[tier]=img;introReady[tier]=new Promise(resolve=>{img.onload=img.onerror=resolve;img.src=src})});
+  Object.entries(introClosedAssets).forEach(([tier,src])=>{const img=new Image();introClosedImages[tier]=img;const prior=introReady[tier];introReady[tier]=Promise.all([prior,new Promise(resolve=>{img.onload=img.onerror=resolve;img.src=src})])});
+  function introNoise(seed){return Math.abs(Math.sin(seed*12.9898+78.233)*43758.5453)%1}
+  function easeOut(t){return 1-Math.pow(1-Math.max(0,Math.min(1,t)),3)}
+  function drawRocketExhaust(ctx,p,x,tailY,scale){
+    if(p<=.07||p>=.94)return;const ignition=Math.min(1,(p-.07)/.14),thrust=p>.74?Math.max(0,1-(p-.74)/.20):1,flicker=.94+.06*Math.sin(p*181),len=(92+82*ignition)*flicker,neck=12*scale,wide=29+15*ignition;
+    ctx.save();ctx.globalCompositeOperation='lighter';const halo=ctx.createRadialGradient(x,tailY+18,2,x,tailY+24,62);halo.addColorStop(0,`rgba(255,245,205,${.42*ignition*thrust})`);halo.addColorStop(.38,`rgba(255,126,28,${.20*ignition*thrust})`);halo.addColorStop(1,'rgba(255,70,0,0)');ctx.fillStyle=halo;ctx.fillRect(x-75,tailY-10,150,130);
+    const outer=ctx.createLinearGradient(x,tailY,x,tailY+len);outer.addColorStop(0,`rgba(255,250,225,${.98*thrust})`);outer.addColorStop(.16,`rgba(255,190,62,${.98*thrust})`);outer.addColorStop(.52,`rgba(255,83,20,${.82*thrust})`);outer.addColorStop(1,'rgba(255,45,5,0)');ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(x-neck,tailY);ctx.bezierCurveTo(x-wide,tailY+len*.30,x-wide*.72,tailY+len*.68,x+Math.sin(p*211)*7,tailY+len);ctx.bezierCurveTo(x+wide*.70,tailY+len*.68,x+wide,tailY+len*.30,x+neck,tailY);ctx.closePath();ctx.fill();
+    const core=ctx.createLinearGradient(x,tailY,x,tailY+len*.60);core.addColorStop(0,'rgba(255,255,255,1)');core.addColorStop(.38,'rgba(255,249,190,.98)');core.addColorStop(1,'rgba(255,160,38,0)');ctx.fillStyle=core;ctx.beginPath();ctx.moveTo(x-neck*.55,tailY);ctx.quadraticCurveTo(x-10,tailY+len*.34,x+Math.sin(p*233)*3,tailY+len*.61);ctx.quadraticCurveTo(x+10,tailY+len*.34,x+neck*.55,tailY);ctx.closePath();ctx.fill();ctx.restore();
+    for(let s=0;s<46;s++){const a=introNoise(s+710),b=introNoise(s+770),life=(p*2.15+a)%1,sx=x+(a-.5)*(26+life*126),sy=tailY+len*.70+life*(52+92*b),rr=5+18*life;ctx.fillStyle=`rgba(${176+Math.floor(42*b)},${180+Math.floor(40*b)},${188+Math.floor(38*b)},${(1-life)*.25*ignition*thrust})`;ctx.beginPath();ctx.arc(sx,sy,rr,0,Math.PI*2);ctx.fill()}
+  }
+  function drawYachtFireworks(ctx,p){
+    if(p<=.38||p>=.93)return;const shows=[{s:.38,x:126,y:82,r:78,c:'255,196,82'},{s:.48,x:315,y:56,r:92,c:'255,232,154'},{s:.58,x:500,y:94,r:74,c:'120,210,255'}];
+    shows.forEach((f,k)=>{const t=(p-f.s)/.31;if(t<=0||t>=1)return;ctx.save();ctx.globalCompositeOperation='lighter';if(t<.28){const u=t/.28,ry=310-(310-f.y)*easeOut(u);ctx.strokeStyle=`rgba(255,220,145,${.9-u*.35})`;ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(f.x+Math.sin(u*9+k)*3,310);ctx.quadraticCurveTo(f.x-9,ry+65,f.x,ry);ctx.stroke();ctx.fillStyle='rgba(255,255,225,.98)';ctx.beginPath();ctx.arc(f.x,ry,3.4,0,Math.PI*2);ctx.fill()}else{const u=(t-.28)/.72,grow=easeOut(Math.min(1,u*1.55)),fade=Math.pow(1-u,1.35),fall=u*u*34;for(let z=0;z<32;z++){const an=z*Math.PI/16+k*.29,j=.82+.22*introNoise(z+k*43),rr=f.r*grow*j,ex=f.x+Math.cos(an)*rr,ey=f.y+Math.sin(an)*rr+fall,ix=f.x+Math.cos(an)*rr*.58,iy=f.y+Math.sin(an)*rr*.58+fall*.46;ctx.strokeStyle=`rgba(${f.c},${fade*.88})`;ctx.lineWidth=1.4+1.4*(1-u);ctx.beginPath();ctx.moveTo(ix,iy);ctx.quadraticCurveTo(f.x+Math.cos(an)*rr*.82,f.y+Math.sin(an)*rr*.78+fall*.70,ex,ey);ctx.stroke();ctx.fillStyle=`rgba(255,245,205,${fade*.72})`;ctx.beginPath();ctx.arc(ex,ey,1.5,0,Math.PI*2);ctx.fill()}const flash=Math.max(0,1-u*5);ctx.fillStyle=`rgba(255,250,215,${flash*.72})`;ctx.beginPath();ctx.arc(f.x,f.y,18+25*u,0,Math.PI*2);ctx.fill()}ctx.restore()})
+  }
+  function drawIntroFrame(tier,p){
+    const ctx=tierIntroCtx,w=630,h=420,openImg=introImages[tier],closedImg=introClosedImages[tier],q=easeOut(p);
+    ctx.clearRect(0,0,w,h);ctx.save();
+    const hue=tier===200?'20,135,220':tier===150?'92,62,220':tier===100?'220,145,20':'180,55,220';
+    const pulse=Math.sin(Math.min(1,p)*Math.PI),aura=ctx.createRadialGradient(w*.5,h*.52,15,w*.5,h*.52,360);aura.addColorStop(0,`rgba(${hue},${.38*pulse})`);aura.addColorStop(.55,`rgba(${hue},${.13*pulse})`);aura.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=aura;ctx.fillRect(0,0,w,h);
+    if(tier===150){for(let j=0;j<4;j++){const rp=40+j*45+Math.sin(p*16+j)*12;ctx.strokeStyle=`rgba(${j%2?120:235},${j%2?205:80},255,${.52-j*.08})`;ctx.lineWidth=3;ctx.beginPath();ctx.arc(w*.5,210,rp,0,Math.PI*2);ctx.stroke()}}
+    if(tier===200){const seaIn=Math.min(1,p/.16),sea=ctx.createLinearGradient(0,270,0,h);sea.addColorStop(0,'rgba(20,92,150,0)');sea.addColorStop(.25,`rgba(18,100,162,${.26*seaIn})`);sea.addColorStop(1,`rgba(4,28,76,${.72*seaIn})`);ctx.fillStyle=sea;ctx.fillRect(0,270,w,h-270);for(let j=0;j<6;j++){ctx.strokeStyle=`rgba(${j%2?85:205},${j%2?190:245},255,${(.34-j*.038)*seaIn})`;ctx.lineWidth=1.5+j*.7;ctx.beginPath();for(let wx=-10;wx<=w+10;wx+=8){const wy=300+j*18+Math.sin(wx*.027+p*25+j*1.7)*5+Math.sin(wx*.061-p*31)*2;wx===-10?ctx.moveTo(wx,wy):ctx.lineTo(wx,wy)}ctx.stroke()}}
+    const opened=tier<=100&&p>=.46,emit=tier<=100?Math.max(0,(p-.43)/.57):p;
+    const n=tier<=100?210:tier===150?170:145;
+    for(let i=0;i<n;i++){const a=introNoise(i+1),b=introNoise(i+37),c=introNoise(i+91),life=(emit*1.55+c)%1;if(tier<=100&&!opened)continue;let x,y,r,alpha=(1-life)*(.28+.72*b);
+      if(tier<=100){const ang=a*Math.PI*2,dist=life*(65+360*b);x=w*.5+Math.cos(ang)*dist;y=h*.5+Math.sin(ang)*dist-life*70;r=1+6*(1-life);ctx.fillStyle=tier===50?`rgba(255,${110+Math.floor(140*b)},100,${alpha})`:`rgba(255,210,55,${alpha})`}
+      else if(tier===150){x=w*.5+(a-.5)*(45+life*150);y=248+life*(130+130*b);r=2+10*(1-life);ctx.fillStyle=b>.5?`rgba(125,215,255,${alpha})`:`rgba(235,70,255,${alpha})`}
+      else{x=-120+q*820-life*150+(a-.5)*80;y=300+life*105+Math.sin(i+p*22)*11;r=2+8*(1-life);ctx.fillStyle=`rgba(205,245,255,${alpha})`}
+      ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+    }
+    let img=openImg,x=w*.5,y=h*.5,scale=1,rot=0,alpha=1;
+    if(tier===50){img=opened?openImg:closedImg;const enter=easeOut(p/.20);scale=.74;y=-150+365*enter;if(!opened&&p>.20){x+=Math.sin(p*95)*Math.min(12,(p-.20)*45);rot=Math.sin(p*80)*.035}if(opened){scale=.80;y=210}}
+    if(tier===100){img=opened?openImg:closedImg;const enter=easeOut(p/.22);scale=.78;y=520-305*enter;if(!opened&&p>.24){x+=Math.sin(p*86)*Math.min(10,(p-.24)*40);rot=Math.sin(p*72)*.025}if(opened){scale=.82;y=215}}
+    if(tier===150){scale=.86;rot=0;if(p<.22){y=565}else if(p<.40){const t=easeOut((p-.22)/.18);y=565-390*t}else if(p<.74){y=175+Math.sin(p*20)*2}else{const t=(p-.74)/.26;y=175-610*t*t}}
+    if(tier===200){scale=.68;rot=-.012;if(p<.10){x=-390;y=242}else if(p<.34){const t=easeOut((p-.10)/.24);x=-390+705*t;y=242+Math.sin(p*19)*3}else if(p<.80){x=w*.5;y=242+Math.sin(p*19)*3;rot=Math.sin(p*13)*.008}else{const t=(p-.80)/.20;x=w*.5+700*t*t;y=242+Math.sin(p*19)*3}}
+    if(p>.92)alpha=(1-p)/.08;
+    if(tier===150)drawRocketExhaust(ctx,p,x,y+(img?.naturalHeight||420)*scale*.47,scale);
+    if(false&&tier===150&&p>.07&&p<.94){const ignition=Math.max(0,Math.min(1,(p-.07)/.18)),tailY=y+(img?.naturalHeight||420)*scale*.47,power=.72+.12*Math.sin(p*137)+.08*Math.sin(p*211),plumeLen=(58+86*ignition)*power,spread=28+26*ignition;
+      ctx.save();ctx.globalCompositeOperation='lighter';
+      const glow=ctx.createRadialGradient(x,tailY,3,x,tailY,78+32*ignition);glow.addColorStop(0,`rgba(255,250,225,${.48*ignition})`);glow.addColorStop(.28,`rgba(80,185,255,${.30*ignition})`);glow.addColorStop(1,'rgba(85,55,255,0)');ctx.fillStyle=glow;ctx.beginPath();ctx.arc(x,tailY,110,0,Math.PI*2);ctx.fill();
+      const outer=ctx.createLinearGradient(x,tailY,x,tailY+plumeLen);outer.addColorStop(0,'rgba(255,248,205,.95)');outer.addColorStop(.18,'rgba(255,174,62,.92)');outer.addColorStop(.52,'rgba(255,78,20,.72)');outer.addColorStop(1,'rgba(255,55,8,0)');ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(x-spread,tailY);ctx.bezierCurveTo(x-spread*(1.15+.12*Math.sin(p*121)),tailY+plumeLen*.32,x-spread*.45,tailY+plumeLen*.72,x+Math.sin(p*173)*12,tailY+plumeLen);ctx.bezierCurveTo(x+spread*.5,tailY+plumeLen*.72,x+spread*(1.1+.1*Math.sin(p*149)),tailY+plumeLen*.30,x+spread,tailY);ctx.closePath();ctx.fill();
+      const inner=ctx.createLinearGradient(x,tailY,x,tailY+plumeLen*.78);inner.addColorStop(0,'rgba(255,255,255,1)');inner.addColorStop(.25,'rgba(155,225,255,.98)');inner.addColorStop(.62,'rgba(70,145,255,.82)');inner.addColorStop(1,'rgba(95,75,255,0)');ctx.fillStyle=inner;ctx.beginPath();ctx.moveTo(x-spread*.42,tailY);ctx.bezierCurveTo(x-spread*.52,tailY+plumeLen*.25,x-spread*.18,tailY+plumeLen*.62,x+Math.sin(p*199)*6,tailY+plumeLen*.80);ctx.bezierCurveTo(x+spread*.2,tailY+plumeLen*.62,x+spread*.5,tailY+plumeLen*.25,x+spread*.42,tailY);ctx.closePath();ctx.fill();
+      for(let e=-1;e<=1;e++){const ex=x+e*39*scale,delay=Math.max(0,Math.min(1,(p-.07-Math.abs(e)*.025)/.10));ctx.fillStyle=`rgba(255,255,255,${.92*delay})`;ctx.beginPath();ctx.ellipse(ex,tailY+5,11+3*delay,24+7*Math.sin(p*160+e),0,0,Math.PI*2);ctx.fill()}
+      ctx.restore();
+      for(let s=0;s<38;s++){const a=introNoise(s+211),b=introNoise(s+260),life=(p*1.8+a)%1,baseY=tailY+plumeLen*.68,sy=baseY+life*(55+105*b),sx=x+(a-.5)*(36+life*175),rr=6+22*life;ctx.fillStyle=`rgba(${185+Math.floor(45*b)},${188+Math.floor(38*b)},${198+Math.floor(32*b)},${(1-life)*.28*ignition})`;ctx.beginPath();ctx.arc(sx,sy,rr,0,Math.PI*2);ctx.fill()}
+      if(p<.38){const charge=Math.min(1,p/.24);for(let ring=0;ring<3;ring++){const rr=26+ring*23+charge*58;ctx.strokeStyle=`rgba(${ring===1?255:105},${ring===1?180:205},255,${(1-charge)*.48})`;ctx.lineWidth=2.5;ctx.beginPath();ctx.ellipse(x,Math.min(367,tailY+15),rr,rr*.25,0,0,Math.PI*2);ctx.stroke()}}
+    }
+    if(tier===200&&p>.08&&p<.96){const motion=Math.min(1,(p-.08)/.22),stern=x-238*scale,bow=x+285*scale,waterY=y+104*scale;ctx.save();ctx.globalCompositeOperation='lighter';const trail=ctx.createLinearGradient(Math.max(0,stern-280),waterY,stern+20,waterY);trail.addColorStop(0,'rgba(115,210,255,0)');trail.addColorStop(.6,`rgba(150,225,255,${.22*motion})`);trail.addColorStop(1,`rgba(245,255,255,${.72*motion})`);ctx.strokeStyle=trail;ctx.lineWidth=14;ctx.beginPath();ctx.moveTo(Math.max(-20,stern-310),waterY+8);ctx.bezierCurveTo(stern-190,waterY-15,stern-75,waterY+16,stern+12,waterY);ctx.stroke();for(let s=0;s<34;s++){const a=introNoise(s+401),life=(p*2.4+a)%1,px=stern-life*(70+210*a),py=waterY+life*(12+38*a)+Math.sin(s+p*52)*5,rr=1.5+5*(1-life);ctx.fillStyle=`rgba(220,250,255,${(1-life)*.48*motion})`;ctx.beginPath();ctx.arc(px,py,rr,0,Math.PI*2);ctx.fill()}for(let s=0;s<24;s++){const a=introNoise(s+501),life=(p*3.1+a)%1,px=bow+(a-.5)*36+life*30,py=waterY-life*(20+55*a),rr=2+7*(1-life);ctx.fillStyle=`rgba(235,255,255,${(1-life)*.72*motion})`;ctx.beginPath();ctx.arc(px,py,rr,0,Math.PI*2);ctx.fill()}for(let r=0;r<12;r++){const rx=x-175*scale+r*30*scale,rh=18+38*(.5+.5*Math.sin(r*2.3+p*35));ctx.strokeStyle=`rgba(${r%3?80:255},${r%3?178:205},255,${.10+.12*motion})`;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(rx,waterY+16);ctx.lineTo(rx+Math.sin(p*26+r)*7,waterY+16+rh);ctx.stroke()}ctx.restore();if(p>.36&&p<.82){const sweep=(p-.36)/.46,beamX=-130+sweep*900,g=ctx.createLinearGradient(beamX-90,0,beamX+130,0);g.addColorStop(0,'rgba(255,220,125,0)');g.addColorStop(.5,'rgba(255,238,180,.13)');g.addColorStop(1,'rgba(255,220,125,0)');ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(beamX-45,0);ctx.lineTo(beamX+110,0);ctx.lineTo(beamX+205,h);ctx.lineTo(beamX-170,h);ctx.closePath();ctx.fill()}}
+    if(img&&img.complete&&img.naturalWidth){ctx.globalAlpha=Math.max(0,alpha);ctx.translate(x,y);ctx.rotate(rot);ctx.scale(scale,scale);ctx.drawImage(img,-img.naturalWidth/2,-img.naturalHeight/2);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1}
+    if(tier<=100){const flash=Math.max(0,1-Math.abs(p-.46)/.09);const fg=ctx.createRadialGradient(w*.5,h*.48,5,w*.5,h*.48,310);fg.addColorStop(0,`rgba(255,255,225,${flash*.88})`);fg.addColorStop(1,'rgba(255,205,60,0)');ctx.fillStyle=fg;ctx.fillRect(0,0,w,h)}
+    if(tier===200)drawYachtFireworks(ctx,p);
+    if(false&&tier===200&&p>.40&&p<.91){for(let k=0;k<3;k++){const start=.40+k*.10,fp=(p-start)/.30,cx=125+k*190,cy=72+(k%2)*38;if(fp<=0||fp>=1)continue;ctx.save();ctx.globalCompositeOperation='lighter';if(fp<.32){const rise=fp/.32,ry=330-(330-cy)*easeOut(rise);ctx.strokeStyle=`rgba(255,${190+k*18},110,${.75-rise*.25})`;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(cx,ry+34);ctx.lineTo(cx,ry);ctx.stroke();ctx.fillStyle='rgba(255,255,220,.95)';ctx.beginPath();ctx.arc(cx,ry,4,0,Math.PI*2);ctx.fill()}else{const burst=(fp-.32)/.68,rr=easeOut(Math.min(1,burst*1.45))*(54+12*k),fade=Math.max(0,1-burst),cr=k===1?'255,205,105':'115,220,255';for(let z=0;z<22;z++){const an=z*Math.PI/11+k*.35,fall=burst*burst*28,inner=rr*.48,outer=rr*(.82+.18*introNoise(z+k*31));ctx.strokeStyle=`rgba(${cr},${fade*.82})`;ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(cx+Math.cos(an)*inner,cy+Math.sin(an)*inner+fall);ctx.quadraticCurveTo(cx+Math.cos(an)*outer*.78,cy+Math.sin(an)*outer*.78+fall*.5,cx+Math.cos(an)*outer,cy+Math.sin(an)*outer+fall);ctx.stroke();ctx.fillStyle=`rgba(255,245,190,${fade*.72})`;ctx.beginPath();ctx.arc(cx+Math.cos(an)*outer,cy+Math.sin(an)*outer+fall,1.8,0,Math.PI*2);ctx.fill()}}ctx.restore()}}
+    ctx.restore();
+  }
+  async function playTierIntro(item){const tier=tierForCount(item.count),duration=({50:3200,100:3900,150:5000,200:6200})[tier],env={ctx:tierIntroCtx,introImages,introClosedImages,introNoise};await Promise.race([introReady[tier],sleep(1000)]);tierIntro.className='';tierIntro.style.setProperty('--intro-duration',duration+'ms');tierIntroLabel.textContent=item.count+' 份贈訂';void tierIntro.offsetWidth;tierIntro.className='play tier'+tier;try{playGiftIntroSfx(tier)}catch(_){}const start=performance.now();await new Promise(resolve=>{let done=false,raf=0;const finish=reason=>{if(done)return;done=true;clearTimeout(watchdog);if(raf)cancelAnimationFrame(raf);if(reason!=='complete')console.warn('intro recovered',tier,reason);resolve()},watchdog=setTimeout(()=>finish('watchdog'),duration+1200);function frame(now){if(done)return;try{const p=Math.min(1,(now-start)/duration);drawIntroFrameV52(tier,p,env);if(p<1)raf=requestAnimationFrame(frame);else finish('complete')}catch(e){console.error('intro frame failed',tier,e);finish('draw-error')}}raf=requestAnimationFrame(frame)});tierIntro.dataset.done='1'}
+  const entryFor=(count,variant)=>entryMap.get(`${tierForCount(count)}:${variant}`)||null;
+  const criticalKeys=new Set(['50:1','200:1']);
+  const keyOf=entryKey;
+  let idlePreloadEntry=null,idlePreloadTimer=0;
+  async function ensureMediaBlob(entry,isIdle=false){
+    if(!entry)return;
+    if(entry.blobUrl&&entry.video.src.startsWith('blob:'))return;
+    if(entry.blobPromise)return entry.blobPromise;
+    const controller=new AbortController();entry.blobController=controller;if(isIdle)idlePreloadEntry=entry;
+    entry.blobPromise=(async()=>{
+      try{
+        const r=await fetch(entry.sourceUrl,{cache:'force-cache',signal:controller.signal});
+        if(!r.ok)throw new Error(`HTTP ${r.status}`);
+        const blob=await r.blob();
+        if(entry.blobUrl)URL.revokeObjectURL(entry.blobUrl);
+        entry.blobUrl=URL.createObjectURL(blob);
+        entry.video.src=entry.blobUrl;
+        entry.video.preload='auto';
+        entry.video.load();
+        await new Promise(resolve=>{
+          if(entry.video.readyState>=3)return resolve();
+          let done=false;const finish=()=>{if(done)return;done=true;entry.video.removeEventListener('canplay',finish);clearTimeout(timer);resolve()};
+          const timer=setTimeout(finish,3000);entry.video.addEventListener('canplay',finish,{once:true});
         });
-        let superLoopActive = false,
-          superLoopIndex = 0,
-          superLoopName = "匿名";
-        function queueSuperNext() {
-          if (!superLoopActive) return;
-          const item = superSequence[superLoopIndex];
-          superLoopIndex = (superLoopIndex + 1) % superSequence.length;
-          queue.push({
-            name: superLoopName,
-            count: item.count,
-            variant: item.variant,
-            eventId: "",
-            mediaAlt: "",
-          });
-        }
-        const entries = [...document.querySelectorAll(".tierMedia")].map(
-          (media) => ({
-            media,
-            video: media.querySelector("video"),
-            tier: Number(media.dataset.tier),
-            variant: Number(media.dataset.variant),
-            alt: String(media.dataset.alt || ""),
-            muted: media.dataset.muted === "1",
-            blobPromise: null,
-            blobUrl: null,
-            sourceUrl: media.querySelector("video").getAttribute("src"),
-          }),
-        );
-        const entryKey = (e) =>
-          `${e.tier}:${e.variant}${e.alt ? ":" + e.alt : ""}`;
-        const entryMap = new Map(entries.map((e) => [entryKey(e), e]));
-        const tierForCount = (count) =>
-          count >= 200 ? 200 : count >= 150 ? 150 : count >= 100 ? 100 : 50;
-        const tierIntro = document.getElementById("tierIntro"),
-          tierIntroCanvas = document.getElementById("tierIntroCanvas"),
-          tierIntroLabel = document.getElementById("tierIntroLabel"),
-          tierIntroCtx = tierIntroCanvas.getContext("2d", { alpha: true });
-        const introAssets = {
-          50: "gift-motion-50.webp?v=20260910-1",
-          100: "gift-motion-100.webp?v=20260910-1",
-          150: "gift-rocket-body-v4.webp?v=20260910-1",
-          200: "gift-yacht-body-v3.webp?v=20260910-1",
-        };
-        const introClosedAssets = {
-          50: "gift-motion-50-closed.webp?v=20260910-1",
-          100: "gift-motion-100-closed.webp?v=20260910-1",
-        };
-        const introImages = {},
-          introClosedImages = {},
-          introReady = {};
-        Object.entries(introAssets).forEach(([tier, src]) => {
-          const img = new Image();
-          introImages[tier] = img;
-          introReady[tier] = new Promise((resolve) => {
-            img.onload = img.onerror = resolve;
-            img.src = src;
-          });
-        });
-        Object.entries(introClosedAssets).forEach(([tier, src]) => {
-          const img = new Image();
-          introClosedImages[tier] = img;
-          const prior = introReady[tier];
-          introReady[tier] = Promise.all([
-            prior,
-            new Promise((resolve) => {
-              img.onload = img.onerror = resolve;
-              img.src = src;
-            }),
-          ]);
-        });
-        function introNoise(seed) {
-          return Math.abs(Math.sin(seed * 12.9898 + 78.233) * 43758.5453) % 1;
-        }
-        function easeOut(t) {
-          return 1 - Math.pow(1 - Math.max(0, Math.min(1, t)), 3);
-        }
-        function drawRocketExhaust(ctx, p, x, tailY, scale) {
-          if (p <= 0.07 || p >= 0.94) return;
-          const ignition = Math.min(1, (p - 0.07) / 0.14),
-            thrust = p > 0.74 ? Math.max(0, 1 - (p - 0.74) / 0.2) : 1,
-            flicker = 0.94 + 0.06 * Math.sin(p * 181),
-            len = (92 + 82 * ignition) * flicker,
-            neck = 12 * scale,
-            wide = 29 + 15 * ignition;
-          ctx.save();
-          ctx.globalCompositeOperation = "lighter";
-          const halo = ctx.createRadialGradient(
-            x,
-            tailY + 18,
-            2,
-            x,
-            tailY + 24,
-            62,
-          );
-          halo.addColorStop(0, `rgba(255,245,205,${0.42 * ignition * thrust})`);
-          halo.addColorStop(
-            0.38,
-            `rgba(255,126,28,${0.2 * ignition * thrust})`,
-          );
-          halo.addColorStop(1, "rgba(255,70,0,0)");
-          ctx.fillStyle = halo;
-          ctx.fillRect(x - 75, tailY - 10, 150, 130);
-          const outer = ctx.createLinearGradient(x, tailY, x, tailY + len);
-          outer.addColorStop(0, `rgba(255,250,225,${0.98 * thrust})`);
-          outer.addColorStop(0.16, `rgba(255,190,62,${0.98 * thrust})`);
-          outer.addColorStop(0.52, `rgba(255,83,20,${0.82 * thrust})`);
-          outer.addColorStop(1, "rgba(255,45,5,0)");
-          ctx.fillStyle = outer;
-          ctx.beginPath();
-          ctx.moveTo(x - neck, tailY);
-          ctx.bezierCurveTo(
-            x - wide,
-            tailY + len * 0.3,
-            x - wide * 0.72,
-            tailY + len * 0.68,
-            x + Math.sin(p * 211) * 7,
-            tailY + len,
-          );
-          ctx.bezierCurveTo(
-            x + wide * 0.7,
-            tailY + len * 0.68,
-            x + wide,
-            tailY + len * 0.3,
-            x + neck,
-            tailY,
-          );
-          ctx.closePath();
-          ctx.fill();
-          const core = ctx.createLinearGradient(x, tailY, x, tailY + len * 0.6);
-          core.addColorStop(0, "rgba(255,255,255,1)");
-          core.addColorStop(0.38, "rgba(255,249,190,.98)");
-          core.addColorStop(1, "rgba(255,160,38,0)");
-          ctx.fillStyle = core;
-          ctx.beginPath();
-          ctx.moveTo(x - neck * 0.55, tailY);
-          ctx.quadraticCurveTo(
-            x - 10,
-            tailY + len * 0.34,
-            x + Math.sin(p * 233) * 3,
-            tailY + len * 0.61,
-          );
-          ctx.quadraticCurveTo(
-            x + 10,
-            tailY + len * 0.34,
-            x + neck * 0.55,
-            tailY,
-          );
-          ctx.closePath();
-          ctx.fill();
-          ctx.restore();
-          for (let s = 0; s < 46; s++) {
-            const a = introNoise(s + 710),
-              b = introNoise(s + 770),
-              life = (p * 2.15 + a) % 1,
-              sx = x + (a - 0.5) * (26 + life * 126),
-              sy = tailY + len * 0.7 + life * (52 + 92 * b),
-              rr = 5 + 18 * life;
-            ctx.fillStyle = `rgba(${176 + Math.floor(42 * b)},${180 + Math.floor(40 * b)},${188 + Math.floor(38 * b)},${(1 - life) * 0.25 * ignition * thrust})`;
-            ctx.beginPath();
-            ctx.arc(sx, sy, rr, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-        function drawYachtFireworks(ctx, p) {
-          if (p <= 0.38 || p >= 0.93) return;
-          const shows = [
-            { s: 0.38, x: 126, y: 82, r: 78, c: "255,196,82" },
-            { s: 0.48, x: 315, y: 56, r: 92, c: "255,232,154" },
-            { s: 0.58, x: 500, y: 94, r: 74, c: "120,210,255" },
-          ];
-          shows.forEach((f, k) => {
-            const t = (p - f.s) / 0.31;
-            if (t <= 0 || t >= 1) return;
-            ctx.save();
-            ctx.globalCompositeOperation = "lighter";
-            if (t < 0.28) {
-              const u = t / 0.28,
-                ry = 310 - (310 - f.y) * easeOut(u);
-              ctx.strokeStyle = `rgba(255,220,145,${0.9 - u * 0.35})`;
-              ctx.lineWidth = 2.4;
-              ctx.beginPath();
-              ctx.moveTo(f.x + Math.sin(u * 9 + k) * 3, 310);
-              ctx.quadraticCurveTo(f.x - 9, ry + 65, f.x, ry);
-              ctx.stroke();
-              ctx.fillStyle = "rgba(255,255,225,.98)";
-              ctx.beginPath();
-              ctx.arc(f.x, ry, 3.4, 0, Math.PI * 2);
-              ctx.fill();
-            } else {
-              const u = (t - 0.28) / 0.72,
-                grow = easeOut(Math.min(1, u * 1.55)),
-                fade = Math.pow(1 - u, 1.35),
-                fall = u * u * 34;
-              for (let z = 0; z < 32; z++) {
-                const an = (z * Math.PI) / 16 + k * 0.29,
-                  j = 0.82 + 0.22 * introNoise(z + k * 43),
-                  rr = f.r * grow * j,
-                  ex = f.x + Math.cos(an) * rr,
-                  ey = f.y + Math.sin(an) * rr + fall,
-                  ix = f.x + Math.cos(an) * rr * 0.58,
-                  iy = f.y + Math.sin(an) * rr * 0.58 + fall * 0.46;
-                ctx.strokeStyle = `rgba(${f.c},${fade * 0.88})`;
-                ctx.lineWidth = 1.4 + 1.4 * (1 - u);
-                ctx.beginPath();
-                ctx.moveTo(ix, iy);
-                ctx.quadraticCurveTo(
-                  f.x + Math.cos(an) * rr * 0.82,
-                  f.y + Math.sin(an) * rr * 0.78 + fall * 0.7,
-                  ex,
-                  ey,
-                );
-                ctx.stroke();
-                ctx.fillStyle = `rgba(255,245,205,${fade * 0.72})`;
-                ctx.beginPath();
-                ctx.arc(ex, ey, 1.5, 0, Math.PI * 2);
-                ctx.fill();
-              }
-              const flash = Math.max(0, 1 - u * 5);
-              ctx.fillStyle = `rgba(255,250,215,${flash * 0.72})`;
-              ctx.beginPath();
-              ctx.arc(f.x, f.y, 18 + 25 * u, 0, Math.PI * 2);
-              ctx.fill();
-            }
-            ctx.restore();
-          });
-        }
-        function drawIntroFrame(tier, p) {
-          const ctx = tierIntroCtx,
-            w = 630,
-            h = 420,
-            openImg = introImages[tier],
-            closedImg = introClosedImages[tier],
-            q = easeOut(p);
-          ctx.clearRect(0, 0, w, h);
-          ctx.save();
-          const hue =
-            tier === 200
-              ? "20,135,220"
-              : tier === 150
-                ? "92,62,220"
-                : tier === 100
-                  ? "220,145,20"
-                  : "180,55,220";
-          const pulse = Math.sin(Math.min(1, p) * Math.PI),
-            aura = ctx.createRadialGradient(
-              w * 0.5,
-              h * 0.52,
-              15,
-              w * 0.5,
-              h * 0.52,
-              360,
-            );
-          aura.addColorStop(0, `rgba(${hue},${0.38 * pulse})`);
-          aura.addColorStop(0.55, `rgba(${hue},${0.13 * pulse})`);
-          aura.addColorStop(1, "rgba(0,0,0,0)");
-          ctx.fillStyle = aura;
-          ctx.fillRect(0, 0, w, h);
-          if (tier === 150) {
-            for (let j = 0; j < 4; j++) {
-              const rp = 40 + j * 45 + Math.sin(p * 16 + j) * 12;
-              ctx.strokeStyle = `rgba(${j % 2 ? 120 : 235},${j % 2 ? 205 : 80},255,${0.52 - j * 0.08})`;
-              ctx.lineWidth = 3;
-              ctx.beginPath();
-              ctx.arc(w * 0.5, 210, rp, 0, Math.PI * 2);
-              ctx.stroke();
-            }
-          }
-          if (tier === 200) {
-            const seaIn = Math.min(1, p / 0.16),
-              sea = ctx.createLinearGradient(0, 270, 0, h);
-            sea.addColorStop(0, "rgba(20,92,150,0)");
-            sea.addColorStop(0.25, `rgba(18,100,162,${0.26 * seaIn})`);
-            sea.addColorStop(1, `rgba(4,28,76,${0.72 * seaIn})`);
-            ctx.fillStyle = sea;
-            ctx.fillRect(0, 270, w, h - 270);
-            for (let j = 0; j < 6; j++) {
-              ctx.strokeStyle = `rgba(${j % 2 ? 85 : 205},${j % 2 ? 190 : 245},255,${(0.34 - j * 0.038) * seaIn})`;
-              ctx.lineWidth = 1.5 + j * 0.7;
-              ctx.beginPath();
-              for (let wx = -10; wx <= w + 10; wx += 8) {
-                const wy =
-                  300 +
-                  j * 18 +
-                  Math.sin(wx * 0.027 + p * 25 + j * 1.7) * 5 +
-                  Math.sin(wx * 0.061 - p * 31) * 2;
-                wx === -10 ? ctx.moveTo(wx, wy) : ctx.lineTo(wx, wy);
-              }
-              ctx.stroke();
-            }
-          }
-          const opened = tier <= 100 && p >= 0.46,
-            emit = tier <= 100 ? Math.max(0, (p - 0.43) / 0.57) : p;
-          const n = tier <= 100 ? 210 : tier === 150 ? 170 : 145;
-          for (let i = 0; i < n; i++) {
-            const a = introNoise(i + 1),
-              b = introNoise(i + 37),
-              c = introNoise(i + 91),
-              life = (emit * 1.55 + c) % 1;
-            if (tier <= 100 && !opened) continue;
-            let x,
-              y,
-              r,
-              alpha = (1 - life) * (0.28 + 0.72 * b);
-            if (tier <= 100) {
-              const ang = a * Math.PI * 2,
-                dist = life * (65 + 360 * b);
-              x = w * 0.5 + Math.cos(ang) * dist;
-              y = h * 0.5 + Math.sin(ang) * dist - life * 70;
-              r = 1 + 6 * (1 - life);
-              ctx.fillStyle =
-                tier === 50
-                  ? `rgba(255,${110 + Math.floor(140 * b)},100,${alpha})`
-                  : `rgba(255,210,55,${alpha})`;
-            } else if (tier === 150) {
-              x = w * 0.5 + (a - 0.5) * (45 + life * 150);
-              y = 248 + life * (130 + 130 * b);
-              r = 2 + 10 * (1 - life);
-              ctx.fillStyle =
-                b > 0.5
-                  ? `rgba(125,215,255,${alpha})`
-                  : `rgba(235,70,255,${alpha})`;
-            } else {
-              x = -120 + q * 820 - life * 150 + (a - 0.5) * 80;
-              y = 300 + life * 105 + Math.sin(i + p * 22) * 11;
-              r = 2 + 8 * (1 - life);
-              ctx.fillStyle = `rgba(205,245,255,${alpha})`;
-            }
-            ctx.beginPath();
-            ctx.arc(x, y, r, 0, Math.PI * 2);
-            ctx.fill();
-          }
-          let img = openImg,
-            x = w * 0.5,
-            y = h * 0.5,
-            scale = 1,
-            rot = 0,
-            alpha = 1;
-          if (tier === 50) {
-            img = opened ? openImg : closedImg;
-            const enter = easeOut(p / 0.2);
-            scale = 0.74;
-            y = -150 + 365 * enter;
-            if (!opened && p > 0.2) {
-              x += Math.sin(p * 95) * Math.min(12, (p - 0.2) * 45);
-              rot = Math.sin(p * 80) * 0.035;
-            }
-            if (opened) {
-              scale = 0.8;
-              y = 210;
-            }
-          }
-          if (tier === 100) {
-            img = opened ? openImg : closedImg;
-            const enter = easeOut(p / 0.22);
-            scale = 0.78;
-            y = 520 - 305 * enter;
-            if (!opened && p > 0.24) {
-              x += Math.sin(p * 86) * Math.min(10, (p - 0.24) * 40);
-              rot = Math.sin(p * 72) * 0.025;
-            }
-            if (opened) {
-              scale = 0.82;
-              y = 215;
-            }
-          }
-          if (tier === 150) {
-            scale = 0.86;
-            rot = 0;
-            if (p < 0.22) {
-              y = 565;
-            } else if (p < 0.4) {
-              const t = easeOut((p - 0.22) / 0.18);
-              y = 565 - 390 * t;
-            } else if (p < 0.74) {
-              y = 175 + Math.sin(p * 20) * 2;
-            } else {
-              const t = (p - 0.74) / 0.26;
-              y = 175 - 610 * t * t;
-            }
-          }
-          if (tier === 200) {
-            scale = 0.68;
-            rot = -0.012;
-            if (p < 0.1) {
-              x = -390;
-              y = 242;
-            } else if (p < 0.34) {
-              const t = easeOut((p - 0.1) / 0.24);
-              x = -390 + 705 * t;
-              y = 242 + Math.sin(p * 19) * 3;
-            } else if (p < 0.8) {
-              x = w * 0.5;
-              y = 242 + Math.sin(p * 19) * 3;
-              rot = Math.sin(p * 13) * 0.008;
-            } else {
-              const t = (p - 0.8) / 0.2;
-              x = w * 0.5 + 700 * t * t;
-              y = 242 + Math.sin(p * 19) * 3;
-            }
-          }
-          if (p > 0.92) alpha = (1 - p) / 0.08;
-          if (tier === 150)
-            drawRocketExhaust(
-              ctx,
-              p,
-              x,
-              y + (img?.naturalHeight || 420) * scale * 0.47,
-              scale,
-            );
-          if (false && tier === 150 && p > 0.07 && p < 0.94) {
-            const ignition = Math.max(0, Math.min(1, (p - 0.07) / 0.18)),
-              tailY = y + (img?.naturalHeight || 420) * scale * 0.47,
-              power =
-                0.72 + 0.12 * Math.sin(p * 137) + 0.08 * Math.sin(p * 211),
-              plumeLen = (58 + 86 * ignition) * power,
-              spread = 28 + 26 * ignition;
-            ctx.save();
-            ctx.globalCompositeOperation = "lighter";
-            const glow = ctx.createRadialGradient(
-              x,
-              tailY,
-              3,
-              x,
-              tailY,
-              78 + 32 * ignition,
-            );
-            glow.addColorStop(0, `rgba(255,250,225,${0.48 * ignition})`);
-            glow.addColorStop(0.28, `rgba(80,185,255,${0.3 * ignition})`);
-            glow.addColorStop(1, "rgba(85,55,255,0)");
-            ctx.fillStyle = glow;
-            ctx.beginPath();
-            ctx.arc(x, tailY, 110, 0, Math.PI * 2);
-            ctx.fill();
-            const outer = ctx.createLinearGradient(
-              x,
-              tailY,
-              x,
-              tailY + plumeLen,
-            );
-            outer.addColorStop(0, "rgba(255,248,205,.95)");
-            outer.addColorStop(0.18, "rgba(255,174,62,.92)");
-            outer.addColorStop(0.52, "rgba(255,78,20,.72)");
-            outer.addColorStop(1, "rgba(255,55,8,0)");
-            ctx.fillStyle = outer;
-            ctx.beginPath();
-            ctx.moveTo(x - spread, tailY);
-            ctx.bezierCurveTo(
-              x - spread * (1.15 + 0.12 * Math.sin(p * 121)),
-              tailY + plumeLen * 0.32,
-              x - spread * 0.45,
-              tailY + plumeLen * 0.72,
-              x + Math.sin(p * 173) * 12,
-              tailY + plumeLen,
-            );
-            ctx.bezierCurveTo(
-              x + spread * 0.5,
-              tailY + plumeLen * 0.72,
-              x + spread * (1.1 + 0.1 * Math.sin(p * 149)),
-              tailY + plumeLen * 0.3,
-              x + spread,
-              tailY,
-            );
-            ctx.closePath();
-            ctx.fill();
-            const inner = ctx.createLinearGradient(
-              x,
-              tailY,
-              x,
-              tailY + plumeLen * 0.78,
-            );
-            inner.addColorStop(0, "rgba(255,255,255,1)");
-            inner.addColorStop(0.25, "rgba(155,225,255,.98)");
-            inner.addColorStop(0.62, "rgba(70,145,255,.82)");
-            inner.addColorStop(1, "rgba(95,75,255,0)");
-            ctx.fillStyle = inner;
-            ctx.beginPath();
-            ctx.moveTo(x - spread * 0.42, tailY);
-            ctx.bezierCurveTo(
-              x - spread * 0.52,
-              tailY + plumeLen * 0.25,
-              x - spread * 0.18,
-              tailY + plumeLen * 0.62,
-              x + Math.sin(p * 199) * 6,
-              tailY + plumeLen * 0.8,
-            );
-            ctx.bezierCurveTo(
-              x + spread * 0.2,
-              tailY + plumeLen * 0.62,
-              x + spread * 0.5,
-              tailY + plumeLen * 0.25,
-              x + spread * 0.42,
-              tailY,
-            );
-            ctx.closePath();
-            ctx.fill();
-            for (let e = -1; e <= 1; e++) {
-              const ex = x + e * 39 * scale,
-                delay = Math.max(
-                  0,
-                  Math.min(1, (p - 0.07 - Math.abs(e) * 0.025) / 0.1),
-                );
-              ctx.fillStyle = `rgba(255,255,255,${0.92 * delay})`;
-              ctx.beginPath();
-              ctx.ellipse(
-                ex,
-                tailY + 5,
-                11 + 3 * delay,
-                24 + 7 * Math.sin(p * 160 + e),
-                0,
-                0,
-                Math.PI * 2,
-              );
-              ctx.fill();
-            }
-            ctx.restore();
-            for (let s = 0; s < 38; s++) {
-              const a = introNoise(s + 211),
-                b = introNoise(s + 260),
-                life = (p * 1.8 + a) % 1,
-                baseY = tailY + plumeLen * 0.68,
-                sy = baseY + life * (55 + 105 * b),
-                sx = x + (a - 0.5) * (36 + life * 175),
-                rr = 6 + 22 * life;
-              ctx.fillStyle = `rgba(${185 + Math.floor(45 * b)},${188 + Math.floor(38 * b)},${198 + Math.floor(32 * b)},${(1 - life) * 0.28 * ignition})`;
-              ctx.beginPath();
-              ctx.arc(sx, sy, rr, 0, Math.PI * 2);
-              ctx.fill();
-            }
-            if (p < 0.38) {
-              const charge = Math.min(1, p / 0.24);
-              for (let ring = 0; ring < 3; ring++) {
-                const rr = 26 + ring * 23 + charge * 58;
-                ctx.strokeStyle = `rgba(${ring === 1 ? 255 : 105},${ring === 1 ? 180 : 205},255,${(1 - charge) * 0.48})`;
-                ctx.lineWidth = 2.5;
-                ctx.beginPath();
-                ctx.ellipse(
-                  x,
-                  Math.min(367, tailY + 15),
-                  rr,
-                  rr * 0.25,
-                  0,
-                  0,
-                  Math.PI * 2,
-                );
-                ctx.stroke();
-              }
-            }
-          }
-          if (tier === 200 && p > 0.08 && p < 0.96) {
-            const motion = Math.min(1, (p - 0.08) / 0.22),
-              stern = x - 238 * scale,
-              bow = x + 285 * scale,
-              waterY = y + 104 * scale;
-            ctx.save();
-            ctx.globalCompositeOperation = "lighter";
-            const trail = ctx.createLinearGradient(
-              Math.max(0, stern - 280),
-              waterY,
-              stern + 20,
-              waterY,
-            );
-            trail.addColorStop(0, "rgba(115,210,255,0)");
-            trail.addColorStop(0.6, `rgba(150,225,255,${0.22 * motion})`);
-            trail.addColorStop(1, `rgba(245,255,255,${0.72 * motion})`);
-            ctx.strokeStyle = trail;
-            ctx.lineWidth = 14;
-            ctx.beginPath();
-            ctx.moveTo(Math.max(-20, stern - 310), waterY + 8);
-            ctx.bezierCurveTo(
-              stern - 190,
-              waterY - 15,
-              stern - 75,
-              waterY + 16,
-              stern + 12,
-              waterY,
-            );
-            ctx.stroke();
-            for (let s = 0; s < 34; s++) {
-              const a = introNoise(s + 401),
-                life = (p * 2.4 + a) % 1,
-                px = stern - life * (70 + 210 * a),
-                py = waterY + life * (12 + 38 * a) + Math.sin(s + p * 52) * 5,
-                rr = 1.5 + 5 * (1 - life);
-              ctx.fillStyle = `rgba(220,250,255,${(1 - life) * 0.48 * motion})`;
-              ctx.beginPath();
-              ctx.arc(px, py, rr, 0, Math.PI * 2);
-              ctx.fill();
-            }
-            for (let s = 0; s < 24; s++) {
-              const a = introNoise(s + 501),
-                life = (p * 3.1 + a) % 1,
-                px = bow + (a - 0.5) * 36 + life * 30,
-                py = waterY - life * (20 + 55 * a),
-                rr = 2 + 7 * (1 - life);
-              ctx.fillStyle = `rgba(235,255,255,${(1 - life) * 0.72 * motion})`;
-              ctx.beginPath();
-              ctx.arc(px, py, rr, 0, Math.PI * 2);
-              ctx.fill();
-            }
-            for (let r = 0; r < 12; r++) {
-              const rx = x - 175 * scale + r * 30 * scale,
-                rh = 18 + 38 * (0.5 + 0.5 * Math.sin(r * 2.3 + p * 35));
-              ctx.strokeStyle = `rgba(${r % 3 ? 80 : 255},${r % 3 ? 178 : 205},255,${0.1 + 0.12 * motion})`;
-              ctx.lineWidth = 2;
-              ctx.beginPath();
-              ctx.moveTo(rx, waterY + 16);
-              ctx.lineTo(rx + Math.sin(p * 26 + r) * 7, waterY + 16 + rh);
-              ctx.stroke();
-            }
-            ctx.restore();
-            if (p > 0.36 && p < 0.82) {
-              const sweep = (p - 0.36) / 0.46,
-                beamX = -130 + sweep * 900,
-                g = ctx.createLinearGradient(beamX - 90, 0, beamX + 130, 0);
-              g.addColorStop(0, "rgba(255,220,125,0)");
-              g.addColorStop(0.5, "rgba(255,238,180,.13)");
-              g.addColorStop(1, "rgba(255,220,125,0)");
-              ctx.fillStyle = g;
-              ctx.beginPath();
-              ctx.moveTo(beamX - 45, 0);
-              ctx.lineTo(beamX + 110, 0);
-              ctx.lineTo(beamX + 205, h);
-              ctx.lineTo(beamX - 170, h);
-              ctx.closePath();
-              ctx.fill();
-            }
-          }
-          if (img && img.complete && img.naturalWidth) {
-            ctx.globalAlpha = Math.max(0, alpha);
-            ctx.translate(x, y);
-            ctx.rotate(rot);
-            ctx.scale(scale, scale);
-            ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
-            ctx.globalAlpha = 1;
-          }
-          if (tier <= 100) {
-            const flash = Math.max(0, 1 - Math.abs(p - 0.46) / 0.09);
-            const fg = ctx.createRadialGradient(
-              w * 0.5,
-              h * 0.48,
-              5,
-              w * 0.5,
-              h * 0.48,
-              310,
-            );
-            fg.addColorStop(0, `rgba(255,255,225,${flash * 0.88})`);
-            fg.addColorStop(1, "rgba(255,205,60,0)");
-            ctx.fillStyle = fg;
-            ctx.fillRect(0, 0, w, h);
-          }
-          if (tier === 200) drawYachtFireworks(ctx, p);
-          if (false && tier === 200 && p > 0.4 && p < 0.91) {
-            for (let k = 0; k < 3; k++) {
-              const start = 0.4 + k * 0.1,
-                fp = (p - start) / 0.3,
-                cx = 125 + k * 190,
-                cy = 72 + (k % 2) * 38;
-              if (fp <= 0 || fp >= 1) continue;
-              ctx.save();
-              ctx.globalCompositeOperation = "lighter";
-              if (fp < 0.32) {
-                const rise = fp / 0.32,
-                  ry = 330 - (330 - cy) * easeOut(rise);
-                ctx.strokeStyle = `rgba(255,${190 + k * 18},110,${0.75 - rise * 0.25})`;
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.moveTo(cx, ry + 34);
-                ctx.lineTo(cx, ry);
-                ctx.stroke();
-                ctx.fillStyle = "rgba(255,255,220,.95)";
-                ctx.beginPath();
-                ctx.arc(cx, ry, 4, 0, Math.PI * 2);
-                ctx.fill();
-              } else {
-                const burst = (fp - 0.32) / 0.68,
-                  rr = easeOut(Math.min(1, burst * 1.45)) * (54 + 12 * k),
-                  fade = Math.max(0, 1 - burst),
-                  cr = k === 1 ? "255,205,105" : "115,220,255";
-                for (let z = 0; z < 22; z++) {
-                  const an = (z * Math.PI) / 11 + k * 0.35,
-                    fall = burst * burst * 28,
-                    inner = rr * 0.48,
-                    outer = rr * (0.82 + 0.18 * introNoise(z + k * 31));
-                  ctx.strokeStyle = `rgba(${cr},${fade * 0.82})`;
-                  ctx.lineWidth = 2.2;
-                  ctx.beginPath();
-                  ctx.moveTo(
-                    cx + Math.cos(an) * inner,
-                    cy + Math.sin(an) * inner + fall,
-                  );
-                  ctx.quadraticCurveTo(
-                    cx + Math.cos(an) * outer * 0.78,
-                    cy + Math.sin(an) * outer * 0.78 + fall * 0.5,
-                    cx + Math.cos(an) * outer,
-                    cy + Math.sin(an) * outer + fall,
-                  );
-                  ctx.stroke();
-                  ctx.fillStyle = `rgba(255,245,190,${fade * 0.72})`;
-                  ctx.beginPath();
-                  ctx.arc(
-                    cx + Math.cos(an) * outer,
-                    cy + Math.sin(an) * outer + fall,
-                    1.8,
-                    0,
-                    Math.PI * 2,
-                  );
-                  ctx.fill();
-                }
-              }
-              ctx.restore();
-            }
-          }
-          ctx.restore();
-        }
-        async function playTierIntro(item) {
-          const tier = tierForCount(item.count),
-            duration = { 50: 3200, 100: 3900, 150: 5000, 200: 6200 }[tier],
-            env = {
-              ctx: tierIntroCtx,
-              introImages,
-              introClosedImages,
-              introNoise,
-            };
-          await Promise.race([introReady[tier], sleep(1000)]);
-          tierIntro.className = "";
-          tierIntro.style.setProperty("--intro-duration", duration + "ms");
-          tierIntroLabel.textContent = item.count + " 份贈訂";
-          void tierIntro.offsetWidth;
-          tierIntro.className = "play tier" + tier;
-          try {
-            playGiftIntroSfx(tier);
-          } catch (_) {}
-          const start = performance.now();
-          await new Promise((resolve) => {
-            let done = false,
-              raf = 0;
-            const finish = (reason) => {
-                if (done) return;
-                done = true;
-                clearTimeout(watchdog);
-                if (raf) cancelAnimationFrame(raf);
-                if (reason !== "complete")
-                  console.warn("intro recovered", tier, reason);
-                resolve();
-              },
-              watchdog = setTimeout(() => finish("watchdog"), duration + 1200);
-            function frame(now) {
-              if (done) return;
-              try {
-                const p = Math.min(1, (now - start) / duration);
-                drawIntroFrameV52(tier, p, env);
-                if (p < 1) raf = requestAnimationFrame(frame);
-                else finish("complete");
-              } catch (e) {
-                console.error("intro frame failed", tier, e);
-                finish("draw-error");
-              }
-            }
-            raf = requestAnimationFrame(frame);
-          });
-          tierIntro.dataset.done = "1";
-        }
-        const entryFor = (count, variant) =>
-          entryMap.get(`${tierForCount(count)}:${variant}`) || null;
-        const criticalKeys = new Set(["50:1", "200:1"]);
-        const keyOf = entryKey;
-        let idlePreloadEntry = null,
-          idlePreloadTimer = 0;
-        async function ensureMediaBlob(entry, isIdle = false) {
-          if (!entry) return;
-          if (entry.blobUrl && entry.video.src.startsWith("blob:")) return;
-          if (entry.blobPromise) return entry.blobPromise;
-          const controller = new AbortController();
-          entry.blobController = controller;
-          if (isIdle) idlePreloadEntry = entry;
-          entry.blobPromise = (async () => {
-            try {
-              const r = await fetch(entry.sourceUrl, {
-                cache: "force-cache",
-                signal: controller.signal,
-              });
-              if (!r.ok) throw new Error(`HTTP ${r.status}`);
-              const blob = await r.blob();
-              if (entry.blobUrl) URL.revokeObjectURL(entry.blobUrl);
-              entry.blobUrl = URL.createObjectURL(blob);
-              entry.video.src = entry.blobUrl;
-              entry.video.preload = "auto";
-              entry.video.load();
-              await new Promise((resolve) => {
-                if (entry.video.readyState >= 3) return resolve();
-                let done = false;
-                const finish = () => {
-                  if (done) return;
-                  done = true;
-                  entry.video.removeEventListener("canplay", finish);
-                  clearTimeout(timer);
-                  resolve();
-                };
-                const timer = setTimeout(finish, 3000);
-                entry.video.addEventListener("canplay", finish, { once: true });
-              });
-            } catch (e) {
-              if (e?.name === "AbortError") {
-                entry.blobPromise = null;
-                return;
-              }
-              console.error("media blob preload failed", keyOf(entry), e);
-              entry.blobPromise = null;
-              entry.video.src = entry.sourceUrl;
-              entry.video.preload = "auto";
-              try {
-                entry.video.load();
-              } catch (_) {}
-            } finally {
-              if (idlePreloadEntry === entry) idlePreloadEntry = null;
-            }
-          })();
-          return entry.blobPromise;
-        }
-        function stopIdlePreload(keep = null) {
-          clearTimeout(idlePreloadTimer);
-          if (idlePreloadEntry && idlePreloadEntry !== keep) {
-            idlePreloadEntry.blobController?.abort();
-            idlePreloadEntry.blobPromise = null;
-            idlePreloadEntry = null;
-          }
-        }
-        function scheduleIdlePreload() {
-          clearTimeout(idlePreloadTimer);
-          if (playing) return;
-          idlePreloadTimer = setTimeout(async () => {
-            if (playing) return;
-            const entry = entries.find((e) => !e.blobUrl && !e.blobPromise);
-            if (!entry) return;
-            await ensureMediaBlob(entry, true);
-            if (!playing) scheduleIdlePreload();
-          }, 450);
-        }
-        Promise.allSettled(Object.values(introReady)).then(() => {
-          try {
-            unlockGiftAudio();
-          } catch (_) {}
-          scheduleIdlePreload();
-        });
-        const COUNTER_API =
-          "https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec?action=stats";
-        async function updateCounters() {
-          try {
-            const r = await fetch(COUNTER_API + "&_=" + Date.now(), {
-                cache: "no-store",
-              }),
-              d = await r.json();
-            if (d && d.ok !== false) {
-              const m = Number(d.subscriptionMonths),
-                g = Number(d.giftSubCount);
-              if (Number.isFinite(m))
-                months.textContent = String(Math.trunc(m));
-              if (Number.isFinite(g)) gifts.textContent = String(Math.trunc(g));
-            }
-          } catch (e) {
-            console.error(e);
-          }
-        }
-        updateCounters();
-        setInterval(updateCounters, 5000);
-        function waitUntilPlayable(video, timeout = 1200) {
-          if (video.readyState >= 3) return Promise.resolve();
-          return new Promise((resolve) => {
-            let done = false;
-            const finish = () => {
-              if (done) return;
-              done = true;
-              video.removeEventListener("canplay", finish);
-              clearTimeout(timer);
-              resolve();
-            };
-            const timer = setTimeout(finish, timeout);
-            video.addEventListener("canplay", finish, { once: true });
-          });
-        }
-        function fullyBuffered(video) {
-          const d = Number(video.duration);
-          if (!Number.isFinite(d) || d <= 0 || !video.buffered?.length)
-            return false;
-          for (let i = 0; i < video.buffered.length; i++) {
-            if (
-              video.buffered.start(i) <= 0.15 &&
-              video.buffered.end(i) >= d - 0.25
-            )
-              return true;
-          }
-          return false;
-        }
-        const safelyBuffered = (video) =>
-          video.src.startsWith("blob:") ||
-          video.readyState >= 4 ||
-          fullyBuffered(video);
-        function waitUntilSafe(entry, timeout = 8000) {
-          const video = entry.video;
-          if (safelyBuffered(video)) return Promise.resolve();
-          return new Promise((resolve) => {
-            let done = false;
-            const events = [
-              "progress",
-              "canplaythrough",
-              "durationchange",
-              "loadeddata",
-            ];
-            const cleanup = () => {
-              events.forEach((x) => video.removeEventListener(x, check));
-              clearInterval(poll);
-              clearTimeout(timer);
-            };
-            const finish = () => {
-              if (done) return;
-              done = true;
-              cleanup();
-              resolve();
-            };
-            const check = () => {
-              if (safelyBuffered(video)) finish();
-            };
-            events.forEach((x) => video.addEventListener(x, check));
-            const poll = setInterval(check, 120);
-            const timer = setTimeout(finish, timeout);
-          });
-        }
-        function waitForRenderedFrame(video, timeout = 450) {
-          if (typeof video.requestVideoFrameCallback === "function")
-            return new Promise((resolve) => {
-              let done = false;
-              const finish = () => {
-                if (done) return;
-                done = true;
-                clearTimeout(timer);
-                resolve();
-              };
-              const timer = setTimeout(finish, timeout);
-              video.requestVideoFrameCallback(finish);
-            });
-          return new Promise((resolve) =>
-            requestAnimationFrame(() => requestAnimationFrame(resolve)),
-          );
-        }
-        function resetVideo(video) {
-          if (!video) return;
-          video.pause();
-          try {
-            video.currentTime = 0;
-          } catch (_) {}
-          video.volume = 1;
-        }
-        async function startVideoWithAudio(video, muted) {
-          resetVideo(video);
-          video.volume = 1;
-          const attempt = async (forceMuted = false) => {
-            video.muted = forceMuted || muted;
-            await video.play();
-            return true;
-          };
-          try {
-            return await attempt(false);
-          } catch (e) {
-            console.warn("video-play-retry", e);
-          }
-          try {
-            video.load();
-            await waitUntilPlayable(video, 1500);
-            return await attempt(false);
-          } catch (e2) {
-            console.warn("video-play-muted-fallback", e2);
-          }
-          try {
-            await waitUntilPlayable(video, 1200);
-            return await attempt(true);
-          } catch (e3) {
-            console.error("video-play-failed", e3);
-            return false;
-          }
-        }
-        async function switchMedia(entry) {
-          const { media, video, muted } = entry;
-          await ensureMediaBlob(entry);
-          video.preload = "auto";
-          if (video.readyState === 0) {
-            try {
-              video.load();
-            } catch (_) {}
-          }
-          await waitUntilSafe(entry);
-          const started = await startVideoWithAudio(video, muted);
-          if (!started) return false;
-          await waitForRenderedFrame(video);
-          if (activeEntry === entry) return true;
-          const old = activeEntry;
-          media.classList.add("show");
-          activeEntry = entry;
-          if (old && old !== entry) {
-            old.media.classList.remove("show");
-            resetVideo(old.video);
-          }
-          return true;
-        }
-        function hideActive() {
-          if (!activeEntry) return;
-          activeEntry.media.classList.remove("show");
-          resetVideo(activeEntry.video);
-          activeEntry = null;
-        }
-        function normalize(p) {
-          return {
-            name: String(p?.name || p?.who || "匿名").trim() || "匿名",
-            count: Math.max(
-              0,
-              Math.floor(Number(p?.count ?? p?.total ?? 0) || 0),
-            ),
-            variant: Number(p?.variant) || 0,
-            mediaAlt: String(p?.mediaAlt || ""),
-          };
-        }
-        function modeFor(count) {
-          if (count >= 200) return "mode200";
-          if (count >= 150) return "mode150";
-          if (count >= 100) return "mode100";
-          return "mode50";
-        }
-        function iconFor(count) {
-          if (count >= 200) return "🔥";
-          if (count >= 150) return "👑";
-          if (count >= 100) return "⭐";
-          return "🎁";
-        }
-        function messageFor({ name, count, variant, mediaAlt }) {
-          const pats = Math.floor(count / 5),
-            tier = tierForCount(count);
-          if (variant === 5) {
-            if (tier === 50)
-              return `感謝 ${name} 的 ${count}隻梳子！剛剛看他拿出來梳差點揍他！海豹拍肚 +${pats}！`;
-            if (tier === 100)
-              return `感謝 ${name} 的 ${count}隻山羌！台中人真的很靠北齁！海豹拍肚 +${pats}！`;
-            if (tier === 150)
-              return `感謝 ${name} 的 ${count}次打擾老人！我才不會說你是臭老人呢！海豹拍肚 +${pats}！`;
-            return `感謝 ${name} 的 ${count}次臭港仔！最吉八的人捏！海豹拍肚 +${pats}！`;
-          }
-          if (variant === 4) {
-            if (tier === 50)
-              return `感謝 ${name} 的 ${count}份贈訂！才藝表演跳舞：Trouble Maker - '내일은 없어 (Now)'！海豹拍肚 +${pats}！`;
-            if (tier === 100)
-              return `肉乙好想知道${name}的${count}份會給怎樣的人！從不養戀愛粉恩罵~!海豹拍肚 +${pats}！`;
-            if (tier === 150)
-              return `${name} 逼肉乙去鏟 ${count}包薯條！我鏟不鏟薯條到底關你屁事啊！海豹拍肚 +${pats}！`;
-            return `感謝 ${name} 的 ${count}份贈訂！才藝表演跳舞：kokain！海豹拍肚 +${pats}！`;
-          }
-          if (variant === 2) {
-            if (tier === 50)
-              return `感謝 ${name} 的 ${count}份贈訂！才藝表演卡祖笛：名偵探柯南！海豹拍肚 +${pats}！`;
-            if (tier === 100)
-              return `感謝 ${name} 的 ${count}份贈訂！才藝表演卡祖笛：灌籃高手！海豹拍肚 +${pats}！`;
-            if (tier === 150)
-              return `感謝 ${name} 的 ${count}份贈訂！才藝表演跳舞：02搖！海豹拍肚 +${pats}！`;
-            return `感謝 ${name} 的 ${count}份贈訂！才藝表演跳舞：UP！跟著一起跳起來！海豹拍肚 +${pats}！`;
-          }
-          if (variant === 3) {
-            if (tier === 50)
-              return `感謝 ${name} 的 ${count}份贈訂！發瘋喇！完全惡意剪輯！海豹拍肚 +${pats}！`;
-            if (tier === 100)
-              return `${name}同學被肉乙甩棒 ${count}次！發瘋啦！嚴厲斥責！海豹拍肚 +${pats}！`;
-            if (tier === 150)
-              return `${name} 聽不懂肉乙講話 ${count}次！MD欠扁484啊！海豹拍肚 +${pats}！`;
-            if (tier === 200)
-              return `感謝 ${name} 的 ${count}份贈訂！才藝表演唱歌：關於cmonBruh的歌！海豹拍肚 +${pats}！`;
-          }
-          if (count >= 200)
-            return `肉乙把 ${name} 丟地板了 ${count}次！我就把你布置好的東西全部弄掉！海豹拍肚 +${pats}！`;
-          if (count >= 150)
-            return `肉乙從不畏懼 ${name} 的 ${count}訂閱！狗叫什麼啊破皮的屁孩！海豹拍肚 +${pats}！`;
-          if (count >= 100)
-            return `肉乙跟 ${name} 一起泡泡浴了 ${count}次！果然只有男人最懂男人！海豹拍肚 +${pats}！`;
-          return `感謝 ${name} 的 ${count}份贈訂！才藝表演：海豹拍！海豹拍肚 +${pats}！`;
-        }
-        function setLook(item) {
-          const mode = modeFor(item.count);
-          banner.classList.remove(
-            "mode50",
-            "mode100",
-            "mode150",
-            "mode200",
-            "shine-now",
-          );
-          banner.classList.add(mode);
-          badgeIcon.textContent = iconFor(item.count);
-          badgeCount.textContent = String(item.count);
-          text.textContent = messageFor(item);
-          void banner.offsetWidth;
-          banner.classList.add("shine-now");
-        }
-        const variantOrder = {
-          50: [1, 2, 3, 4, 5],
-          100: [1, 2, 3, 4, 5],
-          150: [1, 2, 3, 4, 5],
-          200: [1, 2, 3, 4, 5],
-        };
-        function chooseVariant(item) {
-          if (item.variant >= 1 && item.variant <= 5) return item.variant;
-          const tier = tierForCount(item.count),
-            order = variantOrder[tier],
-            v = nextVariant[tier],
-            i = Math.max(0, order.indexOf(v));
-          nextVariant[tier] = order[(i + 1) % order.length];
-          return v;
-        }
-        function fallbackDuration(item, distance) {
-          const pxPerSecond = item.count < 100 ? 188 : 172;
-          return Math.max(item.count < 100 ? 6.8 : 7.2, distance / pxPerSecond);
-        }
-        function runMarqueeSyncedToVideo(item, entry, distance) {
-          const video = entry.video,
-            clip = Number(video.duration),
-            start = Math.max(0, Number(video.currentTime) || 0);
-          return new Promise((resolve) => {
-            let done = false,
-              timer = 0;
-            const finish = () => {
-              if (done) return;
-              done = true;
-              if (timer) clearTimeout(timer);
-              text.style.transform = `translateX(-${distance}px)`;
-              if (video.__zoeFinishMarquee === finish)
-                delete video.__zoeFinishMarquee;
-              resolve();
-            };
-            video.__zoeFinishMarquee = finish;
-            if (!(Number.isFinite(clip) && clip > start + 0.05)) {
-              const duration = fallbackDuration(item, distance);
-              text.style.transition = `transform ${duration}s linear`;
-              requestAnimationFrame(() =>
-                requestAnimationFrame(
-                  () => (text.style.transform = `translateX(-${distance}px)`),
-                ),
-              );
-              timer = setTimeout(finish, duration * 1000);
-              return;
-            }
-            text.style.transition = "none";
-            const span = Math.max(0.001, clip - start),
-              tick = () => {
-                if (done) return;
-                const now = Math.max(start, Number(video.currentTime) || start),
-                  progress = Math.min(1, Math.max(0, (now - start) / span));
-                text.style.transform = `translateX(-${distance * progress}px)`;
-                if (video.ended || now >= clip - 0.04) {
-                  finish();
-                  return;
-                }
-                requestAnimationFrame(tick);
-              };
-            requestAnimationFrame(tick);
-          });
-        }
-        function waitForVideoFinish(video) {
-          if (!video || video.ended) return Promise.resolve("ended");
-          return new Promise((resolve) => {
-            let done = false,
-              lastTime = Math.max(0, Number(video.currentTime) || 0),
-              lastMove = Date.now(),
-              recovering = false,
-              recoveryAttempts = 0;
-            const cleanup = () => {
-                video.removeEventListener("ended", ended);
-                video.removeEventListener("pause", check);
-                video.removeEventListener("stalled", recover);
-                video.removeEventListener("waiting", recover);
-                clearInterval(poll);
-                clearTimeout(hard);
-              },
-              finish = (reason) => {
-                if (done) return;
-                done = true;
-                cleanup();
-                resolve(reason);
-              },
-              ended = () => finish("ended"),
-              recover = async () => {
-                if (recovering || done || video.ended) return;
-                if (++recoveryAttempts > 3) {
-                  console.error("video recovery exhausted", video.currentSrc);
-                  finish("recovery-exhausted");
-                  return;
-                }
-                recovering = true;
-                try {
-                  video.volume = 1;
-                  await video.play();
-                } catch (e) {
-                  console.warn("video-resume-retry", recoveryAttempts, e);
-                  if (recoveryAttempts >= 3) finish("play-rejected");
-                } finally {
-                  recovering = false;
-                }
-              },
-              check = () => {
-                const d = Number(video.duration),
-                  t = Math.max(0, Number(video.currentTime) || 0);
-                if (
-                  video.ended ||
-                  (Number.isFinite(d) && d > 0 && t >= d - 0.04)
-                ) {
-                  finish("ended");
-                  return;
-                }
-                if (t > lastTime + 0.015) {
-                  lastTime = t;
-                  lastMove = Date.now();
-                  recoveryAttempts = 0;
-                  return;
-                }
-                if (
-                  activeEntry?.video === video &&
-                  (video.paused || Date.now() - lastMove > 1800)
-                )
-                  recover();
-              };
-            video.addEventListener("ended", ended, { once: true });
-            video.addEventListener("pause", check);
-            video.addEventListener("stalled", recover);
-            video.addEventListener("waiting", recover);
-            const poll = setInterval(check, 250),
-              remaining = Number.isFinite(video.duration)
-                ? Math.max(0, video.duration - (Number(video.currentTime) || 0))
-                : 45,
-              hard = setTimeout(
-                () => {
-                  console.error("video hard timeout", video.currentSrc);
-                  finish("hard-timeout");
-                },
-                Math.min(180000, Math.max(15000, (remaining + 15) * 1000)),
-              );
-            check();
-          });
-        }
-        async function playOne(item) {
-          const entry = entryFor(item.count, item.variant);
-          if (!entry) return;
-          stopIdlePreload(entry);
-          hideActive();
-          banner.classList.remove("show");
-          try {
-            const mediaReady = ensureMediaBlob(entry);
-            await sleep(180);
-            await playTierIntro(item);
-            await mediaReady;
-            const started = await switchMedia(entry);
-            tierIntro.className = "";
-            if (!started) {
-              console.error("skipping unplayable video", keyOf(entry));
-              return;
-            }
-            setLook(item);
-            text.style.transition = "none";
-            text.style.transform = "translateX(0)";
-            banner.classList.add("show");
-            const distance = lane.clientWidth + text.scrollWidth + 54,
-              marqueeDone = runMarqueeSyncedToVideo(item, entry, distance),
-              finishReason = await waitForVideoFinish(entry.video);
-            if (finishReason !== "ended")
-              console.warn("video ended by recovery guard", finishReason);
-            entry.video.__zoeFinishMarquee?.();
-            await marqueeDone;
-          } catch (e) {
-            console.error("gift playback failed; continuing queue", e);
-          } finally {
-            tierIntro.className = "";
-            hideActive();
-            banner.classList.remove("show");
-            await sleep(220);
-          }
-        }
-        async function drain() {
-          if (playing) return;
-          playing = true;
-          stage.classList.add("active");
-          await sleep(300);
-          while (true) {
-            while (queue.length) {
-              await playOne(queue.shift());
-              if (superLoopActive && !queue.length) queueSuperNext();
-            }
-            await sleep(220);
-            if (queue.length) continue;
-            break;
-          }
-          hideActive();
-          banner.classList.remove("show");
-          stage.classList.remove("active");
-          await sleep(420);
-          playing = false;
-          scheduleIdlePreload();
-          if (queue.length) drain();
-        }
-        function enqueue(payload) {
-          const item = normalize(payload);
-          if (item.count < MIN_GIFT)
-            return { accepted: false, reason: "below-threshold" };
-          item.variant = chooseVariant(item);
-          if (!entryFor(item.count, item.variant))
-            return { accepted: false, reason: "empty-slot" };
-          queue.push(item);
-          drain();
-          return {
-            accepted: true,
-            tier: tierForCount(item.count),
-            variant: item.variant,
-          };
-        }
-        function resetVariants() {
-          nextVariant[50] = 1;
-          nextVariant[100] = 1;
-          nextVariant[150] = 1;
-          nextVariant[200] = 1;
-          superLoopIndex = 0;
-          return { ...nextVariant };
-        }
-        function startSuperLoop(payload = {}) {
-          superLoopName = String(payload.name || "匿名").trim() || "匿名";
-          superLoopActive = true;
-          superLoopIndex = 0;
-          queue.length = 0;
-          queueSuperNext();
-          drain();
-          return { active: true };
-        }
-        function stopSuperLoop() {
-          superLoopActive = false;
-          queue.length = 0;
-          return { active: false };
-        }
-        function setNextVariants(values) {
-          if (playing || queue.length)
-            return { ok: false, reason: "busy", values: { ...nextVariant } };
-          for (const tier of [50, 100, 150, 200]) {
-            const v = Number(values?.[tier]);
-            if (!(v >= 1 && v <= 5))
-              return {
-                ok: false,
-                reason: "invalid",
-                values: { ...nextVariant },
-              };
-          }
-          for (const tier of [50, 100, 150, 200])
-            nextVariant[tier] = Number(values[tier]);
-          return { ok: true, values: { ...nextVariant } };
-        }
-        window.ZoeGiftMarquee = {
-          enqueue,
-          getQueue: () => queue.slice(),
-          isPlaying: () => playing,
-          resetVariants,
-          getNextVariants: () => ({ ...nextVariant }),
-          setNextVariants,
-          startSuperLoop,
-          stopSuperLoop,
-        };
-        window.addEventListener("message", (e) => {
-          if (e?.data?.type === "zoebot-gift-marquee") enqueue(e.data);
-          else if (e?.data?.type === "zoebot-gift-marquee-reset") {
-            superLoopActive = false;
-            queue.length = 0;
-            resetVariants();
-          } else if (e?.data?.type === "zoebot-super-loop-start")
-            startSuperLoop(e.data);
-          else if (e?.data?.type === "zoebot-super-loop-stop") stopSuperLoop();
-        });
-        if (params.has("count"))
-          setTimeout(
-            () =>
-              enqueue({
-                name: params.get("name") || "測試觀眾",
-                count: params.get("count"),
-                variant: params.get("variant"),
-              }),
-            450,
-          );
-      })();
-    </script>
-  </body>
+      }catch(e){
+        if(e?.name==='AbortError'){entry.blobPromise=null;return}
+        console.error('media blob preload failed',keyOf(entry),e);
+        entry.blobPromise=null;
+        entry.video.src=entry.sourceUrl;entry.video.preload='auto';try{entry.video.load()}catch(_){}
+      }finally{if(idlePreloadEntry===entry)idlePreloadEntry=null}
+    })();
+    return entry.blobPromise;
+  }
+  function stopIdlePreload(keep=null){clearTimeout(idlePreloadTimer);if(idlePreloadEntry&&idlePreloadEntry!==keep){idlePreloadEntry.blobController?.abort();idlePreloadEntry.blobPromise=null;idlePreloadEntry=null}}
+  function scheduleIdlePreload(){clearTimeout(idlePreloadTimer);if(playing)return;idlePreloadTimer=setTimeout(async()=>{if(playing)return;const entry=entries.find(e=>!e.blobUrl&&!e.blobPromise);if(!entry)return;await ensureMediaBlob(entry,true);if(!playing)scheduleIdlePreload()},450)}
+  Promise.allSettled(Object.values(introReady)).then(()=>{try{unlockGiftAudio()}catch(_){}scheduleIdlePreload()});
+  const COUNTER_API='https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec?action=stats';
+  async function updateCounters(){try{const r=await fetch(COUNTER_API+'&_='+Date.now(),{cache:'no-store'}),d=await r.json();if(d&&d.ok!==false){const m=Number(d.subscriptionMonths),g=Number(d.giftSubCount);if(Number.isFinite(m))months.textContent=String(Math.trunc(m));if(Number.isFinite(g))gifts.textContent=String(Math.trunc(g))}}catch(e){console.error(e)}}
+  updateCounters();setInterval(updateCounters,5000);
+  function waitUntilPlayable(video,timeout=1200){if(video.readyState>=3)return Promise.resolve();return new Promise(resolve=>{let done=false;const finish=()=>{if(done)return;done=true;video.removeEventListener('canplay',finish);clearTimeout(timer);resolve()};const timer=setTimeout(finish,timeout);video.addEventListener('canplay',finish,{once:true})})}
+  function fullyBuffered(video){
+    const d=Number(video.duration);if(!Number.isFinite(d)||d<=0||!video.buffered?.length)return false;
+    for(let i=0;i<video.buffered.length;i++){if(video.buffered.start(i)<=.15&&video.buffered.end(i)>=d-.25)return true}
+    return false;
+  }
+  const safelyBuffered=video=>video.src.startsWith('blob:')||video.readyState>=4||fullyBuffered(video);
+  function waitUntilSafe(entry,timeout=8000){
+    const video=entry.video;
+    if(safelyBuffered(video))return Promise.resolve();
+    return new Promise(resolve=>{let done=false;const events=['progress','canplaythrough','durationchange','loadeddata'];const cleanup=()=>{events.forEach(x=>video.removeEventListener(x,check));clearInterval(poll);clearTimeout(timer)};const finish=()=>{if(done)return;done=true;cleanup();resolve()};const check=()=>{if(safelyBuffered(video))finish()};events.forEach(x=>video.addEventListener(x,check));const poll=setInterval(check,120);const timer=setTimeout(finish,timeout)})
+  }
+  function waitForRenderedFrame(video,timeout=450){if(typeof video.requestVideoFrameCallback==='function')return new Promise(resolve=>{let done=false;const finish=()=>{if(done)return;done=true;clearTimeout(timer);resolve()};const timer=setTimeout(finish,timeout);video.requestVideoFrameCallback(finish)});return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))}
+  function resetVideo(video){if(!video)return;video.pause();try{video.currentTime=0}catch(_){}video.volume=1}
+  async function startVideoWithAudio(video,muted){resetVideo(video);video.volume=1;const attempt=async(forceMuted=false)=>{video.muted=forceMuted||muted;await video.play();return true};try{return await attempt(false)}catch(e){console.warn('video-play-retry',e)}try{video.load();await waitUntilPlayable(video,1500);return await attempt(false)}catch(e2){console.warn('video-play-muted-fallback',e2)}try{await waitUntilPlayable(video,1200);return await attempt(true)}catch(e3){console.error('video-play-failed',e3);return false}}async function switchMedia(entry){const{media,video,muted}=entry;await ensureMediaBlob(entry);video.preload='auto';if(video.readyState===0){try{video.load()}catch(_){}}await waitUntilSafe(entry);const started=await startVideoWithAudio(video,muted);if(!started)return false;await waitForRenderedFrame(video);if(activeEntry===entry)return true;const old=activeEntry;media.classList.add('show');activeEntry=entry;if(old&&old!==entry){old.media.classList.remove('show');resetVideo(old.video)}return true}function hideActive(){if(!activeEntry)return;activeEntry.media.classList.remove('show');resetVideo(activeEntry.video);activeEntry=null}
+  function normalize(p){return{name:String(p?.name||p?.who||'匿名').trim()||'匿名',count:Math.max(0,Math.floor(Number(p?.count??p?.total??0)||0)),variant:Number(p?.variant)||0,mediaAlt:String(p?.mediaAlt||'')}}
+  function modeFor(count){if(count>=200)return'mode200';if(count>=150)return'mode150';if(count>=100)return'mode100';return'mode50'}
+  function iconFor(count){if(count>=200)return'🔥';if(count>=150)return'👑';if(count>=100)return'⭐';return'🎁'}
+  function messageFor({name,count,variant,mediaAlt}){
+    const pats=Math.floor(count/5),tier=tierForCount(count);if(variant===5){if(tier===50)return`感謝 ${name} 的 ${count}隻梳子！剛剛看他拿出來梳差點揍他！海豹拍肚 +${pats}！`;if(tier===100)return`感謝 ${name} 的 ${count}隻山羌！台中人真的很靠北齁！海豹拍肚 +${pats}！`;if(tier===150)return`感謝 ${name} 的 ${count}次打擾老人！我才不會說你是臭老人呢！海豹拍肚 +${pats}！`;return`感謝 ${name} 的 ${count}次臭港仔！最吉八的人捏！海豹拍肚 +${pats}！`}
+    if(variant===4){
+      if(tier===50)return`感謝 ${name} 的 ${count}份贈訂！才藝表演跳舞：Trouble Maker - '내일은 없어 (Now)'！海豹拍肚 +${pats}！`;
+      if(tier===100)return`肉乙好想知道${name}的${count}份會給怎樣的人！從不養戀愛粉恩罵~!海豹拍肚 +${pats}！`;
+      if(tier===150)return`${name} 逼肉乙去鏟 ${count}包薯條！我鏟不鏟薯條到底關你屁事啊！海豹拍肚 +${pats}！`;
+      return`感謝 ${name} 的 ${count}份贈訂！才藝表演跳舞：kokain！海豹拍肚 +${pats}！`;
+    }
+    if(variant===2){
+      if(tier===50)return`感謝 ${name} 的 ${count}份贈訂！才藝表演卡祖笛：名偵探柯南！海豹拍肚 +${pats}！`;
+      if(tier===100)return`感謝 ${name} 的 ${count}份贈訂！才藝表演卡祖笛：灌籃高手！海豹拍肚 +${pats}！`;
+      if(tier===150)return`感謝 ${name} 的 ${count}份贈訂！才藝表演跳舞：02搖！海豹拍肚 +${pats}！`;
+      return`感謝 ${name} 的 ${count}份贈訂！才藝表演跳舞：UP！跟著一起跳起來！海豹拍肚 +${pats}！`;
+    }
+    if(variant===3){
+      if(tier===50)return`感謝 ${name} 的 ${count}份贈訂！發瘋喇！完全惡意剪輯！海豹拍肚 +${pats}！`;
+      if(tier===100)return`${name}同學被肉乙甩棒 ${count}次！發瘋啦！嚴厲斥責！海豹拍肚 +${pats}！`;
+      if(tier===150)return`${name} 聽不懂肉乙講話 ${count}次！MD欠扁484啊！海豹拍肚 +${pats}！`;
+      if(tier===200)return`感謝 ${name} 的 ${count}份贈訂！才藝表演唱歌：關於cmonBruh的歌！海豹拍肚 +${pats}！`;
+    }
+    if(count>=200)return`肉乙把 ${name} 丟地板了 ${count}次！我就把你布置好的東西全部弄掉！海豹拍肚 +${pats}！`;
+    if(count>=150)return`肉乙從不畏懼 ${name} 的 ${count}訂閱！狗叫什麼啊破皮的屁孩！海豹拍肚 +${pats}！`;
+    if(count>=100)return`肉乙跟 ${name} 一起泡泡浴了 ${count}次！果然只有男人最懂男人！海豹拍肚 +${pats}！`;
+    return`感謝 ${name} 的 ${count}份贈訂！才藝表演：海豹拍！海豹拍肚 +${pats}！`;
+  }
+  function setLook(item){const mode=modeFor(item.count);banner.classList.remove('mode50','mode100','mode150','mode200','shine-now');banner.classList.add(mode);badgeIcon.textContent=iconFor(item.count);badgeCount.textContent=String(item.count);text.textContent=messageFor(item);void banner.offsetWidth;banner.classList.add('shine-now')}
+  const variantOrder={50:[1,2,3,4,5],100:[1,2,3,4,5],150:[1,2,3,4,5],200:[1,2,3,4,5]};function chooseVariant(item){if(item.variant>=1&&item.variant<=5)return item.variant;const tier=tierForCount(item.count),order=variantOrder[tier],v=nextVariant[tier],i=Math.max(0,order.indexOf(v));nextVariant[tier]=order[(i+1)%order.length];return v}
+  function fallbackDuration(item,distance){const pxPerSecond=item.count<100?188:172;return Math.max(item.count<100?6.8:7.2,distance/pxPerSecond)}
+  function runMarqueeSyncedToVideo(item,entry,distance){const video=entry.video,clip=Number(video.duration),start=Math.max(0,Number(video.currentTime)||0);return new Promise(resolve=>{let done=false,timer=0;const finish=()=>{if(done)return;done=true;if(timer)clearTimeout(timer);text.style.transform=`translateX(-${distance}px)`;if(video.__zoeFinishMarquee===finish)delete video.__zoeFinishMarquee;resolve()};video.__zoeFinishMarquee=finish;if(!(Number.isFinite(clip)&&clip>start+.05)){const duration=fallbackDuration(item,distance);text.style.transition=`transform ${duration}s linear`;requestAnimationFrame(()=>requestAnimationFrame(()=>text.style.transform=`translateX(-${distance}px)`));timer=setTimeout(finish,duration*1000);return}text.style.transition='none';const span=Math.max(.001,clip-start),tick=()=>{if(done)return;const now=Math.max(start,Number(video.currentTime)||start),progress=Math.min(1,Math.max(0,(now-start)/span));text.style.transform=`translateX(-${distance*progress}px)`;if(video.ended||now>=clip-.04){finish();return}requestAnimationFrame(tick)};requestAnimationFrame(tick)})}function waitForVideoFinish(video){if(!video||video.ended)return Promise.resolve('ended');return new Promise(resolve=>{let done=false,lastTime=Math.max(0,Number(video.currentTime)||0),lastMove=Date.now(),recovering=false,recoveryAttempts=0;const cleanup=()=>{video.removeEventListener('ended',ended);video.removeEventListener('pause',check);video.removeEventListener('stalled',recover);video.removeEventListener('waiting',recover);clearInterval(poll);clearTimeout(hard)},finish=reason=>{if(done)return;done=true;cleanup();resolve(reason)},ended=()=>finish('ended'),recover=async()=>{if(recovering||done||video.ended)return;if(++recoveryAttempts>3){console.error('video recovery exhausted',video.currentSrc);finish('recovery-exhausted');return}recovering=true;try{video.volume=1;await video.play()}catch(e){console.warn('video-resume-retry',recoveryAttempts,e);if(recoveryAttempts>=3)finish('play-rejected')}finally{recovering=false}},check=()=>{const d=Number(video.duration),t=Math.max(0,Number(video.currentTime)||0);if(video.ended||(Number.isFinite(d)&&d>0&&t>=d-.04)){finish('ended');return}if(t>lastTime+.015){lastTime=t;lastMove=Date.now();recoveryAttempts=0;return}if(activeEntry?.video===video&&(video.paused||Date.now()-lastMove>1800))recover()};video.addEventListener('ended',ended,{once:true});video.addEventListener('pause',check);video.addEventListener('stalled',recover);video.addEventListener('waiting',recover);const poll=setInterval(check,250),remaining=Number.isFinite(video.duration)?Math.max(0,video.duration-(Number(video.currentTime)||0)):45,hard=setTimeout(()=>{console.error('video hard timeout',video.currentSrc);finish('hard-timeout')},Math.min(180000,Math.max(15000,(remaining+15)*1000)));check()})}async function playOne(item){const entry=entryFor(item.count,item.variant);if(!entry)return;stopIdlePreload(entry);hideActive();banner.classList.remove('show');try{const mediaReady=ensureMediaBlob(entry);await sleep(180);await playTierIntro(item);await mediaReady;const started=await switchMedia(entry);tierIntro.className='';if(!started){console.error('skipping unplayable video',keyOf(entry));return}setLook(item);text.style.transition='none';text.style.transform='translateX(0)';banner.classList.add('show');const distance=lane.clientWidth+text.scrollWidth+54,marqueeDone=runMarqueeSyncedToVideo(item,entry,distance),finishReason=await waitForVideoFinish(entry.video);if(finishReason!=='ended')console.warn('video ended by recovery guard',finishReason);entry.video.__zoeFinishMarquee?.();await marqueeDone}catch(e){console.error('gift playback failed; continuing queue',e)}finally{tierIntro.className='';hideActive();banner.classList.remove('show');await sleep(220)}}async function drain(){if(playing)return;playing=true;stage.classList.add('active');await sleep(300);while(true){while(queue.length){await playOne(queue.shift());if(superLoopActive&&!queue.length)queueSuperNext()}await sleep(220);if(queue.length)continue;break}hideActive();banner.classList.remove('show');stage.classList.remove('active');await sleep(420);playing=false;scheduleIdlePreload();if(queue.length)drain()}
+  function enqueue(payload){const item=normalize(payload);if(item.count<MIN_GIFT)return{accepted:false,reason:'below-threshold'};item.variant=chooseVariant(item);if(!entryFor(item.count,item.variant))return{accepted:false,reason:'empty-slot'};queue.push(item);drain();return{accepted:true,tier:tierForCount(item.count),variant:item.variant}}
+  function resetVariants(){nextVariant[50]=1;nextVariant[100]=1;nextVariant[150]=1;nextVariant[200]=1;superLoopIndex=0;return{...nextVariant}}
+  function startSuperLoop(payload={}){superLoopName=String(payload.name||'匿名').trim()||'匿名';superLoopActive=true;superLoopIndex=0;queue.length=0;queueSuperNext();drain();return{active:true}}
+  function stopSuperLoop(){superLoopActive=false;queue.length=0;return{active:false}}
+  function setNextVariants(values){if(playing||queue.length)return{ok:false,reason:'busy',values:{...nextVariant}};for(const tier of[50,100,150,200]){const v=Number(values?.[tier]);if(!(v>=1&&v<=5))return{ok:false,reason:'invalid',values:{...nextVariant}}}for(const tier of[50,100,150,200])nextVariant[tier]=Number(values[tier]);return{ok:true,values:{...nextVariant}}}
+  window.ZoeGiftMarquee={enqueue,getQueue:()=>queue.slice(),isPlaying:()=>playing,resetVariants,getNextVariants:()=>({...nextVariant}),setNextVariants,startSuperLoop,stopSuperLoop};
+  window.addEventListener('message',e=>{if(e?.data?.type==='zoebot-gift-marquee')enqueue(e.data);else if(e?.data?.type==='zoebot-gift-marquee-reset'){superLoopActive=false;queue.length=0;resetVariants()}else if(e?.data?.type==='zoebot-super-loop-start')startSuperLoop(e.data);else if(e?.data?.type==='zoebot-super-loop-stop')stopSuperLoop()});
+  if(params.has('count'))setTimeout(()=>enqueue({name:params.get('name')||'測試觀眾',count:params.get('count'),variant:params.get('variant')}),450);
+})();
+</script>
+</body>
 </html>
