@@ -13,12 +13,12 @@
 <script>
 (()=>{
 'use strict';
-const OBS_BUILD='20260915-state-confirm-v68';
+const OBS_BUILD='20260915-state-confirm-v69';
 const SHEET_ID='14Yv_DyqvCsgQJQ98vZk_IkQ527xLPSVvLaNBnDGcMug';
 const DETAIL_SHEET='SubscriptionDetail',STATE_SHEET='動畫播放狀態';
 const VARIANT_STATE_KEY='zoebot-marquee-next-variant-v3',SEEN_KEY='zoebot-marquee-sheet-seen-v1',INIT_KEY='zoebot-marquee-sheet-initialized-v1';
 const CORE_URL='obs-overlay-core-v16.html?v=20260915-safe-sync-v67';
-const ACK_API='https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec',ACK_KEY='donson-twitch-2026-change-this';
+const ACK_API='https://script.google.com/macros/s/AKfycbxaGXiDJT0t3x70b8Q5SKPAQLAvobSh-5D_lNNtaZRGE6UJSlVQ45RKhO314BnIcKH2Aw/exec',ACK_KEY='donson-twitch-2026-change-this';
 const frame=document.getElementById('core');
 let stateSyncBusy=false,lastAppliedSignature='',pendingRemoteBuild='',remoteBuildHits=0;
 const tierForCount=n=>n>=200?200:n>=150?150:n>=100?100:50;
