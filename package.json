@@ -1,0 +1,7 @@
+{
+  "name": "zoebot",
+  "private": true,
+  "scripts": {
+    "test": "node tests/verify-project.mjs"
+  }
+}

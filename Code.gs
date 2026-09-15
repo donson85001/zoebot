@@ -9,10 +9,11 @@
  * 5. TwitchCounter 每天檢查日結；若數值和上一筆完全相同，就不新增重複日期。
  */
 
-const UPDATE_KEY = 'donson-twitch-2026-change-this';
+const UPDATE_KEY_PROPERTY = 'UPDATE_KEY';
 const COUNTER_SHEET = 'TwitchCounter';
 const LOG_SHEET = 'EventLog';
 const DETAIL_SHEET = 'SubscriptionDetail';
+const ANIMATION_STATE_SHEET = '動畫播放狀態';
 const INITIAL_MONTHS = 1546;
 const INITIAL_GIFTS = 395;
 const LOG_HEADERS = ['時間','eventId','類型','月份增加','贈禮增加','更新後月份','更新後贈禮','事件類型','誰','Tier','數量／一次幾個月','累積第幾月'];
@@ -36,7 +37,20 @@ function setup() {
 }
 
 function doGet(e){try{syncDailyCounterSnapshot_();const action=String((e&&e.parameter&&e.parameter.action)||'stats').toLowerCase(),c=readCounters_();if(action==='months'||action==='subscription-months')return text_(String(c.subscriptionMonths));if(action==='gifts'||action==='gift-count')return text_(String(c.giftSubCount));return json_({ok:true,...c,updatedAt:new Date().toISOString()});}catch(err){return json_({ok:false,error:String(err&&err.message?err.message:err)});}}
-function doPost(e){const lock=LockService.getScriptLock();lock.waitLock(10000);try{const body=parseBody_(e);if(String(body.key||'')!==UPDATE_KEY)return json_({ok:false,error:'更新金鑰錯誤'});syncDailyCounterSnapshot_();const action=String(body.action||'').toLowerCase();if(action==='set')return setCounters_(body);if(action==='increment')return incrementCounters_(body);if(action==='rebuild-detail')return json_({ok:true,rows:rebuildSubscriptionDetailFromLog_()});return json_({ok:false,error:'未知 action'});}catch(err){return json_({ok:false,error:String(err&&err.message?err.message:err)});}finally{lock.releaseLock();}}
+function doPost(e){const lock=LockService.getScriptLock();lock.waitLock(10000);try{const body=parseBody_(e),action=String(body.action||'').toLowerCase();if(action==='ack-animation-state')return acknowledgeAnimationState_(body);const expectedKey=PropertiesService.getScriptProperties().getProperty(UPDATE_KEY_PROPERTY);if(!expectedKey)throw new Error('尚未在 Script Properties 設定 UPDATE_KEY');if(String(body.key||'')!==expectedKey)return json_({ok:false,error:'更新金鑰錯誤'});syncDailyCounterSnapshot_();if(action==='set')return setCounters_(body);if(action==='increment')return incrementCounters_(body);if(action==='rebuild-detail')return json_({ok:true,rows:rebuildSubscriptionDetailFromLog_()});return json_({ok:false,error:'未知 action'});}catch(err){return json_({ok:false,error:String(err&&err.message?err.message:err)});}finally{lock.releaseLock();}}
+
+function acknowledgeAnimationState_(body){
+  const id=PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');if(!id)throw new Error('尚未執行 setup()');
+  const ss=SpreadsheetApp.openById(id),s=ss.getSheetByName(ANIMATION_STATE_SHEET);if(!s)throw new Error('找不到動畫播放狀態');
+  const supplied=body.states&&typeof body.states==='object'?body.states:{},expected={};
+  s.getRange('A2:B5').getValues().forEach(r=>{const tier=Number(r[0]),next=Number(r[1]);if([50,100,150,200].indexOf(tier)!==-1)expected[tier]=next;});
+  [50,100,150,200].forEach(t=>{const got=Number(supplied[t]);if(!(got>=1&&got<=5)||got!==expected[t])throw new Error(t+' 檔位確認值與試算表不一致');});
+  const now=new Date(),build=cleanCell_(body.build||'');
+  s.getRange('I1:J1').setValues([['正式程式確認時間','正式程式已讀設定']]).setFontWeight('bold');
+  s.getRange('I2:I5').setValues([[now],[now],[now],[now]]).setNumberFormat('yyyy/m/d HH:mm:ss');
+  s.getRange('J2:J5').setValues([[build],[build],[build],[build]]);
+  SpreadsheetApp.flush();return json_({ok:true,confirmedAt:now.toISOString(),build:build,states:expected});
+}
 function setCounters_(body){const months=toNonNegativeInt_(body.subscriptionMonths,'subscriptionMonths'),gifts=toNonNegativeInt_(body.giftSubCount,'giftSubCount');writeCounters_(months,gifts);return json_({ok:true,subscriptionMonths:months,giftSubCount:gifts});}
 
 function incrementCounters_(body){
@@ -165,8 +179,9 @@ function ensureDetailLayout_(s){const headers=DETAIL_HEADERS;s.getRange(1,1,1,9)
 function sortDetailOldestFirst_(s){const last=s.getLastRow();if(last<=2)return;s.getRange(2,1,last-1,9).sort({column:1,ascending:true});}
 function cleanCell_(v){if(v===null||v===undefined)return'';return String(v).replace(/^[=+\-@]/,"'$&");}
 function nullableInt_(v){if(v===null||v===undefined||v==='')return'';const n=Number(v);return Number.isFinite(n)?Math.floor(n):'';}
-function alreadyProcessed_(id){const raw=PropertiesService.getScriptProperties().getProperty('RECENT_EVENT_IDS')||'[]';let ids=[];try{ids=JSON.parse(raw);}catch(_){}return ids.indexOf(id)!==-1;}
-function rememberProcessed_(id){const p=PropertiesService.getScriptProperties(),raw=p.getProperty('RECENT_EVENT_IDS')||'[]';let ids=[];try{ids=JSON.parse(raw);}catch(_){}ids.push(id);if(ids.length>300)ids=ids.slice(-300);p.setProperty('RECENT_EVENT_IDS',JSON.stringify(ids));}
+function recentEvents_(){const raw=PropertiesService.getScriptProperties().getProperty('RECENT_EVENT_IDS')||'[]';let rows=[];try{rows=JSON.parse(raw);}catch(_){}const now=Date.now(),cutoff=now-14*24*60*60*1000;return(Array.isArray(rows)?rows:[]).map(x=>typeof x==='string'?{id:x,at:now}:x).filter(x=>x&&x.id&&Number(x.at)>=cutoff).slice(-2000);}
+function alreadyProcessed_(id){return recentEvents_().some(x=>x.id===id);}
+function rememberProcessed_(id){const p=PropertiesService.getScriptProperties(),rows=recentEvents_().filter(x=>x.id!==id);rows.push({id:id,at:Date.now()});p.setProperty('RECENT_EVENT_IDS',JSON.stringify(rows.slice(-2000)));}
 function parseBody_(e){const raw=e&&e.postData&&e.postData.contents?e.postData.contents:'';if(!raw)return{};try{return JSON.parse(raw);}catch(_){throw new Error('POST JSON 格式錯誤');}}
 function toNonNegativeInt_(v,n){const x=toInt_(v,n);if(x<0)throw new Error(n+' 不可小於 0');return x;}
 function toInt_(v,n){const x=Number(v);if(!Number.isFinite(x))throw new Error(n+' 不是有效數字');return Math.floor(x);}
