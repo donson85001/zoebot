@@ -1,358 +1,50 @@
 <!doctype html>
 <html lang="zh-Hant">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>OBS 餘興節目計數器</title>
-    <style>
-      * {
-        box-sizing: border-box;
-      }
-      html,
-      body {
-        margin: 0;
-        padding: 0;
-        width: 630px;
-        height: 420px;
-        overflow: hidden;
-        background: transparent;
-      }
-      #core {
-        position: absolute;
-        inset: 0;
-        display: block;
-        width: 630px;
-        height: 420px;
-        border: 0;
-        background: transparent;
-      }
-    </style>
-  </head>
-  <body>
-    <iframe
-      id="core"
-      allow="autoplay"
-      scrolling="no"
-      title="Zoebot OBS overlay core"
-    ></iframe>
-    <script>
-      (() => {
-        "use strict";
-        const OBS_BUILD = "20260915-variant5-text-v63";
-        const SHEET_ID = "14Yv_DyqvCsgQJQ98vZk_IkQ527xLPSVvLaNBnDGcMug";
-        const DETAIL_SHEET = "SubscriptionDetail",
-          STATE_SHEET = "動畫播放狀態";
-        const VARIANT_STATE_KEY = "zoebot-marquee-next-variant-v3",
-          SEEN_KEY = "zoebot-marquee-sheet-seen-v1",
-          INIT_KEY = "zoebot-marquee-sheet-initialized-v1";
-        const CORE_URL = "obs-overlay-core-v16.html?v=20260915-variant5-text-v63";
-        const ACK_API =
-            "https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec",
-          ACK_KEY = "donson-twitch-2026-change-this";
-        const frame = document.getElementById("core");
-        let stateSyncBusy = false,
-          lastAppliedSignature = "";
-        const tierForCount = (n) =>
-          n >= 200 ? 200 : n >= 150 ? 150 : n >= 100 ? 100 : 50;
-        const previousVariant = (n) => (n === 1 ? 5 : n - 1);
-        const cellValue = (c) =>
-          !c || c.v === null || c.v === undefined ? "" : c.v;
-        function parseSheetTime(cell) {
-          const v = cellValue(cell);
-          if (typeof v === "string") {
-            const m = v.match(/^Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)$/);
-            if (m)
-              return new Date(
-                +m[1],
-                +m[2],
-                +m[3],
-                +m[4],
-                +m[5],
-                +m[6],
-              ).getTime();
-          }
-          const f = String(cell?.f || ""),
-            m = f.match(
-              /(\d{4})\/(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{2}):(\d{2})/,
-            );
-          if (m)
-            return new Date(
-              +m[1],
-              +m[2] - 1,
-              +m[3],
-              +m[4],
-              +m[5],
-              +m[6],
-            ).getTime();
-          return 0;
-        }
-        function buildGvizUrl(sheet, q, callbackName = "") {
-          const u = new URL(
-            `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`,
-          );
-          u.searchParams.set("sheet", sheet);
-          u.searchParams.set("headers", "1");
-          u.searchParams.set("tq", q);
-          u.searchParams.set(
-            "tqx",
-            callbackName
-              ? `out:json;responseHandler:${callbackName}`
-              : "out:json",
-          );
-          u.searchParams.set("_", String(Date.now()));
-          return u;
-        }
-        async function fetchGviz(sheet, q) {
-          const r = await fetch(buildGvizUrl(sheet, q).toString(), {
-            cache: "no-store",
-          });
-          if (!r.ok) throw new Error(`sheet HTTP ${r.status}`);
-          const raw = await r.text(),
-            m = raw.match(
-              /google\.visualization\.Query\.setResponse\(([\s\S]*?)\);?\s*$/,
-            );
-          if (!m) throw new Error("sheet response parse failed");
-          const resp = JSON.parse(m[1]);
-          if (resp?.status && resp.status !== "ok")
-            throw new Error("sheet query failed");
-          return resp;
-        }
-        function fetchGvizJsonp(sheet, q) {
-          return new Promise((resolve, reject) => {
-            const cb =
-                "__zoeBootstrap_" +
-                Date.now() +
-                "_" +
-                Math.floor(Math.random() * 100000),
-              s = document.createElement("script");
-            let done = false;
-            const cleanup = () => {
-                if (done) return;
-                done = true;
-                clearTimeout(timer);
-                try {
-                  delete window[cb];
-                } catch (_) {
-                  window[cb] = undefined;
-                }
-                s.remove();
-              },
-              timer = setTimeout(() => {
-                cleanup();
-                reject(new Error("sheet jsonp timeout"));
-              }, 5000);
-            window[cb] = (resp) => {
-              try {
-                if (resp?.status && resp.status !== "ok")
-                  throw new Error("sheet jsonp query failed");
-                cleanup();
-                resolve(resp);
-              } catch (e) {
-                cleanup();
-                reject(e);
-              }
-            };
-            s.onerror = () => {
-              cleanup();
-              reject(new Error("sheet jsonp load failed"));
-            };
-            s.src = buildGvizUrl(sheet, q, cb).toString();
-            document.head.appendChild(s);
-          });
-        }
-        async function getGviz(sheet, q) {
-          try {
-            return await fetchGviz(sheet, q);
-          } catch (e) {
-            console.warn("bootstrap fetch failed; trying JSONP", e);
-            return fetchGvizJsonp(sheet, q);
-          }
-        }
-        function parseState(resp) {
-          const out = {};
-          for (const r of resp?.table?.rows || []) {
-            const c = r?.c || [],
-              tier = Number(cellValue(c[0])),
-              next = Number(cellValue(c[1]));
-            if ([50, 100, 150, 200].includes(tier) && next >= 1 && next <= 5)
-              out[tier] = next;
-          }
-          return out;
-        }
-        function parseGiftRows(resp) {
-          return (resp?.table?.rows || [])
-            .map((r) => {
-              const c = r?.c || [];
-              return {
-                tsMs: parseSheetTime(c[0]),
-                count: Math.max(0, Math.floor(Number(cellValue(c[3])) || 0)),
-                eventId: String(cellValue(c[4]) || "").trim(),
-              };
-            })
-            .filter((x) => x.eventId);
-        }
-        function readSeen() {
-          try {
-            const v = JSON.parse(localStorage.getItem(SEEN_KEY) || "[]");
-            return new Set(Array.isArray(v) ? v.map(String) : []);
-          } catch (_) {
-            return new Set();
-          }
-        }
-        function willCoreProcess(items) {
-          const seen = readSeen();
-          let initialized = false;
-          try {
-            initialized = localStorage.getItem(INIT_KEY) === "1";
-          } catch (_) {}
-          if (initialized || seen.size) {
-            return items.filter((x) => x.count >= 50 && !seen.has(x.eventId));
-          }
-          const now = Date.now(),
-            cutoff = 3 * 60 * 1000;
-          return items.filter(
-            (x) =>
-              x.count >= 50 &&
-              x.tsMs &&
-              now - x.tsMs >= 0 &&
-              now - x.tsMs <= cutoff,
-          );
-        }
-        function stateBeforeFresh(currentState, freshDesc) {
-          const pre = {
-            50: Number(currentState[50]),
-            100: Number(currentState[100]),
-            150: Number(currentState[150]),
-            200: Number(currentState[200]),
-          };
-          for (const item of freshDesc) {
-            const tier = tierForCount(item.count),
-              n = pre[tier];
-            if (!(n >= 1 && n <= 5)) continue;
-            pre[tier] = previousVariant(n);
-          }
-          return pre;
-        }
-        async function syncVariantState() {
-          const stateResp = await getGviz(
-              STATE_SHEET,
-              "select A,B where A is not null",
-            ),
-            current = parseState(stateResp);
-          if (
-            [50, 100, 150, 200].some(
-              (t) => !(current[t] >= 1 && current[t] <= 5),
-            )
-          )
-            throw new Error("animation state incomplete");
-          const giftsResp = await getGviz(
-              DETAIL_SHEET,
-              "select A,B,C,E,I where B = '贈送訂閱' order by A desc limit 100",
-            ),
-            items = parseGiftRows(giftsResp),
-            fresh = willCoreProcess(items),
-            pre = stateBeforeFresh(current, fresh);
-          localStorage.setItem(VARIANT_STATE_KEY, JSON.stringify(pre));
-          return { current, pre, fresh };
-        }
-        const stateSignature = (state) =>
-          [50, 100, 150, 200].map((t) => `${t}:${state[t]}`).join("|");
-        async function acknowledgeState(state) {
-          await fetch(ACK_API, {
-            method: "POST",
-            mode: "no-cors",
-            cache: "no-store",
-            headers: { "Content-Type": "text/plain;charset=UTF-8" },
-            body: JSON.stringify({
-              key: ACK_KEY,
-              action: "ack-animation-state",
-              build: OBS_BUILD,
-              states: state,
-            }),
-          });
-        }
-        async function syncAndApply() {
-          if (
-            stateSyncBusy ||
-            !frame.contentWindow?.ZoeGiftMarquee ||
-            frame.contentWindow.ZoeGiftMarquee.isPlaying?.()
-          )
-            return;
-          stateSyncBusy = true;
-          try {
-            const { current, pre, fresh } = await syncVariantState();
-            if (frame.contentWindow.ZoeGiftMarquee.isPlaying?.()) return;
-            const applied =
-              frame.contentWindow.ZoeGiftMarquee.setNextVariants?.(pre);
-            if (!applied?.ok) return;
-            const actual =
-                frame.contentWindow.ZoeGiftMarquee.getNextVariants?.() || {},
-              preSig = stateSignature(pre),
-              currentSig = stateSignature(current);
-            if (stateSignature(actual) !== preSig)
-              throw new Error("animation state apply mismatch");
-            if (
-              !fresh.length &&
-              preSig === currentSig &&
-              currentSig !== lastAppliedSignature
-            ) {
-              await acknowledgeState(current);
-              lastAppliedSignature = currentSig;
-              console.log("animation state confirmed", current);
-            }
-          } catch (e) {
-            console.error("animation state sync failed", e);
-          } finally {
-            stateSyncBusy = false;
-          }
-        }
-        function loadCore() {
-          if (frame.src) return;
-          frame.src = CORE_URL;
-        }
-        function start() {
-          loadCore();
-        }
-        frame.addEventListener("load", () => {
-          window.ZoeGiftMarquee = {
-            enqueue: (p) => frame.contentWindow?.ZoeGiftMarquee?.enqueue(p),
-            getQueue: () =>
-              frame.contentWindow?.ZoeGiftMarquee?.getQueue?.() || [],
-            isPlaying: () =>
-              !!frame.contentWindow?.ZoeGiftMarquee?.isPlaying?.(),
-            getNextVariants: () =>
-              frame.contentWindow?.ZoeGiftMarquee?.getNextVariants?.() || {},
-            setNextVariants: (v) =>
-              frame.contentWindow?.ZoeGiftMarquee?.setNextVariants?.(v),
-          };
-          syncAndApply();
-        });
-        window.addEventListener("message", (e) => {
-          if (e?.data?.type === "zoebot-gift-marquee")
-            frame.contentWindow?.postMessage(e.data, "*");
-        });
-        async function checkForPageUpdate() {
-          try {
-            const u = new URL(location.href);
-            u.searchParams.set("__obs_update_check", String(Date.now()));
-            const r = await fetch(u.toString(), { cache: "no-store" });
-            if (!r.ok) return;
-            const html = await r.text(),
-              m = html.match(/const OBS_BUILD='([^']+)'/),
-              remote = m && m[1];
-            if (remote && remote !== OBS_BUILD) {
-              u.searchParams.delete("__obs_update_check");
-              u.searchParams.set("__obs_build", remote);
-              u.searchParams.set("_", String(Date.now()));
-              location.replace(u.toString());
-            }
-          } catch (_) {}
-        }
-        start();
-        setInterval(syncAndApply, 5000);
-        setTimeout(checkForPageUpdate, 7000);
-        setInterval(checkForPageUpdate, 10000);
-      })();
-    </script>
-  </body>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OBS 餘興節目計數器</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;padding:0;width:630px;height:420px;overflow:hidden;background:transparent}#core{position:absolute;inset:0;display:block;width:630px;height:420px;border:0;background:transparent}
+</style>
+</head>
+<body>
+<iframe id="core" allow="autoplay" scrolling="no" title="Zoebot OBS overlay core"></iframe>
+<script>
+(()=>{
+'use strict';
+const OBS_BUILD='20260915-variant5-hotfix-v64';
+const SHEET_ID='14Yv_DyqvCsgQJQ98vZk_IkQ527xLPSVvLaNBnDGcMug';
+const DETAIL_SHEET='SubscriptionDetail',STATE_SHEET='動畫播放狀態';
+const VARIANT_STATE_KEY='zoebot-marquee-next-variant-v3',SEEN_KEY='zoebot-marquee-sheet-seen-v1',INIT_KEY='zoebot-marquee-sheet-initialized-v1';
+const CORE_URL='obs-overlay-core-v16.html?v=20260915-variant5-hotfix-v64';
+const ACK_API='https://script.google.com/macros/s/AKfycbzLet29KonFvVjhxrzf7oM-g-FyfhVkyzYjbRLQtrHeX7zh4KLNXsIbfRdqGnYZuWzzZg/exec',ACK_KEY='donson-twitch-2026-change-this';
+const frame=document.getElementById('core');
+let stateSyncBusy=false,lastAppliedSignature='';
+const tierForCount=n=>n>=200?200:n>=150?150:n>=100?100:50;
+const previousVariant=n=>n===1?5:n-1;
+const cellValue=c=>!c||c.v===null||c.v===undefined?'':c.v;
+function parseSheetTime(cell){const v=cellValue(cell);if(typeof v==='string'){const m=v.match(/^Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)$/);if(m)return new Date(+m[1],+m[2],+m[3],+m[4],+m[5],+m[6]).getTime()}const f=String(cell?.f||''),m=f.match(/(\d{4})\/(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{2}):(\d{2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6]).getTime();return 0}
+function buildGvizUrl(sheet,q,callbackName=''){const u=new URL(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`);u.searchParams.set('sheet',sheet);u.searchParams.set('headers','1');u.searchParams.set('tq',q);u.searchParams.set('tqx',callbackName?`out:json;responseHandler:${callbackName}`:'out:json');u.searchParams.set('_',String(Date.now()));return u}
+async function fetchGviz(sheet,q){const r=await fetch(buildGvizUrl(sheet,q).toString(),{cache:'no-store'});if(!r.ok)throw new Error(`sheet HTTP ${r.status}`);const raw=await r.text(),m=raw.match(/google\.visualization\.Query\.setResponse\(([\s\S]*?)\);?\s*$/);if(!m)throw new Error('sheet response parse failed');const resp=JSON.parse(m[1]);if(resp?.status&&resp.status!=='ok')throw new Error('sheet query failed');return resp}
+function fetchGvizJsonp(sheet,q){return new Promise((resolve,reject)=>{const cb='__zoeBootstrap_'+Date.now()+'_'+Math.floor(Math.random()*100000),s=document.createElement('script');let done=false;const cleanup=()=>{if(done)return;done=true;clearTimeout(timer);try{delete window[cb]}catch(_){window[cb]=undefined}s.remove()},timer=setTimeout(()=>{cleanup();reject(new Error('sheet jsonp timeout'))},5000);window[cb]=resp=>{try{if(resp?.status&&resp.status!=='ok')throw new Error('sheet jsonp query failed');cleanup();resolve(resp)}catch(e){cleanup();reject(e)}};s.onerror=()=>{cleanup();reject(new Error('sheet jsonp load failed'))};s.src=buildGvizUrl(sheet,q,cb).toString();document.head.appendChild(s)})}
+async function getGviz(sheet,q){try{return await fetchGviz(sheet,q)}catch(e){console.warn('bootstrap fetch failed; trying JSONP',e);return fetchGvizJsonp(sheet,q)}}
+function parseState(resp){const out={};for(const r of resp?.table?.rows||[]){const c=r?.c||[],tier=Number(cellValue(c[0])),next=Number(cellValue(c[1]));if([50,100,150,200].includes(tier)&&next>=1&&next<=5)out[tier]=next}return out}
+function parseGiftRows(resp){return(resp?.table?.rows||[]).map(r=>{const c=r?.c||[];return{tsMs:parseSheetTime(c[0]),count:Math.max(0,Math.floor(Number(cellValue(c[3]))||0)),eventId:String(cellValue(c[4])||'').trim()}}).filter(x=>x.eventId)}
+function readSeen(){try{const v=JSON.parse(localStorage.getItem(SEEN_KEY)||'[]');return new Set(Array.isArray(v)?v.map(String):[])}catch(_){return new Set()}}
+function willCoreProcess(items){const seen=readSeen();let initialized=false;try{initialized=localStorage.getItem(INIT_KEY)==='1'}catch(_){}if(initialized||seen.size){return items.filter(x=>x.count>=50&&!seen.has(x.eventId))}const now=Date.now(),cutoff=3*60*1000;return items.filter(x=>x.count>=50&&x.tsMs&&now-x.tsMs>=0&&now-x.tsMs<=cutoff)}
+function stateBeforeFresh(currentState,freshDesc){const pre={50:Number(currentState[50]),100:Number(currentState[100]),150:Number(currentState[150]),200:Number(currentState[200])};for(const item of freshDesc){const tier=tierForCount(item.count),n=pre[tier];if(!(n>=1&&n<=5))continue;pre[tier]=previousVariant(n)}return pre}
+async function syncVariantState(){const stateResp=await getGviz(STATE_SHEET,'select A,B where A is not null'),current=parseState(stateResp);if([50,100,150,200].some(t=>!(current[t]>=1&&current[t]<=5)))throw new Error('animation state incomplete');const giftsResp=await getGviz(DETAIL_SHEET,"select A,B,C,E,I where B = '贈送訂閱' order by A desc limit 100"),items=parseGiftRows(giftsResp),fresh=willCoreProcess(items),pre=stateBeforeFresh(current,fresh);localStorage.setItem(VARIANT_STATE_KEY,JSON.stringify(pre));return{current,pre,fresh}}
+const stateSignature=state=>[50,100,150,200].map(t=>`${t}:${state[t]}`).join('|');
+async function acknowledgeState(state){await fetch(ACK_API,{method:'POST',mode:'no-cors',cache:'no-store',headers:{'Content-Type':'text/plain;charset=UTF-8'},body:JSON.stringify({key:ACK_KEY,action:'ack-animation-state',build:OBS_BUILD,states:state})})}
+async function syncAndApply(){if(stateSyncBusy||!frame.contentWindow?.ZoeGiftMarquee||frame.contentWindow.ZoeGiftMarquee.isPlaying?.())return;stateSyncBusy=true;try{const{current,pre,fresh}=await syncVariantState();if(frame.contentWindow.ZoeGiftMarquee.isPlaying?.())return;const applied=frame.contentWindow.ZoeGiftMarquee.setNextVariants?.(pre);if(!applied?.ok)return;const actual=frame.contentWindow.ZoeGiftMarquee.getNextVariants?.()||{},preSig=stateSignature(pre),currentSig=stateSignature(current);if(stateSignature(actual)!==preSig)throw new Error('animation state apply mismatch');if(!fresh.length&&preSig===currentSig&&currentSig!==lastAppliedSignature){await acknowledgeState(current);lastAppliedSignature=currentSig;console.log('animation state confirmed',current)}}catch(e){console.error('animation state sync failed',e)}finally{stateSyncBusy=false}}
+function loadCore(){if(frame.src)return;frame.src=CORE_URL}
+function start(){loadCore()}
+frame.addEventListener('load',()=>{window.ZoeGiftMarquee={enqueue:p=>frame.contentWindow?.ZoeGiftMarquee?.enqueue(p),getQueue:()=>frame.contentWindow?.ZoeGiftMarquee?.getQueue?.()||[],isPlaying:()=>!!frame.contentWindow?.ZoeGiftMarquee?.isPlaying?.(),getNextVariants:()=>frame.contentWindow?.ZoeGiftMarquee?.getNextVariants?.()||{},setNextVariants:v=>frame.contentWindow?.ZoeGiftMarquee?.setNextVariants?.(v)};syncAndApply()});
+window.addEventListener('message',e=>{if(e?.data?.type==='zoebot-gift-marquee')frame.contentWindow?.postMessage(e.data,'*')});
+async function checkForPageUpdate(){try{const u=new URL(location.href);u.searchParams.set('__obs_update_check',String(Date.now()));const r=await fetch(u.toString(),{cache:'no-store'});if(!r.ok)return;const html=await r.text(),m=html.match(/const OBS_BUILD='([^']+)'/),remote=m&&m[1];if(remote&&remote!==OBS_BUILD){u.searchParams.delete('__obs_update_check');u.searchParams.set('__obs_build',remote);u.searchParams.set('_',String(Date.now()));location.replace(u.toString())}}catch(_){}}
+start();setInterval(syncAndApply,5000);setTimeout(checkForPageUpdate,7000);setInterval(checkForPageUpdate,10000);
+})();
+</script>
+</body>
 </html>
