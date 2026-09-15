@@ -46,7 +46,7 @@ function acknowledgeAnimationState_(body){
   const supplied=body.states&&typeof body.states==='object'?body.states:{};
   const live=s.getRange('A2:B5').getValues(),expected={};
   live.forEach(r=>{const tier=Number(r[0]),next=Number(r[1]);if([50,100,150,200].indexOf(tier)!==-1)expected[tier]=next;});
-  [50,100,150,200].forEach(t=>{const got=Number(supplied[t]);if(!(got>=1&&got<=4)||got!==expected[t])throw new Error(t+' 檔位確認值與試算表不一致');});
+  [50,100,150,200].forEach(t=>{const got=Number(supplied[t]);if(!(got>=1&&got<=5)||got!==expected[t])throw new Error(t+' 檔位確認值與試算表不一致');});
   const build=cleanCell_(body.build||''),now=new Date();
   s.getRange('I1:J1').setValues([['正式程式確認時間','正式程式已讀設定']]).setFontWeight('bold');
   s.getRange('I2:I5').setValues([[now],[now],[now],[now]]).setNumberFormat('yyyy/m/d HH:mm:ss');
