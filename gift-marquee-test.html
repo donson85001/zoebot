@@ -96,7 +96,7 @@ button{height:48px;min-height:48px;border:0;border-radius:9px;background:#ef629a
   function post(payload){if(!previewReady){pending.push(payload);return}preview.contentWindow?.postMessage(payload,'*')}
   function flush(){while(pending.length)preview.contentWindow?.postMessage(pending.shift(),'*')}
   preview.addEventListener('load',()=>{previewReady=true;flush();status.textContent='待命中；按「超級循環」會從 50-1 開始一路自動播放'});
-  preview.src='gift-marquee-obs-test.html?debug=1&v=20260915-safe-sync-v67&_='+Date.now();
+  preview.src='gift-marquee-obs-test.html?debug=1&v=20260916-ni-refresh-v70&_='+Date.now();
   function sendButton(btn){
     const count=Number(btn.dataset.count),variant=Number(btn.dataset.variant)||0,who=name.value.trim()||'匿名',label=btn.dataset.label||'';
     const payload={type:'zoebot-gift-marquee',name:who,count};if(variant)payload.variant=variant;post(payload);
@@ -123,7 +123,7 @@ button{height:48px;min-height:48px;border:0;border-radius:9px;background:#ef629a
 </script>
 
 <script>
-(()=>{const TEST_BUILD='20260915-safe-sync-v67',buildNumber=v=>Number(String(v||'').split('-v').pop())||0;let candidate='',hits=0;async function checkForPageUpdate(){try{const u=new URL(location.href);u.searchParams.set('__test_update_check',String(Date.now()));const r=await fetch(u.toString(),{cache:'no-store'});if(!r.ok)return;const html=await r.text(),m=html.match(/const TEST_BUILD='([^']+)'/),remote=m&&m[1];if(!remote||buildNumber(remote)<=buildNumber(TEST_BUILD)){candidate='';hits=0;return}if(remote!==candidate){candidate=remote;hits=1;return}hits++;if(hits<2||preview.contentWindow?.ZoeGiftMarquee?.isPlaying?.()||preview.contentWindow?.ZoeGiftMarquee?.getQueue?.().length)return;u.searchParams.delete('__test_update_check');u.searchParams.set('__test_build',remote);u.searchParams.set('_',String(Date.now()));location.replace(u.toString())}catch(e){console.warn('test update check skipped',e)}}setTimeout(checkForPageUpdate,15000);setInterval(checkForPageUpdate,15000)})();
+(()=>{const TEST_BUILD='20260916-ni-refresh-v70',buildNumber=v=>Number(String(v||'').split('-v').pop())||0;let candidate='',hits=0;async function checkForPageUpdate(){try{const u=new URL(location.href);u.searchParams.set('__test_update_check',String(Date.now()));const r=await fetch(u.toString(),{cache:'no-store'});if(!r.ok)return;const html=await r.text(),m=html.match(/const TEST_BUILD='([^']+)'/),remote=m&&m[1];if(!remote||buildNumber(remote)<=buildNumber(TEST_BUILD)){candidate='';hits=0;return}if(remote!==candidate){candidate=remote;hits=1;return}hits++;if(hits<2||preview.contentWindow?.ZoeGiftMarquee?.isPlaying?.()||preview.contentWindow?.ZoeGiftMarquee?.getQueue?.().length)return;u.searchParams.delete('__test_update_check');u.searchParams.set('__test_build',remote);u.searchParams.set('_',String(Date.now()));location.replace(u.toString())}catch(e){console.warn('test update check skipped',e)}}setTimeout(checkForPageUpdate,15000);setInterval(checkForPageUpdate,15000)})();
 </script>
 </body>
 </html>
