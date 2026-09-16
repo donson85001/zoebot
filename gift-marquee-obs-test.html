@@ -235,11 +235,20 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   function waitForRenderedFrame(video,timeout=450){if(typeof video.requestVideoFrameCallback==='function')return new Promise(resolve=>{let done=false;const finish=()=>{if(done)return;done=true;clearTimeout(timer);resolve()};const timer=setTimeout(finish,timeout);video.requestVideoFrameCallback(finish)});return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))}
   function resetVideo(video){if(!video)return;video.pause();try{video.currentTime=0}catch(_){}video.volume=1}
   async function startVideoWithAudio(video,muted){resetVideo(video);video.muted=muted;video.volume=1;try{await video.play();return true}catch(e){console.warn('video-play-retry',e);try{video.load();await waitUntilPlayable(video,1500);video.muted=muted;video.volume=1;await video.play();return true}catch(e2){console.error('video-play-failed',e2);return false}}}
-  async function switchMedia(entry){
+  function switchToStreamingSource(entry){
+    entry.blobController?.abort();entry.blobController=null;entry.blobPromise=null;
+    entry.video.src=entry.sourceUrl;entry.video.preload='auto';try{entry.video.load()}catch(_){}
+  }
+  async function waitForBlobOrStream(entry,mediaReady){
+    await Promise.race([Promise.resolve(mediaReady).catch(()=>{}),sleep(250)]);
+    if(entry.blobUrl&&entry.video.src.startsWith('blob:'))return false;
+    switchToStreamingSource(entry);return true;
+  }
+  async function switchMedia(entry,streaming=false){
     const {media,video,muted}=entry;
-    await ensureMediaBlob(entry);
+    if(!streaming)await ensureMediaBlob(entry);
     video.preload='auto';if(video.readyState===0){try{video.load()}catch(_){}}
-    await waitUntilSafe(entry);
+    if(streaming)await waitUntilPlayable(video,3000);else await waitUntilSafe(entry);
     if(activeEntry===entry){await startVideoWithAudio(video,muted);await waitForRenderedFrame(video);return}
     await startVideoWithAudio(video,muted);await waitForRenderedFrame(video);
     const old=activeEntry;media.classList.add('show');activeEntry=entry;
@@ -282,7 +291,7 @@ body.debug::after{content:'實際 OBS 只到紅線，上面 630×420；紅線下
   async function playOne(item){
     const entry=entryFor(item.count,item.variant);if(!entry)return;
     stopIdlePreload(entry);hideActive();banner.classList.remove('show');const mediaReady=ensureMediaBlob(entry);await sleep(180);await playTierIntro(item);
-    await mediaReady;await switchMedia(entry);setLook(item);text.style.transition='none';text.style.transform='translateX(0)';
+    const streaming=await waitForBlobOrStream(entry,mediaReady);await switchMedia(entry,streaming);setLook(item);text.style.transition='none';text.style.transform='translateX(0)';
     banner.classList.add('show');tierIntro.className='';
     const distance=lane.clientWidth+text.scrollWidth+54,videoDone=waitForVideoFinish(entry.video),marqueeDone=runMarqueeSyncedToVideo(item,entry,distance);
     await Promise.all([marqueeDone,videoDone]);hideActive();banner.classList.remove('show');await sleep(220);

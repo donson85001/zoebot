@@ -25,7 +25,8 @@ ok(formal.includes('setNextVariants'),'正式核心缺少免重載順序同步')
 ok(formal.includes('MAX_BLOB_CACHE=8'),'正式核心缺少 Blob 快取上限');
 ok(formal.includes('refreshMediaVersions')&&formal.includes('MEDIA_VERSION_POLL_MS'),'正式核心缺少自動影片版本刷新');
 ok(test.includes('refreshMediaVersions')&&test.includes('MEDIA_VERSION_POLL_MS'),'測試核心缺少自動影片版本刷新');
+ok(formal.includes('waitForBlobOrStream')&&test.includes('waitForBlobOrStream'),'正式或測試核心缺少 Blob 未完成時的串流後備');
 ok(!backend.includes("const UPDATE_KEY = '"),'公開原始碼仍含固定更新金鑰');
 ok(backend.includes("getProperty(UPDATE_KEY_PROPERTY)"),'後端沒有從 Script Properties 讀取金鑰');
 ok(backend.includes('acknowledgeAnimationState_'),'後端缺少正式程式已讀確認');
-console.log('OK: 20 支影片、腳本語法、免重載同步、更新防護、快取限制與自動影片刷新全部通過');
+console.log('OK: 20 支影片、腳本語法、免重載同步、更新防護、快取限制、自動影片刷新與串流後備全部通過');
